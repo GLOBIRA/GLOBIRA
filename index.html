@@ -4413,12 +4413,40 @@ document.addEventListener(
 
 
 /* =========================================================
+CJ DROPSHIPPING / STEP 1 PRODUCT LOAD
+========================================================= */
+
+async function loadCJFeaturedProduct(){
+    try{
+        const response = await fetch('/api/cj-products?keyword=hoodie&size=1');
+        if(!response.ok) throw new Error(`CJ API returned ${response.status}`);
+
+        const payload = await response.json();
+        const cjProduct = payload?.products?.[0];
+        if(!cjProduct) throw new Error('No CJ product was returned.');
+
+        // Keep the existing GLOBIRA product/card/modal/cart system.
+        // Only the product data source is being added here.
+        womenProducts.push(cjProduct);
+
+        renderFeatured();
+        renderCart();
+
+        console.log('GLOBIRA: CJ product connected', cjProduct);
+    }catch(error){
+        console.error('GLOBIRA CJ PRODUCT LOAD:', error);
+    }
+}
+
+/* =========================================================
 INITIALIZE
 ========================================================= */
 
 renderFeatured();
 
 renderCart();
+
+loadCJFeaturedProduct();
 
 </script>
 
