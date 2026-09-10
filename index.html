@@ -2922,23 +2922,24 @@ function renderFeatured(){
 
     if(!container) return;
 
-    const products = [
+    const cjProduct = womenProducts.find(
+        product => product.source === 'cjdropshipping'
+    );
 
+    const products = [
+        cjProduct,
         womenProducts[0],
         menProducts[0],
         womenProducts[1],
         menProducts[3],
         womenProducts[2],
         menProducts[2],
-        womenProducts[5],
-        menProducts[5]
-
-    ];
+        womenProducts[5]
+    ].filter(Boolean);
 
     container.innerHTML =
         products.map(productCard).join('');
-
-}
+}   
 
 
 /* =========================================================
@@ -3103,24 +3104,21 @@ OPEN PRODUCT
 
 function openProduct(id, preselectedSize=null){
 
-    const product =
-        findProduct(id);
+    const product = findProduct(id);
 
     if(!product) return;
 
     currentProduct = product;
 
-    selectedSize =
-        preselectedSize || null;
-
+    selectedSize = preselectedSize || null;
     productQuantity = 1;
 
-
+    /* PRODUCT NAME */
     document.getElementById('popupName')
-        .textContent =
-        product.name;
+        .textContent = product.name;
 
 
+    /* PRODUCT PRICE */
     document.getElementById('popupPrice')
         .innerHTML =
         formatPrice(product.price) +
@@ -3129,33 +3127,186 @@ function openProduct(id, preselectedSize=null){
         '</span>';
 
 
-    document.getElementById('popupDescription')
-        .textContent =
-        product.description;
+    /* PRODUCT DESCRIPTION */
+    const description =
+        document.getElementById('popupDescription');
+
+    if(product.source === 'cjdropshipping'){
+
+        // Remove CJ HTML/images and show clean text
+        const temp = document.createElement('div');
+
+        temp.innerHTML = product.description || '';
+
+        const cleanDescription =
+            temp.textContent
+                .replace(/\s+/g, ' ')
+                .trim();
+
+        description.textContent =
+            cleanDescription ||
+            'Premium quality product from GLOBIRA.';
+    }
+    else{
+
+        description.textContent =
+            product.description || '';
+    }
 
 
-    document.getElementById('mainProductImage')
-        .src =
-        product.images[0];
+    /* PRODUCT IMAGES */
 
+    let productImages = Array.isArray(product.images)
+        ? product.images
+        : [];
+
+    // CJ can sometimes return an image list as a JSON string
+    productImages = productImages.flatMap(image => {
+
+        if(typeof image !== 'string'){
+            return [];
+        }
+
+        const trimmed = image.trim();
+
+        if(
+            trimmed.startsWith('[') &&
+            trimmed.endsWith(']')
+        ){
+            try{
+                const parsed = JSON.parse(trimmed);
+
+                if(Array.isArray(parsed)){
+                    return parsed;
+                }
+            }
+            catch(error){
+                console.warn(
+                    'Could not parse CJ image list',
+                    error
+                );
+            }
+        }
+
+        return [trimmed];
+    });
+
+
+    // Remove empty/duplicate images
+    productImages = [
+        ...new Set(
+            productImages.filter(image => image)
+        )
+    ];
+
+
+    /* MAIN IMAGE */
+
+    if(productImages.length > 0){
+
+        document.getElementById('mainProductImage')
+            .src = productImages[0];
+    }
+
+
+    /* THUMBNAILS */
 
     const thumbnails =
         document.getElementById('productThumbnails');
 
-
     thumbnails.innerHTML =
-        product.images.map(
-            image => `
+        productImages.map(image => `
+            <img
+                src="${image}"
+                onclick="changeMainImage('${image.replace(/'/g, "\\'")}')"
+                alt="${product.name}"
+            >
+        `).join('');
 
-                <img
-                    src="${image}"
-                    onclick="changeMainImage('${image}')"
-                    alt="${product.name}"
-                >
 
-            `
-        ).join('');
+    /* SIZE / VARIANT BUTTONS */
 
+    const sizesContainer =
+        document.querySelector(
+            '#productModal .sizes'
+        );
+
+    if(sizesContainer){
+
+        if(
+            product.source === 'cjdropshipping' &&
+            Array.isArray(product.variants) &&
+            product.variants.length > 0
+        ){
+
+            /*
+             * CJ variant example:
+             * Black-S
+             * Black-M
+             * Black-L
+             */
+
+            sizesContainer.innerHTML =
+                product.variants.map(variant => {
+
+                    const variantKey =
+                        variant.variantKey ||
+                        variant.variantNameEn ||
+                        variant.variantSku ||
+                        '';
+
+                    return `
+                        <button
+                            class="size"
+                            data-size="${variantKey}"
+                            onclick="selectSize(this)"
+                        >
+                            ${variantKey}
+                        </button>
+                    `;
+
+                }).join('');
+
+        }
+        else{
+
+            // Keep the original GLOBIRA sizes
+            sizesContainer.innerHTML = `
+                <button class="size"
+                        data-size="XS"
+                        onclick="selectSize(this)">
+                    XS
+                </button>
+
+                <button class="size"
+                        data-size="S"
+                        onclick="selectSize(this)">
+                    S
+                </button>
+
+                <button class="size"
+                        data-size="M"
+                        onclick="selectSize(this)">
+                    M
+                </button>
+
+                <button class="size"
+                        data-size="L"
+                        onclick="selectSize(this)">
+                    L
+                </button>
+
+                <button class="size"
+                        data-size="XL"
+                        onclick="selectSize(this)">
+                    XL
+                </button>
+            `;
+        }
+    }
+
+
+    /* SELECT PREVIOUS SIZE */
 
     document
         .querySelectorAll('#productModal .size')
@@ -3167,27 +3318,30 @@ function openProduct(id, preselectedSize=null){
                 preselectedSize &&
                 btn.dataset.size === preselectedSize
             ){
-
                 btn.classList.add('selected');
-
             }
 
         });
 
 
+    /* QUANTITY */
+
     document.getElementById('productQuantity')
         .textContent = '1';
 
+
+    /* ADD TO CART */
 
     document.getElementById('popupAddButton')
         .onclick = function(){
 
             if(!selectedSize){
 
-                alert('Please select a size first.');
+                alert(
+                    'Please select a size or variant first.'
+                );
 
                 return;
-
             }
 
             addToCart(
@@ -3197,19 +3351,21 @@ function openProduct(id, preselectedSize=null){
             );
 
             closeProduct();
-
         };
 
+
+    /* BUY NOW */
 
     document.getElementById('popupBuyButton')
         .onclick = function(){
 
             if(!selectedSize){
 
-                alert('Please select a size first.');
+                alert(
+                    'Please select a size or variant first.'
+                );
 
                 return;
-
             }
 
             addToCart(
@@ -3222,9 +3378,10 @@ function openProduct(id, preselectedSize=null){
             closeProduct();
 
             openCheckout();
-
         };
 
+
+    /* OPEN POPUP */
 
     document.getElementById('productModal')
         .classList.add('active');
@@ -3232,7 +3389,6 @@ function openProduct(id, preselectedSize=null){
     document.body.classList.add('no-scroll');
 
 }
-
 
 /* =========================================================
 CHANGE MAIN IMAGE
