@@ -1,0 +1,19 @@
+[
+  {
+    "id": "SUP-1788941331032-d8ef8b",
+    "businessName": "vastradu shop",
+    "contactPerson": "Yuvraj Gavhane",
+    "email": "yuvrajgavhane5761@gmail.com",
+    "phone": "9028576460",
+    "country": "",
+    "category": "Clothing",
+    "website": "",
+    "passwordHash": "86d867ca8e681a2af5bd6f67a60df6086160b65681b483ffc16ec05b86f3f9bcd9de05403698f7786e3467a0d68844f8492322d5c757aa89b275e618b0deb0cd",
+    "passwordSalt": "3909623f0453662664bf5be40804a8c0",
+    "status": "pending",
+    "currency": "INR",
+    "products": [],
+    "orders": [],
+    "createdAt": "2026-09-09T08:08:51.032Z"
+  }
+]

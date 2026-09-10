@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>GLOBIRA | Product Details</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f7f7f7;
+    color: #222;
+}
+
+header {
+    background: white;
+    padding: 18px 6%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+.logo {
+    font-size: 30px;
+    font-weight: 900;
+    color: #ff5a1f;
+    letter-spacing: 1px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.back-btn,
+.cart-btn {
+    border: none;
+    padding: 11px 18px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.back-btn {
+    background: #eee;
+    color: #333;
+}
+
+.cart-btn {
+    background: #ff5a1f;
+    color: white;
+}
+
+#cartCount {
+    background: white;
+    color: #ff5a1f;
+    padding: 2px 7px;
+    border-radius: 50%;
+    margin-left: 4px;
+}
+
+.product-page {
+    max-width: 1200px;
+    margin: 50px auto;
+    padding: 0 25px;
+}
+
+.product-container {
+    background: white;
+    border-radius: 22px;
+    padding: 35px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 45px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+}
+
+.gallery {
+    min-width: 0;
+}
+
+.main-image {
+    width: 100%;
+    height: 500px;
+    background: #f3f3f3;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.main-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.thumbnail-list {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    overflow-x: auto;
+}
+
+.thumbnail {
+    width: 75px;
+    height: 75px;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    background: #f3f3f3;
+    flex-shrink: 0;
+}
+
+.thumbnail.active {
+    border-color: #ff5a1f;
+}
+
+.thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-details {
+    padding: 10px 0;
+}
+
+.badge {
+    display: inline-block;
+    background: #fff0e9;
+    color: #ff5a1f;
+    padding: 7px 13px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.product-details h1 {
+    font-size: 38px;
+    line-height: 1.2;
+    margin-bottom: 15px;
+}
+
+.rating {
+    color: #f5a623;
+    font-size: 18px;
+    margin-bottom: 18px;
+}
+
+.price {
+    font-size: 32px;
+    font-weight: 900;
+    color: #111;
+    margin-bottom: 20px;
+}
+
+.description {
+    color: #666;
+    line-height: 1.7;
+    font-size: 16px;
+    margin-bottom: 25px;
+}
+
+.option-group {
+    margin-bottom: 22px;
+}
+
+.option-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.option-select {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 16px;
+    background: white;
+}
+
+.stock {
+    padding: 12px 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.stock.available {
+    background: #e9f8ed;
+    color: #218838;
+}
+
+.stock.unavailable {
+    background: #fdeaea;
+    color: #c62828;
+}
+
+.quantity-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.quantity-box button {
+    width: 38px;
+    height: 38px;
+    border: none;
+    background: #eee;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#quantity {
+    min-width: 35px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.add-cart-btn {
+    width: 100%;
+    padding: 17px;
+    border: none;
+    border-radius: 12px;
+    background: #ff5a1f;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.add-cart-btn:hover {
+    background: #e8480d;
+}
+
+.add-cart-btn:disabled {
+    background: #aaa;
+    cursor: not-allowed;
+}
+
+.message {
+    margin-top: 15px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.loading,
+.error {
+    text-align: center;
+    padding: 100px 20px;
+    font-size: 20px;
+}
+
+.error {
+    color: #c62828;
+}
+
+@media (max-width: 800px) {
+
+    .product-container {
+        grid-template-columns: 1fr;
+        padding: 20px;
+    }
+
+    .main-image {
+        height: 380px;
+    }
+
+    .product-details h1 {
+        font-size: 30px;
+    }
+
+    .logo {
+        font-size: 24px;
+    }
+
+    .back-btn {
+        display: none;
+    }
+}
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<div class="logo">
+    GLOBIRA
+</div>
+
+<div class="header-actions">
+
+<button class="back-btn" onclick="goBack()">
+    ← Back to Shopping
+</button>
+
+<button class="cart-btn" onclick="goToCart()">
+    🛒 Cart
+    <span id="cartCount">0</span>
+</button>
+
+</div>
+
+</header>
+
+<main class="product-page">
+
+<div id="productArea">
+
+<div class="loading">
+    🔄 Loading product...
+</div>
+
+</div>
+
+</main>
+
+<script>
+
+const params = new URLSearchParams(window.location.search);
+
+const productId = params.get("id");
+
+let product = null;
+let selectedVariant = null;
+let quantity = 1;
+
+let cart =
+    JSON.parse(localStorage.getItem("globiraCart")) || [];
+
+
+/* =========================
+   ESCAPE HTML
+========================= */
+
+function escapeHTML(value) {
+
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+/* =========================
+   SAVE CART
+========================= */
+
+function saveCart() {
+
+    localStorage.setItem(
+        "globiraCart",
+        JSON.stringify(cart)
+    );
+
+}
+
+
+/* =========================
+   UPDATE CART COUNT
+========================= */
+
+function updateCartCount() {
+
+    const count =
+        cart.reduce(
+            (total, item) =>
+                total + (Number(item.quantity) || 0),
+            0
+        );
+
+    document.getElementById("cartCount").textContent =
+        count;
+
+}
+
+
+/* =========================
+   PRICE
+========================= */
+
+function getPrice(variant) {
+
+    if (!variant || variant.price == null) {
+        return 0;
+    }
+
+    let price = Number(variant.price);
+
+    if (price > 1000) {
+        price = price / 100;
+    }
+
+    return Number.isFinite(price)
+        ? price
+        : 0;
+
+}
+
+
+/* =========================
+   IMAGE
+========================= */
+
+function getImages() {
+
+    if (
+        !product ||
+        !Array.isArray(product.images)
+    ) {
+        return [];
+    }
+
+    return product.images
+        .map(image => {
+
+            if (!image) {
+                return "";
+            }
+
+            return image.src ||
+                   image.url ||
+                   "";
+
+        })
+        .filter(Boolean);
+
+}
+
+
+/* =========================
+   VARIANT TITLE
+========================= */
+
+function getVariantTitle(variant) {
+
+    if (!variant) {
+        return "";
+    }
+
+    if (variant.title) {
+        return variant.title;
+    }
+
+    const parts = [];
+
+    if (variant.options) {
+
+        Object.values(variant.options)
+            .forEach(value => {
+
+                if (value) {
+                    parts.push(value);
+                }
+
+            });
+
+    }
+
+    return parts.join(" / ");
+
+}
+
+
+/* =========================
+   LOAD PRODUCT
+========================= */
+
+async function loadProduct() {
+
+    const area =
+        document.getElementById("productArea");
+
+    if (!productId) {
+
+        area.innerHTML =
+            '<div class="error">' +
+            '<h2>Product not found</h2>' +
+            '<p>No product ID was provided.</p>' +
+            '</div>';
+
+        return;
+
+    }
+
+    try {
+
+        /*
+         * IMPORTANT:
+         * Backend is hosted on Render.
+         */
+
+        const response =
+            await fetch(
+                "https://yadhuvii.onrender.com/product/" +
+                encodeURIComponent(productId)
+            );
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Server returned " +
+                response.status
+            );
+
+        }
+
+        const result =
+            await response.json();
+
+        console.log(
+            "Product API response:",
+            result
+        );
+
+        if (!result.success || !result.product) {
+
+            throw new Error(
+                "Product was not found."
+            );
+
+        }
+
+        product =
+            result.product;
+
+        const variants =
+            Array.isArray(product.variants)
+                ? product.variants.filter(
+                    variant =>
+                        variant &&
+                        variant.available !== false
+                )
+                : [];
+
+        if (!variants.length) {
+
+            throw new Error(
+                "This product currently has no available variants."
+            );
+
+        }
+
+        selectedVariant =
+            variants[0];
+
+        renderProduct(variants);
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Product loading error:",
+            error
+        );
+
+        area.innerHTML =
+            '<div class="error">' +
+            '<h2>⚠️ Unable to load product</h2>' +
+            '<p>' +
+            escapeHTML(error.message) +
+            '</p>' +
+            '<br>' +
+            '<button class="back-btn" onclick="goBack()">' +
+            '← Back to Products' +
+            '</button>' +
+            '</div>';
+
+    }
+
+}
+
+
+/* =========================
+   RENDER PRODUCT
+========================= */
+
+function renderProduct(variants) {
+
+    const area =
+        document.getElementById("productArea");
+
+    const images =
+        getImages();
+
+    const firstImage =
+        images.length
+            ? images[0]
+            : "";
+
+    const title =
+        product.title ||
+        "GLOBIRA Product";
+
+    const description =
+        product.description ||
+        "Quality product from GLOBIRA.";
+
+    const price =
+        getPrice(selectedVariant);
+
+    const variantOptions =
+        variants.map(
+            (variant, index) => {
+
+                const variantPrice =
+                    getPrice(variant);
+
+                const variantTitle =
+                    getVariantTitle(variant) ||
+                    "Option " + (index + 1);
+
+                return (
+                    '<option value="' +
+                    index +
+                    '">' +
+                    escapeHTML(variantTitle) +
+                    ' - $' +
+                    variantPrice.toFixed(2) +
+                    '</option>'
+                );
+
+            }
+        ).join("");
+
+    const thumbnails =
+        images.map(
+            (image, index) => {
+
+                return (
+                    '<button class="thumbnail ' +
+                    (index === 0 ? "active" : "") +
+                    '" onclick="changeImage(' +
+                    index +
+                    ')">' +
+
+                    '<img src="' +
+                    escapeHTML(image) +
+                    '" alt="Product image">' +
+
+                    '</button>'
+                );
+
+            }
+        ).join("");
+
+    const imageHTML =
+        firstImage
+            ?
+            '<img id="mainProductImage" src="' +
+            escapeHTML(firstImage) +
+            '" alt="' +
+            escapeHTML(title) +
+            '">'
+            :
+            '<div style="font-size:90px;">🛍️</div>';
+
+    area.innerHTML =
+
+        '<div class="product-container">' +
+
+            '<div class="gallery">' +
+
+                '<div class="main-image">' +
+                    imageHTML +
+                '</div>' +
+
+                '<div class="thumbnail-list">' +
+                    thumbnails +
+                '</div>' +
+
+            '</div>' +
+
+            '<div class="product-details">' +
+
+                '<span class="badge">' +
+                    'GLOBIRA' +
+                '</span>' +
+
+                '<h1>' +
+                    escapeHTML(title) +
+                '</h1>' +
+
+                '<div class="rating">' +
+                    '★★★★★' +
+                '</div>' +
+
+                '<div class="price" id="productPrice">' +
+                    '$' +
+                    price.toFixed(2) +
+                '</div>' +
+
+                '<div class="description">' +
+                    escapeHTML(stripHTML(description)) +
+                '</div>' +
+
+                '<div class="option-group">' +
+
+                    '<label for="variantSelect">' +
+                        'Select Size / Color / Variant' +
+                    '</label>' +
+
+                    '<select ' +
+                    'id="variantSelect" ' +
+                    'class="option-select" ' +
+                    'onchange="selectVariant(this.value)">' +
+
+                        variantOptions +
+
+                    '</select>' +
+
+                '</div>' +
+
+                '<div id="stockMessage" ' +
+                'class="stock available">' +
+                    '✓ Available' +
+                '</div>' +
+
+                '<div class="quantity-box">' +
+
+                    '<strong>Quantity:</strong>' +
+
+                    '<button onclick="changeQuantity(-1)">' +
+                        '−' +
+                    '</button>' +
+
+                    '<span id="quantity">1</span>' +
+
+                    '<button onclick="changeQuantity(1)">' +
+                        '+' +
+                    '</button>' +
+
+                '</div>' +
+
+                '<button ' +
+                'id="addCartButton" ' +
+                'class="add-cart-btn" ' +
+                'onclick="addSelectedToCart()">' +
+
+                    '🛒 Add to Cart' +
+
+                '</button>' +
+
+                '<div id="cartMessage" class="message"></div>' +
+
+            '</div>' +
+
+        '</div>';
+
+}
+
+
+/* =========================
+   REMOVE HTML TAGS
+========================= */
+
+function stripHTML(value) {
+
+    const temp =
+        document.createElement("div");
+
+    temp.innerHTML =
+        value || "";
+
+    return temp.textContent ||
+           temp.innerText ||
+           "";
+
+}
+
+
+/* =========================
+   CHANGE IMAGE
+========================= */
+
+function changeImage(index) {
+
+    const images =
+        getImages();
+
+    if (!images[index]) {
+        return;
+    }
+
+    const mainImage =
+        document.getElementById(
+            "mainProductImage"
+        );
+
+    if (mainImage) {
+
+        mainImage.src =
+            images[index];
+
+    }
+
+    document
+        .querySelectorAll(".thumbnail")
+        .forEach(
+            (thumbnail, thumbnailIndex) => {
+
+                thumbnail.classList.toggle(
+                    "active",
+                    thumbnailIndex === index
+                );
+
+            }
+        );
+
+}
+
+
+/* =========================
+   SELECT VARIANT
+========================= */
+
+function selectVariant(index) {
+
+    const variants =
+        Array.isArray(product.variants)
+            ? product.variants.filter(
+                variant =>
+                    variant &&
+                    variant.available !== false
+            )
+            : [];
+
+    selectedVariant =
+        variants[Number(index)];
+
+    if (!selectedVariant) {
+        return;
+    }
+
+    const price =
+        getPrice(selectedVariant);
+
+    document.getElementById(
+        "productPrice"
+    ).textContent =
+        "$" + price.toFixed(2);
+
+}
+
+
+/* =========================
+   QUANTITY
+========================= */
+
+function changeQuantity(amount) {
+
+    quantity += amount;
+
+    if (quantity < 1) {
+        quantity = 1;
+    }
+
+    if (quantity > 99) {
+        quantity = 99;
+    }
+
+    document.getElementById(
+        "quantity"
+    ).textContent = quantity;
+
+}
+
+
+/* =========================
+   ADD SELECTED VARIANT
+========================= */
+
+function addSelectedToCart() {
+
+    if (!product || !selectedVariant) {
+
+        alert(
+            "Please select an available product option."
+        );
+
+        return;
+
+    }
+
+    const price =
+        getPrice(selectedVariant);
+
+    const images =
+        getImages();
+
+    const variantId =
+        selectedVariant.id ||
+        getVariantTitle(selectedVariant);
+
+    const cartKey =
+        String(product.id) +
+        "_" +
+        String(variantId);
+
+    const existing =
+        cart.find(
+            item =>
+                item.cartKey === cartKey
+        );
+
+    if (existing) {
+
+        existing.quantity += quantity;
+
+    } else {
+
+        cart.push({
+
+            cartKey: cartKey,
+
+            productId:
+                product.id,
+
+            variantId:
+                selectedVariant.id || "",
+
+            name:
+                product.title ||
+                "GLOBIRA Product",
+
+            variant:
+                getVariantTitle(
+                    selectedVariant
+                ),
+
+            price:
+                price,
+
+            quantity:
+                quantity,
+
+            image:
+                images[0] || ""
+
+        });
+
+    }
+
+    saveCart();
+
+    updateCartCount();
+
+    const message =
+        document.getElementById(
+            "cartMessage"
+        );
+
+    message.textContent =
+        "✓ Added to your cart!";
+
+    message.style.color =
+        "#218838";
+
+    quantity = 1;
+
+    document.getElementById(
+        "quantity"
+    ).textContent = "1";
+
+}
+
+
+/* =========================
+   NAVIGATION
+========================= */
+
+function goBack() {
+
+    window.location.href =
+        "index.html#products";
+
+}
+
+
+function goToCart() {
+
+    window.location.href =
+        "index.html#products";
+
+}
+
+
+/* =========================
+   START
+========================= */
+
+updateCartCount();
+
+loadProduct();
+
+</script>
+
+</body>
+</html>

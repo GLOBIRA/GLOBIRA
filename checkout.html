@@ -1,0 +1,519 @@
+<script>
+
+const API_URL = "https://yadhuvii.onrender.com";
+
+let cart = [];
+
+
+// ========================================
+// LOAD CART
+// ========================================
+
+function loadCart() {
+
+    try {
+
+        const savedCart =
+            localStorage.getItem("yaduviiCart");
+
+        cart = savedCart
+            ? JSON.parse(savedCart)
+            : [];
+
+    } catch (error) {
+
+        console.error("Cart loading error:", error);
+
+        cart = [];
+    }
+
+
+    // Clean cart
+
+    cart = cart.filter(function(product) {
+
+        return product &&
+               product.name &&
+               !isNaN(Number(product.price));
+
+    });
+
+
+    cart.forEach(function(product) {
+
+        product.price = Number(product.price);
+
+        product.quantity =
+            Number(product.quantity) || 1;
+
+    });
+
+}
+
+
+// ========================================
+// DISPLAY ORDER
+// ========================================
+
+function displayOrder() {
+
+    const orderItems =
+        document.getElementById("order-items");
+
+    const emptyMessage =
+        document.getElementById("empty-message");
+
+    const placeOrderButton =
+        document.getElementById("placeOrderButton");
+
+
+    orderItems.innerHTML = "";
+
+
+    if (cart.length === 0) {
+
+        emptyMessage.style.display = "block";
+
+        placeOrderButton.disabled = true;
+
+        updateTotals();
+
+        return;
+    }
+
+
+    emptyMessage.style.display = "none";
+
+    placeOrderButton.disabled = false;
+
+
+    cart.forEach(function(product) {
+
+        const price =
+            Number(product.price);
+
+        const quantity =
+            Number(product.quantity);
+
+        const itemTotal =
+            price * quantity;
+
+
+        const item =
+            document.createElement("div");
+
+        item.className = "order-item";
+
+
+        const imageHTML = product.image
+            ? `
+                <img
+                    src="${escapeHTML(product.image)}"
+                    style="
+                        width:55px;
+                        height:55px;
+                        object-fit:cover;
+                        border-radius:10px;
+                    "
+                    onerror="this.style.display='none'"
+                >
+              `
+            : `
+                <div class="order-icon">
+                    🛍️
+                </div>
+              `;
+
+
+        item.innerHTML = `
+
+            <div class="order-item-info">
+
+                ${imageHTML}
+
+                <div>
+
+                    <div class="order-item-name">
+                        ${escapeHTML(product.name)}
+                    </div>
+
+                    <div class="order-item-quantity">
+                        Quantity: ${quantity}
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="order-item-price">
+
+                $${itemTotal.toFixed(2)}
+
+            </div>
+
+        `;
+
+
+        orderItems.appendChild(item);
+
+    });
+
+
+    updateTotals();
+
+}
+
+
+// ========================================
+// CALCULATE TOTALS
+// ========================================
+
+function updateTotals() {
+
+    let subtotal = 0;
+
+
+    cart.forEach(function(product) {
+
+        subtotal +=
+            Number(product.price) *
+            Number(product.quantity);
+
+    });
+
+
+    // Shipping
+
+    let shipping = 0;
+
+    if (subtotal > 0 && subtotal < 50) {
+
+        shipping = 5;
+
+    }
+
+
+    // Tax
+
+    const tax =
+        subtotal * 0.10;
+
+
+    // Final total
+
+    const finalTotal =
+        subtotal +
+        shipping +
+        tax;
+
+
+    document.getElementById("subtotal")
+        .textContent =
+        "$" + subtotal.toFixed(2);
+
+
+    document.getElementById("shipping")
+        .textContent =
+        shipping === 0 && subtotal > 0
+        ? "FREE"
+        : "$" + shipping.toFixed(2);
+
+
+    document.getElementById("tax")
+        .textContent =
+        "$" + tax.toFixed(2);
+
+
+    document.getElementById("final-total")
+        .textContent =
+        "$" + finalTotal.toFixed(2);
+
+}
+
+
+// ========================================
+// PLACE ORDER
+// ========================================
+
+async function placeOrder() {
+
+    if (cart.length === 0) {
+
+        alert("Your cart is empty!");
+
+        return;
+    }
+
+
+    const firstName =
+        document.getElementById("firstName")
+            .value.trim();
+
+    const lastName =
+        document.getElementById("lastName")
+            .value.trim();
+
+    const email =
+        document.getElementById("email")
+            .value.trim();
+
+    const phone =
+        document.getElementById("phone")
+            .value.trim();
+
+    const address =
+        document.getElementById("address")
+            .value.trim();
+
+    const city =
+        document.getElementById("city")
+            .value.trim();
+
+    const country =
+        document.getElementById("country")
+            .value.trim();
+
+    const payment =
+        document.getElementById("paymentMethod")
+            .value;
+
+
+    if (
+        !firstName ||
+        !lastName ||
+        !email ||
+        !phone ||
+        !address ||
+        !city ||
+        !country ||
+        !payment
+    ) {
+
+        alert(
+            "Please complete all customer, shipping and payment information."
+        );
+
+        return;
+    }
+
+
+    const subtotal =
+        cart.reduce(function(total, product) {
+
+            return total +
+                Number(product.price) *
+                Number(product.quantity);
+
+        }, 0);
+
+
+    const shipping =
+        subtotal > 0 && subtotal < 50
+        ? 5
+        : 0;
+
+
+    const tax =
+        subtotal * 0.10;
+
+
+    const finalTotal =
+        subtotal +
+        shipping +
+        tax;
+
+
+    const button =
+        document.getElementById(
+            "placeOrderButton"
+        );
+
+
+    button.disabled = true;
+
+    button.textContent =
+        "⏳ Processing Order...";
+
+
+    try {
+
+        const response = await fetch(
+            `${API_URL}/api/checkout`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    customer: {
+
+                        firstName,
+                        lastName,
+                        email,
+                        phone
+
+                    },
+
+                    shippingAddress: {
+
+                        address,
+                        city,
+                        country
+
+                    },
+
+                    paymentMethod:
+                        payment,
+
+                    items: cart,
+
+                    subtotal,
+                    shipping,
+                    tax,
+                    total: finalTotal
+
+                })
+
+            }
+        );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Checkout failed."
+            );
+
+        }
+
+
+        // If backend provides checkout URL
+
+        if (data.checkoutUrl) {
+
+            window.location.href =
+                data.checkoutUrl;
+
+            return;
+        }
+
+
+        if (data.url) {
+
+            window.location.href =
+                data.url;
+
+            return;
+        }
+
+
+        // Successful order
+
+        const success =
+            document.getElementById(
+                "successMessage"
+            );
+
+
+        success.style.display =
+            "block";
+
+
+        success.innerHTML = `
+
+            ✅ Order placed successfully!
+
+            <br><br>
+
+            Thank you,
+            ${escapeHTML(firstName)}
+            ${escapeHTML(lastName)}.
+
+            <br>
+
+            Order Total:
+            $${finalTotal.toFixed(2)}
+
+        `;
+
+
+        localStorage.removeItem(
+            "yaduviiCart"
+        );
+
+
+        cart = [];
+
+
+        displayOrder();
+
+
+        button.textContent =
+            "✅ Order Placed";
+
+
+    } catch (error) {
+
+        console.error(
+            "Checkout error:",
+            error
+        );
+
+
+        alert(
+            "Checkout connection failed. Please try again."
+        );
+
+
+        button.disabled = false;
+
+        button.textContent =
+            "✅ Place Order";
+
+    }
+
+}
+
+
+// ========================================
+// SECURITY
+// ========================================
+
+function escapeHTML(value) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent =
+        String(value);
+
+    return div.innerHTML;
+
+}
+
+
+// ========================================
+// START
+// ========================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function() {
+
+        loadCart();
+
+        displayOrder();
+
+    }
+);
+
+</script>

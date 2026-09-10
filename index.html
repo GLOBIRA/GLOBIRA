@@ -1,0 +1,4951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>GLOBIRA | Luxury Fashion</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    font-family:'DM Sans',sans-serif;
+    background:#f7f4ee;
+    color:#111;
+}
+
+body.no-scroll{
+    overflow:hidden;
+}
+
+button{
+    font-family:inherit;
+    cursor:pointer;
+}
+
+a{
+    color:inherit;
+    text-decoration:none;
+}
+
+/* =========================
+HEADER
+========================= */
+
+header{
+    height:82px;
+    background:#f7f4ee;
+    border-bottom:1px solid #ddd8ce;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 6%;
+    position:sticky;
+    top:0;
+    z-index:100;
+}
+
+.logo{
+    font-family:'Playfair Display',serif;
+    font-size:30px;
+    letter-spacing:4px;
+    color:#000;
+    font-weight:700;
+}
+
+.nav{
+    display:flex;
+    gap:38px;
+    align-items:center;
+}
+
+.nav a{
+    font-size:13px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+}
+
+.nav a:hover{
+    opacity:.55;
+}
+
+.cart-btn{
+    border:1px solid #111;
+    background:#111;
+    color:white;
+    padding:12px 20px;
+    border-radius:30px;
+    font-size:13px;
+}
+
+.account-btn{
+    border:1px solid #111;
+    background:transparent;
+    color:#111;
+    padding:12px 18px;
+    border-radius:30px;
+    font-size:12px;
+    letter-spacing:1px;
+    white-space:nowrap;
+}
+.account-btn:hover{background:#111;color:#fff}
+.header-actions{display:flex;gap:10px;align-items:center}
+
+/* =========================
+ACCOUNT
+========================= */
+.globira-account-overlay{
+    position:fixed;inset:0;z-index:99990;display:none;
+    align-items:center;justify-content:center;padding:20px;
+    background:rgba(0,0,0,.62);backdrop-filter:blur(12px);
+}
+.globira-account-overlay.active{display:flex}
+.globira-account-box{
+    width:min(920px,100%);max-height:90vh;overflow:auto;background:#fff;
+    box-shadow:0 30px 90px rgba(0,0,0,.28);padding:42px;position:relative;
+}
+.globira-account-close{position:absolute;right:22px;top:18px;border:0;background:none;font-size:25px}
+.globira-account-eyebrow{font-size:10px;letter-spacing:3px;color:#777}
+.globira-account-title{font-family:'Playfair Display',serif;font-size:42px;font-weight:500;margin:8px 0 5px}
+.globira-account-email{color:#777;font-size:13px;margin-bottom:30px}
+.globira-account-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.globira-account-card{border:1px solid #e3e0d9;padding:24px;min-height:125px;cursor:pointer;transition:.2s}
+.globira-account-card:hover{border-color:#111;transform:translateY(-2px)}
+.globira-account-card h3{font-family:'Playfair Display',serif;font-size:22px;font-weight:500;margin-bottom:8px}
+.globira-account-card p{font-size:12px;color:#777;line-height:1.6}
+.globira-account-footer{margin-top:25px;padding-top:20px;border-top:1px solid #ddd;display:flex;justify-content:space-between;gap:15px;align-items:center}
+.globira-account-logout{border:1px solid #111;background:#111;color:#fff;padding:12px 20px;letter-spacing:1px;font-size:11px}
+.globira-profile-overlay{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.65);backdrop-filter:blur(12px)}
+.globira-profile-overlay.active{display:flex}
+.globira-profile-box{width:min(440px,100%);background:#fff;padding:40px;box-shadow:0 30px 90px rgba(0,0,0,.3)}
+.globira-profile-box h2{font-family:'Playfair Display',serif;font-size:34px;font-weight:500;margin:8px 0 10px}
+.globira-profile-box p{font-size:13px;color:#777;line-height:1.6;margin-bottom:22px}
+.globira-profile-input{width:100%;padding:14px;border:1px solid #ccc;margin-bottom:12px;font-family:inherit}
+.globira-profile-button{width:100%;padding:15px;background:#111;color:#fff;border:0;letter-spacing:1px}
+@media(max-width:700px){.header-actions{gap:6px}.account-btn{padding:10px 12px;font-size:10px}.cart-btn{padding:10px 12px}.globira-account-box{padding:30px 20px}.globira-account-grid{grid-template-columns:1fr}.globira-account-title{font-size:35px}}
+
+/* =========================
+HERO
+========================= */
+
+.hero{
+    min-height:690px;
+    display:grid;
+    grid-template-columns:48% 52%;
+    padding:45px 5% 65px;
+    gap:40px;
+}
+
+.hero-content{
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding-left:7%;
+}
+
+.eyebrow{
+    font-size:11px;
+    letter-spacing:4px;
+    margin-bottom:25px;
+}
+
+.hero h1{
+    font-family:'Playfair Display',serif;
+    font-size:clamp(55px,7vw,105px);
+    line-height:.92;
+    font-weight:500;
+    max-width:650px;
+}
+
+.hero p{
+    margin-top:30px;
+    max-width:450px;
+    color:#666;
+    line-height:1.8;
+    font-size:15px;
+}
+
+.hero-buttons{
+    margin-top:38px;
+    display:flex;
+    gap:15px;
+}
+
+.primary-btn{
+    background:#111;
+    color:#fff;
+    border:0;
+    padding:16px 28px;
+    letter-spacing:1px;
+}
+
+.secondary-btn{
+    background:transparent;
+    border:1px solid #222;
+    padding:16px 28px;
+}
+
+.hero-image{
+    position:relative;
+    min-height:600px;
+    overflow:hidden;
+}
+
+.hero-image img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.hero-label{
+    position:absolute;
+    bottom:25px;
+    left:25px;
+    background:#fff;
+    padding:18px 25px;
+}
+
+.hero-label small{
+    display:block;
+    font-size:10px;
+    letter-spacing:2px;
+    margin-bottom:5px;
+}
+
+/* =========================
+CATEGORY
+========================= */
+
+.section{
+    padding:90px 5%;
+}
+
+.section-heading{
+    display:flex;
+    justify-content:space-between;
+    align-items:end;
+    margin-bottom:35px;
+}
+
+.section-heading h2{
+    font-family:'Playfair Display',serif;
+    font-size:48px;
+    font-weight:500;
+}
+
+.section-heading p{
+    color:#777;
+}
+
+.category-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+}
+
+.category{
+    height:580px;
+    position:relative;
+    overflow:hidden;
+    cursor:pointer;
+}
+
+.category img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    transition:.6s;
+}
+
+.category:hover img{
+    transform:scale(1.04);
+}
+
+.category-overlay{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:flex-end;
+    padding:35px;
+    background:linear-gradient(transparent,rgba(0,0,0,.55));
+    color:white;
+}
+
+.category-overlay h3{
+    font-family:'Playfair Display',serif;
+    font-size:50px;
+    font-weight:500;
+}
+
+/* =========================
+PRODUCT GRID
+========================= */
+
+.products{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:20px;
+}
+
+.product{
+    background:#fff;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.product:hover{
+    transform:translateY(-3px);
+}
+
+.product-image{
+    height:430px;
+    overflow:hidden;
+    position:relative;
+}
+
+.product-image img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    transition:.5s;
+}
+
+.product:hover img{
+    transform:scale(1.04);
+}
+
+.badge{
+    position:absolute;
+    top:15px;
+    left:15px;
+    background:#fff;
+    padding:7px 12px;
+    font-size:10px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+}
+
+.product-info{
+    padding:18px 3px 25px;
+}
+
+.product-info h3{
+    font-family:'Playfair Display',serif;
+    font-size:20px;
+    font-weight:500;
+}
+
+.product-info p{
+    color:#777;
+    font-size:12px;
+    margin-top:5px;
+}
+
+.price{
+    margin-top:12px;
+    font-weight:600;
+}
+
+.old-price{
+    color:#aaa;
+    text-decoration:line-through;
+    margin-left:8px;
+    font-weight:400;
+}
+
+/* =========================
+COLLECTION STRIP
+========================= */
+
+.collection-strip{
+    background:#111;
+    color:#fff;
+    padding:28px 5%;
+    display:flex;
+    justify-content:space-around;
+    text-align:center;
+    letter-spacing:2px;
+    font-size:11px;
+}
+
+/* =========================
+OVERLAY
+========================= */
+
+.overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.5);
+    z-index:300;
+    display:none;
+}
+
+.overlay.active{
+    display:block;
+}
+
+/* =========================
+CART
+========================= */
+
+.cart-drawer{
+    position:fixed;
+    right:-500px;
+    top:0;
+    height:100vh;
+    width:min(480px,100%);
+    background:#fff;
+    z-index:400;
+    transition:.4s;
+    display:flex;
+    flex-direction:column;
+    box-shadow:-15px 0 50px rgba(0,0,0,.15);
+}
+
+.cart-drawer.active{
+    right:0;
+}
+
+.cart-header{
+    padding:25px;
+    border-bottom:1px solid #ddd;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.cart-header h2{
+    font-family:'Playfair Display',serif;
+    font-size:28px;
+}
+
+.close{
+    background:none;
+    border:0;
+    font-size:25px;
+}
+
+.cart-items{
+    flex:1;
+    overflow:auto;
+    padding:20px;
+}
+
+.cart-item{
+    display:flex;
+    gap:15px;
+    border-bottom:1px solid #eee;
+    padding:15px 0;
+}
+
+.cart-item img{
+    width:90px;
+    height:110px;
+    object-fit:cover;
+    cursor:pointer;
+}
+
+.cart-item-info{
+    flex:1;
+}
+
+.cart-item-info h4{
+    font-family:'Playfair Display',serif;
+    font-weight:500;
+    margin-bottom:7px;
+    cursor:pointer;
+}
+
+.cart-size{
+    font-size:11px;
+    color:#777;
+    letter-spacing:1px;
+    margin-bottom:6px;
+}
+
+.cart-price{
+    font-size:14px;
+}
+
+.line-total{
+    font-size:14px;
+    font-weight:600;
+    margin-top:8px;
+}
+
+.quantity{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-top:12px;
+}
+
+.quantity button{
+    width:27px;
+    height:27px;
+    background:white;
+    border:1px solid #ccc;
+}
+
+.quantity span{
+    min-width:15px;
+    text-align:center;
+}
+
+.remove{
+    border:0;
+    background:none;
+    color:#999;
+    margin-top:10px;
+    font-size:11px;
+}
+
+.cart-footer{
+    border-top:1px solid #ddd;
+    padding:25px;
+}
+
+.total-row{
+    display:flex;
+    justify-content:space-between;
+    font-size:18px;
+    margin-bottom:20px;
+}
+
+.checkout-btn{
+    width:100%;
+    background:#111;
+    color:white;
+    border:0;
+    padding:17px;
+    letter-spacing:1px;
+}
+
+/* =========================
+PRODUCT POPUP
+========================= */
+
+.product-modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.78);
+    z-index:500;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:25px;
+}
+
+.product-modal.active{
+    display:flex;
+}
+
+.product-popup{
+    width:min(1050px,100%);
+    max-height:92vh;
+    overflow:auto;
+    background:#fff;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    box-shadow:0 30px 80px rgba(0,0,0,.3);
+}
+
+.popup-gallery{
+    background:#eee;
+}
+
+.main-photo{
+    height:600px;
+    width:100%;
+    object-fit:cover;
+    display:block;
+}
+
+.thumbnails{
+    display:flex;
+    gap:8px;
+    padding:10px;
+    background:#fff;
+}
+
+.thumbnails img{
+    width:75px;
+    height:90px;
+    object-fit:cover;
+    cursor:pointer;
+    opacity:.65;
+    border:1px solid transparent;
+}
+
+.thumbnails img:hover{
+    opacity:1;
+    border-color:#111;
+}
+
+.popup-info{
+    padding:50px;
+}
+
+.popup-info h2{
+    font-family:'Playfair Display',serif;
+    font-size:40px;
+    font-weight:500;
+}
+
+.popup-description{
+    color:#666;
+    line-height:1.7;
+    margin:20px 0;
+}
+
+.popup-price{
+    font-size:24px;
+    margin-bottom:25px;
+}
+
+.details-box{
+    border-top:1px solid #ddd;
+    border-bottom:1px solid #ddd;
+    padding:20px 0;
+    line-height:2;
+    font-size:13px;
+}
+
+.size-title{
+    margin-top:25px;
+    margin-bottom:10px;
+    font-size:12px;
+    letter-spacing:2px;
+}
+
+.sizes{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+}
+
+.size{
+    border:1px solid #bbb;
+    background:#fff;
+    padding:10px 15px;
+    transition:.2s;
+}
+
+.size:hover{
+    border-color:#111;
+}
+
+.size.selected{
+    background:#111;
+    color:#fff;
+    border-color:#111;
+}
+
+.product-quantity-title{
+    margin-top:22px;
+    margin-bottom:10px;
+    font-size:12px;
+    letter-spacing:2px;
+}
+
+.product-quantity{
+    display:flex;
+    align-items:center;
+    gap:18px;
+}
+
+.product-quantity button{
+    width:35px;
+    height:35px;
+    background:#fff;
+    border:1px solid #ccc;
+    font-size:18px;
+}
+
+.product-quantity span{
+    min-width:20px;
+    text-align:center;
+}
+
+.add-popup{
+    width:100%;
+    margin-top:25px;
+    padding:17px;
+    background:#111;
+    color:#fff;
+    border:0;
+    letter-spacing:1px;
+}
+
+.add-popup:hover{
+    background:#333;
+}
+
+.buy-now{
+    width:100%;
+    margin-top:10px;
+    padding:17px;
+    background:#fff;
+    color:#111;
+    border:1px solid #111;
+    letter-spacing:1px;
+}
+
+.popup-close{
+    position:fixed;
+    top:20px;
+    right:25px;
+    color:white;
+    background:none;
+    border:0;
+    font-size:35px;
+    z-index:510;
+}
+
+/* =========================
+CHECKOUT
+========================= */
+
+.checkout-modal{
+    position:fixed;
+    inset:0;
+    background:#f7f4ee;
+    z-index:600;
+    display:none;
+    overflow:auto;
+}
+
+.checkout-modal.active{
+    display:block;
+}
+
+.checkout-shell{
+    min-height:100vh;
+}
+
+.checkout-header{
+    height:80px;
+    background:#fff;
+    border-bottom:1px solid #ddd8ce;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 5%;
+    position:sticky;
+    top:0;
+    z-index:10;
+}
+
+.checkout-brand{
+    font-family:'Playfair Display',serif;
+    font-size:28px;
+    letter-spacing:4px;
+    font-weight:700;
+}
+
+.checkout-secure{
+    font-size:11px;
+    letter-spacing:2px;
+    color:#777;
+}
+
+.checkout-close{
+    background:none;
+    border:0;
+    font-size:28px;
+}
+
+.checkout-content{
+    width:min(1150px,92%);
+    margin:45px auto 80px;
+}
+
+.checkout-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:end;
+    margin-bottom:30px;
+}
+
+.checkout-top h1{
+    font-family:'Playfair Display',serif;
+    font-size:48px;
+    font-weight:500;
+}
+
+.checkout-top p{
+    color:#777;
+    font-size:13px;
+}
+
+.steps{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    border-top:1px solid #ccc;
+    border-bottom:1px solid #ccc;
+    margin-bottom:35px;
+}
+
+.step{
+    padding:17px 10px;
+    text-align:center;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:1.5px;
+    color:#999;
+    position:relative;
+}
+
+.step.active{
+    color:#111;
+    font-weight:700;
+}
+
+.step.active:after{
+    content:"";
+    position:absolute;
+    left:15%;
+    right:15%;
+    bottom:-1px;
+    height:2px;
+    background:#111;
+}
+
+.checkout-layout{
+    display:grid;
+    grid-template-columns:1.5fr .7fr;
+    gap:30px;
+}
+
+.checkout-main{
+    background:#fff;
+    padding:35px;
+}
+
+.checkout-summary{
+    background:#111;
+    color:#fff;
+    padding:30px;
+    height:max-content;
+    position:sticky;
+    top:110px;
+}
+
+.checkout-summary h3{
+    font-family:'Playfair Display',serif;
+    font-size:25px;
+    font-weight:500;
+    margin-bottom:20px;
+}
+
+.checkout-summary-row{
+    display:flex;
+    justify-content:space-between;
+    padding:13px 0;
+    border-bottom:1px solid rgba(255,255,255,.15);
+    font-size:13px;
+}
+
+.checkout-summary-total{
+    display:flex;
+    justify-content:space-between;
+    margin-top:20px;
+    font-size:20px;
+}
+
+.checkout-step{
+    display:none;
+}
+
+.checkout-step.active{
+    display:block;
+}
+
+.checkout-step h2{
+    font-family:'Playfair Display',serif;
+    font-size:35px;
+    margin-bottom:25px;
+    font-weight:500;
+}
+
+.review-card{
+    display:flex;
+    gap:18px;
+    padding:18px 0;
+    border-bottom:1px solid #eee;
+}
+
+.review-card img{
+    width:90px;
+    height:110px;
+    object-fit:cover;
+}
+
+.review-card-info{
+    flex:1;
+}
+
+.review-card-info h3{
+    font-family:'Playfair Display',serif;
+    font-size:20px;
+    font-weight:500;
+    margin-bottom:7px;
+}
+
+.review-meta{
+    color:#777;
+    font-size:12px;
+    line-height:1.8;
+}
+
+.review-price{
+    font-weight:600;
+    margin-top:8px;
+}
+
+.review-total{
+    display:flex;
+    justify-content:space-between;
+    padding:20px 0;
+    font-size:19px;
+}
+
+.delivery-note{
+    background:#f7f4ee;
+    padding:18px;
+    margin-top:20px;
+    font-size:12px;
+    color:#666;
+    line-height:1.7;
+}
+
+.form-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:15px;
+}
+
+.form-label{
+    display:block;
+    font-size:10px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    margin-bottom:7px;
+}
+
+input,
+textarea{
+    width:100%;
+    padding:14px;
+    margin-bottom:18px;
+    border:1px solid #ccc;
+    font-family:inherit;
+    font-size:14px;
+    background:#fff;
+    outline:none;
+}
+
+input:focus,
+textarea:focus{
+    border-color:#111;
+}
+
+textarea{
+    min-height:100px;
+    resize:vertical;
+}
+
+.next-btn{
+    width:100%;
+    padding:17px;
+    border:0;
+    background:#111;
+    color:#fff;
+    margin-top:10px;
+    letter-spacing:1px;
+}
+
+.back-btn{
+    width:100%;
+    padding:15px;
+    border:1px solid #111;
+    background:#fff;
+    color:#111;
+    margin-top:10px;
+    letter-spacing:1px;
+}
+
+.payment-option{
+    border:1px solid #ddd;
+    padding:20px;
+    margin-bottom:12px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    transition:.2s;
+}
+
+.payment-option:hover{
+    border-color:#111;
+}
+
+.payment-option.selected{
+    border-color:#111;
+    background:#f7f4ee;
+}
+
+.payment-option input{
+    width:auto;
+    margin:0;
+}
+
+.payment-name{
+    font-weight:600;
+}
+
+.payment-description{
+    display:block;
+    color:#777;
+    font-size:11px;
+    margin-top:4px;
+}
+
+.payment-warning{
+    margin:18px 0;
+    padding:15px;
+    background:#f7f4ee;
+    color:#666;
+    font-size:11px;
+    line-height:1.7;
+}
+
+.done{
+    text-align:center;
+    padding:50px 20px;
+}
+
+.done-icon{
+    width:70px;
+    height:70px;
+    border:1px solid #111;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin:0 auto 25px;
+    font-size:30px;
+}
+
+.done h2{
+    font-family:'Playfair Display',serif;
+    font-size:50px;
+    font-weight:500;
+}
+
+.done p{
+    margin:15px 0;
+    color:#666;
+}
+
+.order-id{
+    display:inline-block;
+    margin-top:10px;
+    padding:12px 18px;
+    background:#f7f4ee;
+    letter-spacing:2px;
+    font-size:13px;
+}
+
+.delivery-estimate{
+    margin-top:20px;
+    font-size:13px;
+    line-height:1.8;
+}
+
+/* =========================
+CATEGORY PAGE
+========================= */
+
+.category-page{
+    display:none;
+    padding:50px 5% 100px;
+}
+
+.category-page.active{
+    display:block;
+}
+
+.category-page-title{
+    margin-bottom:45px;
+}
+
+.category-page-title span{
+    font-size:11px;
+    letter-spacing:3px;
+}
+
+.category-page-title h1{
+    font-family:'Playfair Display',serif;
+    font-size:65px;
+    font-weight:500;
+    margin-top:10px;
+}
+
+/* =========================
+FOOTER
+========================= */
+
+footer{
+    background:#111;
+    color:#fff;
+    padding:80px 5% 30px;
+}
+
+.footer-highlight{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:30px;
+    padding:0 0 55px;
+    margin-bottom:55px;
+    border-bottom:1px solid rgba(255,255,255,.15);
+}
+.footer-highlight-copy span,.footer-newsletter span{
+    font-size:10px;
+    letter-spacing:2.5px;
+    color:#aaa;
+}
+.footer-highlight h2{
+    font-family:'Playfair Display',serif;
+    font-size:42px;
+    font-weight:500;
+    margin:10px 0;
+}
+.footer-highlight p{
+    color:#888;
+    font-size:13px;
+    line-height:1.7;
+    max-width:560px;
+}
+.footer-highlight-btn{
+    border:1px solid rgba(255,255,255,.4);
+    padding:15px 20px;
+    font-size:11px;
+    letter-spacing:1px;
+    white-space:nowrap;
+    transition:.2s;
+}
+.footer-highlight-btn:hover{background:#fff;color:#111;}
+.footer-newsletter{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:30px;
+    padding:45px 0;
+    border-bottom:1px solid rgba(255,255,255,.15);
+}
+.footer-newsletter h3{
+    font-family:'Playfair Display',serif;
+    font-size:25px;
+    font-weight:500;
+    margin-top:9px;
+}
+.newsletter-form{display:flex;min-width:min(440px,100%);}
+.newsletter-form input{
+    margin:0;
+    border:1px solid rgba(255,255,255,.25);
+    background:transparent;
+    color:#fff;
+    padding:14px 16px;
+}
+.newsletter-form input::placeholder{color:#777;}
+.newsletter-form button{
+    border:1px solid #fff;
+    background:#fff;
+    color:#111;
+    padding:0 20px;
+    font-size:11px;
+    letter-spacing:1px;
+}
+
+
+.footer-top{
+    display:grid;
+    grid-template-columns:1.5fr 1fr 1fr 1fr;
+    gap:50px;
+    padding-bottom:55px;
+    border-bottom:1px solid rgba(255,255,255,.15);
+}
+
+.footer-brand .logo{
+    color:#fff;
+    margin-bottom:18px;
+}
+
+.footer-brand p{
+    color:#aaa;
+    font-size:13px;
+    line-height:1.8;
+    max-width:300px;
+}
+
+.footer-column h3{
+    font-size:11px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    margin-bottom:20px;
+}
+
+.footer-column a{
+    display:block;
+    color:#aaa;
+    font-size:13px;
+    margin-bottom:12px;
+    transition:.2s;
+}
+
+.footer-column a:hover{
+    color:#fff;
+    transform:translateX(3px);
+}
+
+.supplier-link{
+    display:inline-block !important;
+    color:#fff !important;
+    border:1px solid rgba(255,255,255,.45);
+    padding:12px 16px;
+    margin-top:5px;
+    letter-spacing:.5px;
+}
+
+.supplier-link:hover{
+    background:#fff;
+    color:#111 !important;
+    transform:none !important;
+}
+
+.footer-bottom{
+    padding-top:25px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:20px;
+}
+
+.footer-bottom p{
+    color:#777;
+    font-size:11px;
+}
+
+.footer-tagline{
+    color:#aaa !important;
+    font-size:11px !important;
+    letter-spacing:1px;
+}
+
+/* =========================
+TOAST
+========================= */
+
+.toast{
+    position:fixed;
+    left:50%;
+    bottom:30px;
+    transform:translate(-50%,20px);
+    background:#111;
+    color:#fff;
+    padding:14px 22px;
+    font-size:12px;
+    letter-spacing:.5px;
+    opacity:0;
+    pointer-events:none;
+    transition:.3s;
+    z-index:1000;
+}
+
+.toast.show{
+    opacity:1;
+    transform:translate(-50%,0);
+}
+
+/* =========================
+MOBILE
+========================= */
+
+@media(max-width:900px){
+
+    .nav{
+        display:none;
+    }
+
+    .hero{
+        grid-template-columns:1fr;
+    }
+
+    .hero-content{
+        padding-left:0;
+    }
+
+    .hero-image{
+        min-height:500px;
+    }
+
+    .products{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .product-image{
+        height:330px;
+    }
+
+    .category-grid{
+        grid-template-columns:1fr;
+    }
+
+    .product-popup{
+        grid-template-columns:1fr;
+        max-height:90vh;
+    }
+
+    .main-photo{
+        height:400px;
+    }
+
+    .popup-info{
+        padding:30px;
+    }
+
+    .checkout-layout{
+        grid-template-columns:1fr;
+    }
+
+    .checkout-summary{
+        position:static;
+        order:-1;
+    }
+}
+
+@media(max-width:550px){
+
+    header{
+        padding:0 20px;
+    }
+
+    .logo{
+        font-size:23px;
+    }
+
+    .cart-btn{
+        padding:10px 14px;
+    }
+
+    .hero{
+        padding:30px 20px 50px;
+    }
+
+    .hero h1{
+        font-size:55px;
+    }
+
+    .section{
+        padding:60px 20px;
+    }
+
+    .products{
+        gap:12px;
+    }
+
+    .product-image{
+        height:270px;
+    }
+
+    .category{
+        height:450px;
+    }
+
+    .section-heading h2{
+        font-size:38px;
+    }
+
+    .category-page{
+        padding:35px 20px 70px;
+    }
+
+    .category-page-title h1{
+        font-size:48px;
+    }
+
+    .product-popup{
+        width:100%;
+    }
+
+    .main-photo{
+        height:350px;
+    }
+
+    .popup-info{
+        padding:25px;
+    }
+
+    .popup-info h2{
+        font-size:32px;
+    }
+
+    .checkout-header{
+        padding:0 20px;
+    }
+
+    .checkout-brand{
+        font-size:22px;
+    }
+
+    .checkout-secure{
+        display:none;
+    }
+
+    .checkout-content{
+        width:94%;
+        margin:25px auto 50px;
+    }
+
+    .checkout-top h1{
+        font-size:35px;
+    }
+
+    .checkout-main{
+        padding:22px;
+    }
+
+
+    .footer-highlight,.footer-newsletter{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+    .footer-highlight h2{font-size:32px;}
+    .newsletter-form{width:100%;min-width:0;}
+    .newsletter-form button{padding:0 14px;}
+
+    .footer-top{
+        grid-template-columns:1fr 1fr;
+        gap:35px 25px;
+        padding-bottom:40px;
+    }
+
+    .footer-brand{
+        grid-column:1 / -1;
+    }
+
+    .footer-bottom{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:10px;
+    }
+
+    .steps{
+        grid-template-columns:repeat(4,1fr);
+    }
+
+    .step{
+        font-size:8px;
+        padding:13px 2px;
+    }
+
+    .form-row{
+        grid-template-columns:1fr;
+        gap:0;
+    }
+
+
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+<!-- =========================
+HEADER
+========================= -->
+
+<header>
+
+    <div class="logo">GLOBIRA</div>
+
+    <nav class="nav">
+        <a href="#" onclick="showHome();return false;">Home</a>
+        <a href="#" onclick="showCategory('women');return false;">Women</a>
+        <a href="#" onclick="showCategory('men');return false;">Men</a>
+        <a href="#new">New Arrivals</a>
+    </nav>
+
+    <div class="header-actions">
+        <button class="account-btn" id="globiraAccountButton" onclick="handleGlobiraAccountClick()">
+            MY ACCOUNT
+        </button>
+        <button class="cart-btn" onclick="openCart()">
+            Cart (<span id="cartCount">0</span>)
+        </button>
+    </div>
+
+</header>
+
+
+<!-- =========================
+HOME
+========================= -->
+
+<main id="homePage">
+
+<section class="hero">
+
+    <div class="hero-content">
+
+        <div class="eyebrow">GLOBIRA COLLECTION 2026</div>
+
+        <h1>Style<br>Without<br>Limits.</h1>
+
+        <p>
+            Discover refined essentials, contemporary silhouettes
+            and timeless pieces designed for the modern wardrobe.
+        </p>
+
+        <div class="hero-buttons">
+
+            <button class="primary-btn"
+                    onclick="showCategory('women')">
+                SHOP WOMEN
+            </button>
+
+            <button class="secondary-btn"
+                    onclick="showCategory('men')">
+                SHOP MEN
+            </button>
+
+        </div>
+
+    </div>
+
+    <div class="hero-image">
+
+        <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1200&q=90">
+
+        <div class="hero-label">
+            <small>THE NEW EDIT</small>
+            AUTUMN / WINTER
+        </div>
+
+    </div>
+
+</section>
+
+
+<div class="collection-strip">
+
+    <span>PREMIUM FABRICS</span>
+    <span>MODERN SILHOUETTES</span>
+    <span>WORLDWIDE DELIVERY</span>
+    <span>GLOBIRA EDIT</span>
+
+</div>
+
+
+<section class="section">
+
+    <div class="section-heading">
+
+        <div>
+            <p>SHOP BY COLLECTION</p>
+            <h2>Find Your Style</h2>
+        </div>
+
+    </div>
+
+    <div class="category-grid">
+
+        <div class="category"
+             onclick="showCategory('women')">
+
+            <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1000&q=90">
+
+            <div class="category-overlay">
+                <h3>Women</h3>
+            </div>
+
+        </div>
+
+
+        <div class="category"
+             onclick="showCategory('men')">
+
+            <img src="https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&w=1000&q=90">
+
+            <div class="category-overlay">
+                <h3>Men</h3>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="section" id="new">
+
+    <div class="section-heading">
+
+        <div>
+            <p>CURATED FOR YOU</p>
+            <h2>New Arrivals</h2>
+        </div>
+
+    </div>
+
+    <div class="products" id="featuredProducts"></div>
+
+</section>
+
+</main>
+
+
+<!-- =========================
+CATEGORY PAGE
+========================= -->
+
+<section id="categoryPage" class="category-page">
+
+    <div class="category-page-title">
+
+        <span id="categoryEyebrow">
+            GLOBIRA COLLECTION
+        </span>
+
+        <h1 id="categoryTitle">Women</h1>
+
+    </div>
+
+    <div class="products" id="categoryProducts"></div>
+
+</section>
+
+
+<!-- =========================
+OVERLAY
+========================= -->
+
+<div class="overlay"
+     id="overlay"
+     onclick="overlayClose()">
+</div>
+
+
+<!-- =========================
+CART
+========================= -->
+
+<div class="cart-drawer" id="cartDrawer">
+
+    <div class="cart-header">
+
+        <h2>Your Cart</h2>
+
+        <button class="close"
+                onclick="closeCart()">×</button>
+
+    </div>
+
+    <div class="cart-items" id="cartItems"></div>
+
+    <div class="cart-footer">
+
+        <div class="total-row">
+
+            <span>Total</span>
+
+            <strong id="cartTotal">₹0</strong>
+
+        </div>
+
+        <button class="checkout-btn"
+                onclick="openCheckout()">
+            REVIEW ORDER
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+PRODUCT POPUP
+========================= -->
+
+<div class="product-modal" id="productModal">
+
+    <button class="popup-close"
+            onclick="closeProduct()">×</button>
+
+    <div class="product-popup">
+
+        <div class="popup-gallery">
+
+            <img id="mainProductImage"
+                 class="main-photo"
+                 alt="Product">
+
+            <div class="thumbnails"
+                 id="productThumbnails"></div>
+
+        </div>
+
+
+        <div class="popup-info">
+
+            <h2 id="popupName"></h2>
+
+            <div class="popup-price"
+                 id="popupPrice"></div>
+
+            <div class="popup-description"
+                 id="popupDescription"></div>
+
+            <div class="details-box">
+
+                <strong>Product Details</strong><br>
+
+                Premium quality fabric<br>
+                Comfortable modern fit<br>
+                Carefully finished details<br>
+                Suitable for everyday & occasion wear<br>
+                Delivery: 4–7 working days
+
+            </div>
+
+
+            <div class="size-title">
+                SELECT SIZE
+            </div>
+
+            <div class="sizes">
+
+                <button class="size"
+                        data-size="XS"
+                        onclick="selectSize(this)">
+                    XS
+                </button>
+
+                <button class="size"
+                        data-size="S"
+                        onclick="selectSize(this)">
+                    S
+                </button>
+
+                <button class="size"
+                        data-size="M"
+                        onclick="selectSize(this)">
+                    M
+                </button>
+
+                <button class="size"
+                        data-size="L"
+                        onclick="selectSize(this)">
+                    L
+                </button>
+
+                <button class="size"
+                        data-size="XL"
+                        onclick="selectSize(this)">
+                    XL
+                </button>
+
+            </div>
+
+
+            <div class="product-quantity-title">
+                QUANTITY
+            </div>
+
+            <div class="product-quantity">
+
+                <button onclick="changeProductQuantity(-1)">
+                    −
+                </button>
+
+                <span id="productQuantity">1</span>
+
+                <button onclick="changeProductQuantity(1)">
+                    +
+                </button>
+
+            </div>
+
+
+            <button class="add-popup"
+                    id="popupAddButton">
+                ADD TO CART
+            </button>
+
+            <button class="buy-now"
+                    id="popupBuyButton">
+                BUY NOW
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+CHECKOUT
+========================= -->
+
+<div class="checkout-modal"
+     id="checkoutModal">
+
+    <div class="checkout-shell">
+
+        <div class="checkout-header">
+
+            <div class="checkout-brand">
+                GLOBIRA
+            </div>
+
+            <div class="checkout-secure">
+                SECURE CHECKOUT
+            </div>
+
+            <button class="checkout-close"
+                    onclick="closeCheckout()">
+                ×
+            </button>
+
+        </div>
+
+
+        <div class="checkout-content">
+
+            <div class="checkout-top">
+
+                <div>
+                    <p>GLOBIRA / ORDER</p>
+                    <h1>Checkout</h1>
+                </div>
+
+                <p>
+                    Premium delivery · 4–7 working days
+                </p>
+
+            </div>
+
+
+            <div class="steps">
+
+                <span id="stepLabel1"
+                      class="step active">
+                    1 Review
+                </span>
+
+                <span id="stepLabel2"
+                      class="step">
+                    2 Address
+                </span>
+
+                <span id="stepLabel3"
+                      class="step">
+                    3 Payment
+                </span>
+
+                <span id="stepLabel4"
+                      class="step">
+                    4 Done
+                </span>
+
+            </div>
+
+
+            <div class="checkout-layout">
+
+                <div class="checkout-main">
+
+
+                    <!-- REVIEW -->
+
+                    <div id="step1"
+                         class="checkout-step active">
+
+                        <h2>Review Your Order</h2>
+
+                        <div id="checkoutReview"></div>
+
+                        <div class="delivery-note">
+
+                            <strong>DELIVERY ESTIMATE</strong><br>
+
+                            Your GLOBIRA order will normally arrive
+                            within 4–7 working days after order confirmation.
+
+                        </div>
+
+                        <button class="next-btn"
+                                onclick="goToDelivery()">
+                            CONTINUE TO ADDRESS
+                        </button>
+
+                    </div>
+
+
+                    <!-- ADDRESS -->
+
+                    <div id="step2"
+                         class="checkout-step">
+
+                        <h2>Delivery Details</h2>
+
+
+                        <label class="form-label">
+                            Full Name
+                        </label>
+
+                        <input id="customerName"
+                               placeholder="Enter your full name">
+
+
+                        <label class="form-label">
+                            Mobile Number
+                        </label>
+
+                        <input id="customerMobile"
+                               type="tel"
+                               maxlength="10"
+                               placeholder="10 digit mobile number">
+
+
+                        <label class="form-label">
+                            Complete Address
+                        </label>
+
+                        <textarea id="customerAddress"
+                                  placeholder="House / Flat / Street / Area"></textarea>
+
+
+                        <div class="form-row">
+
+                            <div>
+
+                                <label class="form-label">
+                                    City
+                                </label>
+
+                                <input id="customerCity"
+                                       placeholder="City">
+
+                            </div>
+
+
+                            <div>
+
+                                <label class="form-label">
+                                    State
+                                </label>
+
+                                <input id="customerState"
+                                       placeholder="State">
+
+                            </div>
+
+                        </div>
+
+
+                        <label class="form-label">
+                            PIN Code
+                        </label>
+
+                        <input id="customerPin"
+                               maxlength="6"
+                               placeholder="6 digit PIN code">
+
+
+                        <button class="next-btn"
+                                onclick="goToPayment()">
+                            CONTINUE TO PAYMENT
+                        </button>
+
+                        <button class="back-btn"
+                                onclick="showStep(1)">
+                            BACK TO REVIEW
+                        </button>
+
+                    </div>
+
+
+                    <!-- PAYMENT -->
+
+                    <div id="step3"
+                         class="checkout-step">
+
+                        <h2>Choose Payment</h2>
+
+
+                        <div class="payment-option"
+                             data-payment="UPI"
+                             onclick="selectPayment('UPI')">
+
+                            <input type="radio"
+                                   name="payment"
+                                   value="UPI">
+
+                            <div>
+                                <div class="payment-name">
+                                    UPI
+                                </div>
+
+                                <span class="payment-description">
+                                    PhonePe · Google Pay · Other UPI apps
+                                </span>
+                            </div>
+
+                        </div>
+
+
+                        <div class="payment-option"
+                             data-payment="Paytm"
+                             onclick="selectPayment('Paytm')">
+
+                            <input type="radio"
+                                   name="payment"
+                                   value="Paytm">
+
+                            <div>
+                                <div class="payment-name">
+                                    Paytm
+                                </div>
+
+                                <span class="payment-description">
+                                    Pay securely using Paytm
+                                </span>
+                            </div>
+
+                        </div>
+
+
+                        <div class="payment-option"
+                             data-payment="Card"
+                             onclick="selectPayment('Card')">
+
+                            <input type="radio"
+                                   name="payment"
+                                   value="Card">
+
+                            <div>
+                                <div class="payment-name">
+                                    Debit / Credit Card
+                                </div>
+
+                                <span class="payment-description">
+                                    Visa · Mastercard · RuPay
+                                </span>
+                            </div>
+
+                        </div>
+
+
+                        <div class="payment-option"
+                             data-payment="Net Banking"
+                             onclick="selectPayment('Net Banking')">
+
+                            <input type="radio"
+                                   name="payment"
+                                   value="Net Banking">
+
+                            <div>
+                                <div class="payment-name">
+                                    Net Banking
+                                </div>
+
+                                <span class="payment-description">
+                                    Pay directly through your bank
+                                </span>
+                            </div>
+
+                        </div>
+
+
+                        <div class="payment-option"
+                             data-payment="COD"
+                             onclick="selectPayment('COD')">
+
+                            <input type="radio"
+                                   name="payment"
+                                   value="COD">
+
+                            <div>
+                                <div class="payment-name">
+                                    Cash on Delivery
+                                </div>
+
+                                <span class="payment-description">
+                                    Pay when your order arrives
+                                </span>
+                            </div>
+
+                        </div>
+
+
+                        <div class="payment-warning">
+
+                            <strong>PAYMENT NOTE</strong><br>
+
+                            Online payment methods are currently shown
+                            as checkout options. Actual online payment
+                            collection will require connecting GLOBIRA
+                            to a payment gateway.
+
+                        </div>
+
+
+                        <button class="next-btn"
+                                id="placeOrderButton"
+                                onclick="placeOrder()">
+                            PLACE ORDER
+                        </button>
+
+                        <button class="back-btn"
+                                onclick="showStep(2)">
+                            BACK TO ADDRESS
+                        </button>
+
+                    </div>
+
+
+                    <!-- DONE -->
+
+                    <div id="step4"
+                         class="checkout-step">
+
+                        <div class="done">
+
+                            <div class="done-icon">
+                                ✓
+                            </div>
+
+                            <h2>
+                                Order Confirmed
+                            </h2>
+
+                            <p>
+                                Thank you for shopping with GLOBIRA.
+                            </p>
+
+                            <div class="order-id"
+                                 id="orderNumber">
+                            </div>
+
+                            <div class="delivery-estimate"
+                                 id="deliveryEstimate">
+                            </div>
+
+                            <button class="next-btn"
+                                    onclick="finishOrder()">
+                                CONTINUE SHOPPING
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- SUMMARY -->
+
+                <aside class="checkout-summary">
+
+                    <h3>Order Summary</h3>
+
+                    <div id="checkoutSummary"></div>
+
+                    <div class="checkout-summary-total">
+
+                        <span>Total</span>
+
+                        <strong id="checkoutTotal">
+                            ₹0
+                        </strong>
+
+                    </div>
+
+                </aside>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+FOOTER
+========================= -->
+
+<footer>
+
+    <div class="footer-highlight">
+        <div class="footer-highlight-copy">
+            <span>THE GLOBIRA STANDARD</span>
+            <h2>Designed for modern living.</h2>
+            <p>Thoughtful style, dependable quality and a shopping experience built around simplicity.</p>
+        </div>
+        <a href="#new" class="footer-highlight-btn">EXPLORE THE EDIT →</a>
+    </div>
+
+    <div class="footer-top">
+
+        <div class="footer-brand">
+            <div class="logo">
+                GLOBIRA
+            </div>
+
+            <p>
+                Modern essentials designed with a refined approach to everyday living.
+                Discover thoughtful style, quality and contemporary design with GLOBIRA.
+            </p>
+        </div>
+
+        <div class="footer-column">
+            <h3>Why GLOBIRA</h3>
+            <a href="#new">Curated Collections</a>
+            <a href="#new">Quality First</a>
+            <a href="#new">Modern Design</a>
+            <a href="#new">Worldwide Delivery</a>
+            <a href="#new">Secure Shopping</a>
+            <a href="#new">Customer Support</a>
+        </div>
+
+        <div class="footer-column">
+            <h3>Customer</h3>
+            <a href="#homePage" onclick="showHome();return false;">Home</a>
+            <a href="#new">New Arrivals</a>
+            <a href="#" onclick="showCategory('women');return false;">Women</a>
+            <a href="#" onclick="showCategory('men');return false;">Men</a>
+            <a href="#new">FAQ & Help</a>
+            <a href="#new">Shipping & Returns</a>
+        </div>
+
+        <div class="footer-column">
+            <h3>Work With Us</h3>
+           <a class="supplier-link" href="supplier-terms.html">
+                Become a Supplier →
+            </a>
+            <a href="supplier.html">
+                Partner With GLOBIRA
+            </a>
+            <a href="supplier.html">
+                Submit Your Products
+            </a>
+            <a href="supplier.html">
+                Brand Partnerships
+            </a>
+        </div>
+
+    </div>
+
+    <div class="footer-newsletter">
+        <div>
+            <span>STAY IN THE GLOBIRA CIRCLE</span>
+            <h3>New collections. New ideas. Your inbox.</h3>
+        </div>
+        <div class="newsletter-form">
+            <input type="email" placeholder="Your email address" aria-label="Email address">
+            <button type="button" onclick="showToast('Newsletter signup coming soon.')">SUBSCRIBE</button>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <p>
+            © 2026 GLOBIRA. All Rights Reserved.
+        </p>
+
+        <p class="footer-tagline">
+            STYLE · QUALITY · MODERN LIVING
+        </p>
+    </div>
+
+</footer>
+
+
+<div class="toast" id="toast"></div>
+
+
+<script>
+
+/* =========================================================
+PRODUCT DATABASE
+========================================================= */
+
+const womenProducts = [
+
+{
+id:'w1',
+name:'Silk Evening Dress',
+price:3299,
+oldPrice:4499,
+description:'Elegant flowing silhouette designed for sophisticated evenings.',
+images:[
+'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'w2',
+name:'Satin Midi Dress',
+price:2499,
+oldPrice:3499,
+description:'Refined satin finish with a contemporary feminine cut.',
+images:[
+'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'w3',
+name:'Premium Blazer',
+price:2899,
+oldPrice:3999,
+description:'Structured premium blazer made for effortless styling.',
+images:[
+'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1591369822096-ffd140ec948f?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'w4',
+name:'Classic White Shirt',
+price:1799,
+oldPrice:2499,
+description:'A timeless wardrobe essential with a clean luxury finish.',
+images:[
+'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1603252110481-7ba873bf42ab?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'w5',
+name:'Minimal Black Dress',
+price:2699,
+oldPrice:3699,
+description:'Minimal black dress created for timeless elegance.',
+images:[
+'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'w6',
+name:'Premium Knit Top',
+price:1399,
+oldPrice:1999,
+description:'Soft premium knit with an elegant relaxed silhouette.',
+images:[
+'https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1583743814966-8936f37f4678?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'w7',
+name:'Linen Co-Ord Set',
+price:2999,
+oldPrice:3999,
+description:'Modern linen co-ord set with effortless resort styling.',
+images:[
+'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'w8',
+name:'Tailored Trousers',
+price:1999,
+oldPrice:2799,
+description:'High quality tailored trousers with a polished fit.',
+images:[
+'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1506629905607-d9d4a3f9a96d?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'w9',
+name:'Luxury Trench Coat',
+price:3999,
+oldPrice:5499,
+description:'Classic trench coat with premium construction.',
+images:[
+'https://images.unsplash.com/photo-1544022613-e87ca75a784a?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1539533113208-f6df8cc8b543?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'w10',
+name:'Pleated Skirt',
+price:1899,
+oldPrice:2599,
+description:'Elegant pleated skirt designed for day-to-evening styling.',
+images:[
+'https://images.unsplash.com/photo-1583496661160-fb5886a13d27?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'w11',
+name:'Premium Denim Jacket',
+price:2199,
+oldPrice:2999,
+description:'Contemporary denim jacket with a premium structured finish.',
+images:[
+'https://images.unsplash.com/photo-1543076447-215ad9ba6923?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'w12',
+name:'Soft Cashmere Sweater',
+price:3299,
+oldPrice:4499,
+description:'Luxuriously soft sweater made for elevated everyday wear.',
+images:[
+'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1583743814966-8936f37f4678?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'w13',
+name:'Evening Satin Top',
+price:1599,
+oldPrice:2299,
+description:'Fluid satin top for elegant evening looks.',
+images:[
+'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'w14',
+name:'Relaxed Cotton Dress',
+price:2299,
+oldPrice:3199,
+description:'Breathable cotton dress with a relaxed luxury silhouette.',
+images:[
+'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'w15',
+name:'Wide Leg Pants',
+price:2099,
+oldPrice:2899,
+description:'Elegant wide leg pants designed for modern styling.',
+images:[
+'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1506629905607-d9d4a3f9a96d?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'w16',
+name:'Luxury Maxi Dress',
+price:3499,
+oldPrice:4799,
+description:'Flowing maxi dress designed for statement occasions.',
+images:[
+'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'w17',
+name:'Structured Vest',
+price:1799,
+oldPrice:2499,
+description:'Tailored vest for contemporary layered looks.',
+images:[
+'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1591369822096-ffd140ec948f?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'w18',
+name:'Premium Lounge Set',
+price:2499,
+oldPrice:3399,
+description:'Soft elevated lounge set for comfortable luxury.',
+images:[
+'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'w19',
+name:'Signature Blouse',
+price:1699,
+oldPrice:2399,
+description:'Elegant blouse with refined detailing.',
+images:[
+'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'w20',
+name:'GLOBIRA Signature Dress',
+price:3799,
+oldPrice:4999,
+description:'A signature GLOBIRA silhouette created for special occasions.',
+images:[
+'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=900&q=90'
+]
+}
+
+];
+
+
+const menProducts = [
+
+{
+id:'m1',
+name:'Premium Oxford Shirt',
+price:1799,
+oldPrice:2499,
+description:'Classic Oxford shirt with a refined contemporary fit.',
+images:[
+'https://images.unsplash.com/photo-1603252110481-7ba873bf42ab?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'m2',
+name:'Luxury Black Shirt',
+price:1899,
+oldPrice:2699,
+description:'Sharp black shirt designed for evening and smart-casual wear.',
+images:[
+'https://images.unsplash.com/photo-1621072156002-e2fccdc0b176?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1603252110481-7ba873bf42ab?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'m3',
+name:'Tailored Black Blazer',
+price:3499,
+oldPrice:4999,
+description:'Structured blazer designed for a sharp luxury appearance.',
+images:[
+'https://images.unsplash.com/photo-1555069519-127aadedf1ee?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1598808503746-f34c53b9323e?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'m4',
+name:'Essential White Tee',
+price:899,
+oldPrice:1299,
+description:'Premium everyday essential made for a clean modern wardrobe.',
+images:[
+'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1583743814966-8936f37f4678?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'m5',
+name:'Relaxed Beige Shirt',
+price:1699,
+oldPrice:2399,
+description:'Relaxed shirt in a sophisticated neutral shade.',
+images:[
+'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1603252110481-7ba873bf42ab?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'m6',
+name:'Premium Polo',
+price:1499,
+oldPrice:2199,
+description:'Refined polo shirt with premium texture and fit.',
+images:[
+'https://images.unsplash.com/photo-1625910513413-5fc45b2b4a3c?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1583743814966-8936f37f4678?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'m7',
+name:'Classic Navy Shirt',
+price:1799,
+oldPrice:2499,
+description:'Versatile navy shirt with a timeless silhouette.',
+images:[
+'https://images.unsplash.com/photo-1603252110481-7ba873bf42ab?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1621072156002-e2fccdc0b176?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'m8',
+name:'Smart Trousers',
+price:2199,
+oldPrice:2999,
+description:'Tailored trousers for sophisticated everyday dressing.',
+images:[
+'https://images.unsplash.com/photo-1506629905607-d9d4a3f9a96d?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1516826957135-700dedea698c?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'m9',
+name:'Premium Denim',
+price:2299,
+oldPrice:3199,
+description:'Modern denim designed with a clean premium finish.',
+images:[
+'https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1475178626620-a4d074967452?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'m10',
+name:'Luxury Trench Coat',
+price:3999,
+oldPrice:5499,
+description:'Classic outerwear with a sophisticated structured finish.',
+images:[
+'https://images.unsplash.com/photo-1544022613-e87ca75a784a?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1539533113208-f6df8cc8b543?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'m11',
+name:'Premium Knit Sweater',
+price:2499,
+oldPrice:3499,
+description:'Soft knit sweater with an elevated minimalist look.',
+images:[
+'https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1583743814966-8936f37f4678?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'m12',
+name:'Oversized Premium Tee',
+price:1099,
+oldPrice:1599,
+description:'Modern oversized silhouette with premium cotton construction.',
+images:[
+'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1583743814966-8936f37f4678?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'m13',
+name:'Signature Suit Jacket',
+price:4299,
+oldPrice:5999,
+description:'Elegant tailored jacket for formal occasions.',
+images:[
+'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1555069519-127aadedf1ee?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1598808503746-f34c53b9323e?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'m14',
+name:'Linen Resort Shirt',
+price:1999,
+oldPrice:2799,
+description:'Breathable linen shirt designed for relaxed luxury.',
+images:[
+'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1603252110481-7ba873bf42ab?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1621072156002-e2fccdc0b176?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'m15',
+name:'Minimalist Hoodie',
+price:1899,
+oldPrice:2599,
+description:'Clean minimalist hoodie made for premium casual styling.',
+images:[
+'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1578681994506-b8f463449011?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'m16',
+name:'Cargo Trousers',
+price:1999,
+oldPrice:2899,
+description:'Contemporary cargo trousers with a refined silhouette.',
+images:[
+'https://images.unsplash.com/photo-1516826957135-700dedea698c?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1506629905607-d9d4a3f9a96d?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'m17',
+name:'Premium Overshirt',
+price:2299,
+oldPrice:3199,
+description:'Versatile overshirt designed for sophisticated layering.',
+images:[
+'https://images.unsplash.com/photo-1598808503746-f34c53b9323e?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1555069519-127aadedf1ee?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'m18',
+name:'Luxury Bomber Jacket',
+price:2999,
+oldPrice:4199,
+description:'Contemporary bomber jacket with premium street-luxury styling.',
+images:[
+'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'m19',
+name:'Classic Crewneck',
+price:1599,
+oldPrice:2199,
+description:'Premium crewneck sweatshirt with a timeless fit.',
+images:[
+'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1578681994506-b8f463449011?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=90'
+]
+},
+
+{
+id:'m20',
+name:'GLOBIRA Signature Jacket',
+price:3799,
+oldPrice:4999,
+description:'The signature GLOBIRA jacket created for a distinctive modern look.',
+images:[
+'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1555069519-127aadedf1ee?auto=format&fit=crop&w=900&q=90',
+'https://images.unsplash.com/photo-1598808503746-f34c53b9323e?auto=format&fit=crop&w=900&q=90'
+]
+}
+
+];
+
+
+/* =========================================================
+STATE
+========================================================= */
+
+let cart =
+    JSON.parse(localStorage.getItem('globiraCart')) || [];
+
+let currentProduct = null;
+
+let selectedSize = null;
+
+let productQuantity = 1;
+
+let selectedPayment = null;
+
+
+/* =========================================================
+OLD CART COMPATIBILITY
+========================================================= */
+
+cart = cart.map(item => ({
+    id:item.id,
+    size:item.size || 'M',
+    quantity:Number(item.quantity) || 1
+}));
+
+
+/* =========================================================
+PRICE
+========================================================= */
+
+function formatPrice(price){
+
+    return '₹' +
+        Number(price).toLocaleString('en-IN');
+
+}
+
+
+/* =========================================================
+ALL PRODUCTS
+========================================================= */
+
+function allProducts(){
+
+    return [
+        ...womenProducts,
+        ...menProducts
+    ];
+
+}
+
+
+/* =========================================================
+FIND PRODUCT
+========================================================= */
+
+function findProduct(id){
+
+    return allProducts().find(
+        product => product.id === id
+    );
+
+}
+
+
+/* =========================================================
+SAVE CART
+========================================================= */
+
+function saveCart(){
+
+    localStorage.setItem(
+        'globiraCart',
+        JSON.stringify(cart)
+    );
+
+    renderCart();
+
+}
+
+
+/* =========================================================
+FEATURED
+========================================================= */
+
+function renderFeatured(){
+
+    const container =
+        document.getElementById('featuredProducts');
+
+    if(!container) return;
+
+    const products = [
+
+        womenProducts[0],
+        menProducts[0],
+        womenProducts[1],
+        menProducts[3],
+        womenProducts[2],
+        menProducts[2],
+        womenProducts[5],
+        menProducts[5]
+
+    ];
+
+    container.innerHTML =
+        products.map(productCard).join('');
+
+}
+
+
+/* =========================================================
+PRODUCT CARD
+========================================================= */
+
+function productCard(product){
+
+    return `
+
+        <div class="product"
+             onclick="openProduct('${product.id}')">
+
+            <div class="product-image">
+
+                <img
+                    src="${product.images[0]}"
+                    alt="${product.name}"
+                >
+
+                <span class="badge">
+                    New
+                </span>
+
+            </div>
+
+            <div class="product-info">
+
+                <h3>
+                    ${product.name}
+                </h3>
+
+                <p>
+                    GLOBIRA EDIT
+                </p>
+
+                <div class="price">
+
+                    ${formatPrice(product.price)}
+
+                    <span class="old-price">
+                        ${formatPrice(product.oldPrice)}
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================================
+CATEGORY
+========================================================= */
+
+function showCategory(category){
+
+    document.getElementById('homePage')
+        .style.display='none';
+
+    document.getElementById('categoryPage')
+        .classList.add('active');
+
+    const products =
+        category === 'women'
+        ? womenProducts
+        : menProducts;
+
+    document.getElementById('categoryTitle')
+        .textContent =
+        category === 'women'
+        ? 'Women'
+        : 'Men';
+
+    document.getElementById('categoryEyebrow')
+        .textContent =
+        category === 'women'
+        ? 'WOMEN / GLOBIRA COLLECTION'
+        : 'MEN / GLOBIRA COLLECTION';
+
+    document.getElementById('categoryProducts')
+        .innerHTML =
+        products.map(productCard).join('');
+
+    window.scrollTo({
+        top:0,
+        behavior:'smooth'
+    });
+
+}
+
+
+/* =========================================================
+HOME
+========================================================= */
+
+function showHome(){
+
+    document.getElementById('categoryPage')
+        .classList.remove('active');
+
+    document.getElementById('homePage')
+        .style.display='block';
+
+    window.scrollTo({
+        top:0,
+        behavior:'smooth'
+    });
+
+}
+
+
+/* =========================================================
+SELECT SIZE
+========================================================= */
+
+function selectSize(button){
+
+    document
+        .querySelectorAll('#productModal .size')
+        .forEach(btn =>
+            btn.classList.remove('selected')
+        );
+
+    button.classList.add('selected');
+
+    selectedSize =
+        button.dataset.size;
+
+}
+
+
+/* =========================================================
+PRODUCT QUANTITY
+========================================================= */
+
+function changeProductQuantity(amount){
+
+    productQuantity += amount;
+
+    if(productQuantity < 1){
+        productQuantity = 1;
+    }
+
+    if(productQuantity > 20){
+        productQuantity = 20;
+    }
+
+    document.getElementById('productQuantity')
+        .textContent = productQuantity;
+
+}
+
+
+/* =========================================================
+OPEN PRODUCT
+========================================================= */
+
+function openProduct(id, preselectedSize=null){
+
+    const product =
+        findProduct(id);
+
+    if(!product) return;
+
+    currentProduct = product;
+
+    selectedSize =
+        preselectedSize || null;
+
+    productQuantity = 1;
+
+
+    document.getElementById('popupName')
+        .textContent =
+        product.name;
+
+
+    document.getElementById('popupPrice')
+        .innerHTML =
+        formatPrice(product.price) +
+        ' <span class="old-price">' +
+        formatPrice(product.oldPrice) +
+        '</span>';
+
+
+    document.getElementById('popupDescription')
+        .textContent =
+        product.description;
+
+
+    document.getElementById('mainProductImage')
+        .src =
+        product.images[0];
+
+
+    const thumbnails =
+        document.getElementById('productThumbnails');
+
+
+    thumbnails.innerHTML =
+        product.images.map(
+            image => `
+
+                <img
+                    src="${image}"
+                    onclick="changeMainImage('${image}')"
+                    alt="${product.name}"
+                >
+
+            `
+        ).join('');
+
+
+    document
+        .querySelectorAll('#productModal .size')
+        .forEach(btn => {
+
+            btn.classList.remove('selected');
+
+            if(
+                preselectedSize &&
+                btn.dataset.size === preselectedSize
+            ){
+
+                btn.classList.add('selected');
+
+            }
+
+        });
+
+
+    document.getElementById('productQuantity')
+        .textContent = '1';
+
+
+    document.getElementById('popupAddButton')
+        .onclick = function(){
+
+            if(!selectedSize){
+
+                alert('Please select a size first.');
+
+                return;
+
+            }
+
+            addToCart(
+                product.id,
+                selectedSize,
+                productQuantity
+            );
+
+            closeProduct();
+
+        };
+
+
+    document.getElementById('popupBuyButton')
+        .onclick = function(){
+
+            if(!selectedSize){
+
+                alert('Please select a size first.');
+
+                return;
+
+            }
+
+            addToCart(
+                product.id,
+                selectedSize,
+                productQuantity,
+                false
+            );
+
+            closeProduct();
+
+            openCheckout();
+
+        };
+
+
+    document.getElementById('productModal')
+        .classList.add('active');
+
+    document.body.classList.add('no-scroll');
+
+}
+
+
+/* =========================================================
+CHANGE MAIN IMAGE
+========================================================= */
+
+function changeMainImage(image){
+
+    document.getElementById('mainProductImage')
+        .src = image;
+
+}
+
+
+/* =========================================================
+CLOSE PRODUCT
+========================================================= */
+
+function closeProduct(){
+
+    document.getElementById('productModal')
+        .classList.remove('active');
+
+    if(
+        !document.getElementById('cartDrawer')
+            .classList.contains('active') &&
+        !document.getElementById('checkoutModal')
+            .classList.contains('active')
+    ){
+
+        document.body.classList.remove('no-scroll');
+
+    }
+
+}
+
+
+/* =========================================================
+ADD TO CART
+========================================================= */
+
+function addToCart(
+    id,
+    size,
+    quantity=1,
+    shouldOpenCart=true
+){
+
+    const product =
+        findProduct(id);
+
+    if(!product) return;
+
+
+    if(!size){
+
+        alert('Please select a size.');
+
+        return;
+
+    }
+
+
+    const existing =
+        cart.find(
+            item =>
+                item.id === id &&
+                item.size === size
+        );
+
+
+    if(existing){
+
+        existing.quantity += quantity;
+
+    }else{
+
+        cart.push({
+
+            id:id,
+
+            size:size,
+
+            quantity:quantity
+
+        });
+
+    }
+
+
+    saveCart();
+
+    showToast(
+        product.name +
+        ' added to your cart'
+    );
+
+
+    if(shouldOpenCart){
+
+        openCart();
+
+    }
+
+}
+
+
+/* =========================================================
+CHANGE CART QUANTITY
+========================================================= */
+
+function changeQuantity(
+    id,
+    size,
+    amount
+){
+
+    const item =
+        cart.find(
+            item =>
+                item.id === id &&
+                item.size === size
+        );
+
+    if(!item) return;
+
+
+    item.quantity += amount;
+
+
+    if(item.quantity <= 0){
+
+        cart =
+            cart.filter(
+                item =>
+                    !(
+                        item.id === id &&
+                        item.size === size
+                    )
+            );
+
+    }
+
+
+    saveCart();
+
+}
+
+
+/* =========================================================
+REMOVE CART ITEM
+========================================================= */
+
+function removeItem(id,size){
+
+    cart =
+        cart.filter(
+            item =>
+                !(
+                    item.id === id &&
+                    item.size === size
+                )
+        );
+
+    saveCart();
+
+}
+
+
+/* =========================================================
+RENDER CART
+========================================================= */
+
+function renderCart(){
+
+    const container =
+        document.getElementById('cartItems');
+
+    if(!container) return;
+
+
+    if(cart.length === 0){
+
+        container.innerHTML = `
+
+            <div style="
+                text-align:center;
+                color:#888;
+                padding:70px 20px;
+            ">
+
+                <div style="
+                    font-family:'Playfair Display',serif;
+                    font-size:28px;
+                    color:#111;
+                    margin-bottom:10px;
+                ">
+                    Your Cart
+                </div>
+
+                Your cart is currently empty.
+
+            </div>
+
+        `;
+
+    }else{
+
+        container.innerHTML =
+            cart.map(item => {
+
+                const product =
+                    findProduct(item.id);
+
+                if(!product) return '';
+
+                const lineTotal =
+                    product.price *
+                    item.quantity;
+
+
+                return `
+
+                    <div class="cart-item">
+
+                        <img
+                            src="${product.images[0]}"
+                            onclick="openProduct('${product.id}','${item.size}')"
+                            alt="${product.name}"
+                        >
+
+                        <div class="cart-item-info">
+
+                            <h4
+                                onclick="openProduct('${product.id}','${item.size}')"
+                            >
+                                ${product.name}
+                            </h4>
+
+                            <div class="cart-size">
+                                SIZE: ${item.size}
+                            </div>
+
+                            <div class="cart-price">
+                                ${formatPrice(product.price)}
+                            </div>
+
+                            <div class="quantity">
+
+                                <button
+                                    onclick="changeQuantity('${product.id}','${item.size}',-1)"
+                                >
+                                    −
+                                </button>
+
+                                <span>
+                                    ${item.quantity}
+                                </span>
+
+                                <button
+                                    onclick="changeQuantity('${product.id}','${item.size}',1)"
+                                >
+                                    +
+                                </button>
+
+                            </div>
+
+                            <div class="line-total">
+                                ${formatPrice(lineTotal)}
+                            </div>
+
+                            <button
+                                class="remove"
+                                onclick="removeItem('${product.id}','${item.size}')"
+                            >
+                                REMOVE
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                `;
+
+            }).join('');
+
+    }
+
+
+    let quantity = 0;
+
+    let total = 0;
+
+
+    cart.forEach(item => {
+
+        const product =
+            findProduct(item.id);
+
+        if(!product) return;
+
+        quantity +=
+            item.quantity;
+
+        total +=
+            product.price *
+            item.quantity;
+
+    });
+
+
+    document.getElementById('cartCount')
+        .textContent =
+        quantity;
+
+
+    document.getElementById('cartTotal')
+        .textContent =
+        formatPrice(total);
+
+}
+
+
+/* =========================================================
+OPEN CART
+========================================================= */
+
+function openCart(){
+
+    renderCart();
+
+    document.getElementById('cartDrawer')
+        .classList.add('active');
+
+    document.getElementById('overlay')
+        .classList.add('active');
+
+    document.body.classList.add('no-scroll');
+
+}
+
+
+/* =========================================================
+CLOSE CART
+========================================================= */
+
+function closeCart(){
+
+    document.getElementById('cartDrawer')
+        .classList.remove('active');
+
+    document.getElementById('overlay')
+        .classList.remove('active');
+
+    if(
+        !document.getElementById('productModal')
+            .classList.contains('active') &&
+        !document.getElementById('checkoutModal')
+            .classList.contains('active')
+    ){
+
+        document.body.classList.remove('no-scroll');
+
+    }
+
+}
+
+
+/* =========================================================
+OVERLAY
+========================================================= */
+
+function overlayClose(){
+
+    closeCart();
+
+}
+
+
+/* =========================================================
+GET CART TOTAL
+========================================================= */
+
+function getCartTotal(){
+
+    let total = 0;
+
+    cart.forEach(item => {
+
+        const product =
+            findProduct(item.id);
+
+        if(product){
+
+            total +=
+                product.price *
+                item.quantity;
+
+        }
+
+    });
+
+    return total;
+
+}
+
+
+/* =========================================================
+CHECKOUT
+========================================================= */
+
+async function openCheckout(){
+
+    if(cart.length === 0){
+
+        alert('Your cart is empty.');
+
+        return;
+
+    }
+
+    /* Require a real Supabase login before checkout. */
+    if (typeof isGlobiraLoggedIn === 'function') {
+        const loggedIn = await isGlobiraLoggedIn();
+
+        if (!loggedIn) {
+            globiraPendingCheckout = true;
+            openGlobiraLogin(true);
+            return;
+        }
+    }
+
+
+    closeCart();
+
+    renderReview();
+
+    renderCheckoutSummary();
+
+    selectedPayment = null;
+
+
+    document
+        .querySelectorAll('.payment-option')
+        .forEach(option => {
+
+            option.classList.remove('selected');
+
+            const radio =
+                option.querySelector('input');
+
+            if(radio){
+
+                radio.checked = false;
+
+            }
+
+        });
+
+
+    document.getElementById('checkoutModal')
+        .classList.add('active');
+
+    document.body.classList.add('no-scroll');
+
+    showStep(1);
+
+}
+
+
+/* =========================================================
+CLOSE CHECKOUT
+========================================================= */
+
+function closeCheckout(){
+
+    document.getElementById('checkoutModal')
+        .classList.remove('active');
+
+    document.body.classList.remove('no-scroll');
+
+}
+
+
+/* =========================================================
+RENDER REVIEW
+========================================================= */
+
+function renderReview(){
+
+    const container =
+        document.getElementById('checkoutReview');
+
+    if(!container) return;
+
+
+    container.innerHTML =
+        cart.map(item => {
+
+            const product =
+                findProduct(item.id);
+
+            if(!product) return '';
+
+
+            return `
+
+                <div class="review-card">
+
+                    <img
+                        src="${product.images[0]}"
+                        alt="${product.name}"
+                    >
+
+                    <div class="review-card-info">
+
+                        <h3>
+                            ${product.name}
+                        </h3>
+
+                        <div class="review-meta">
+
+                            Size: ${item.size}<br>
+
+                            Quantity: ${item.quantity}
+
+                        </div>
+
+                        <div class="review-price">
+
+                            ${formatPrice(
+                                product.price *
+                                item.quantity
+                            )}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            `;
+
+        }).join('');
+
+
+    const total =
+        getCartTotal();
+
+
+    container.innerHTML += `
+
+        <div class="review-total">
+
+            <strong>
+                Total
+            </strong>
+
+            <strong>
+                ${formatPrice(total)}
+            </strong>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================================
+CHECKOUT SUMMARY
+========================================================= */
+
+function renderCheckoutSummary(){
+
+    const container =
+        document.getElementById(
+            'checkoutSummary'
+        );
+
+    container.innerHTML =
+        cart.map(item => {
+
+            const product =
+                findProduct(item.id);
+
+            if(!product) return '';
+
+
+            return `
+
+                <div class="checkout-summary-row">
+
+                    <span>
+                        ${product.name}
+                        × ${item.quantity}
+                    </span>
+
+                    <strong>
+                        ${formatPrice(
+                            product.price *
+                            item.quantity
+                        )}
+                    </strong>
+
+                </div>
+
+            `;
+
+        }).join('');
+
+
+    document.getElementById('checkoutTotal')
+        .textContent =
+        formatPrice(getCartTotal());
+
+}
+
+
+/* =========================================================
+SHOW STEP
+========================================================= */
+
+function showStep(step){
+
+    document
+        .querySelectorAll('.checkout-step')
+        .forEach(element =>
+            element.classList.remove('active')
+        );
+
+
+    const current =
+        document.getElementById(
+            'step' + step
+        );
+
+    if(current){
+
+        current.classList.add('active');
+
+    }
+
+
+    document
+        .querySelectorAll('.step')
+        .forEach(element =>
+            element.classList.remove('active')
+        );
+
+
+    const label =
+        document.getElementById(
+            'stepLabel' + step
+        );
+
+    if(label){
+
+        label.classList.add('active');
+
+    }
+
+
+    window.scrollTo({
+        top:0,
+        behavior:'smooth'
+    });
+
+}
+
+
+/* =========================================================
+DELIVERY
+========================================================= */
+
+function goToDelivery(){
+
+    if(cart.length === 0){
+
+        closeCheckout();
+
+        return;
+
+    }
+
+    showStep(2);
+
+}
+
+
+/* =========================================================
+PAYMENT
+========================================================= */
+
+function goToPayment(){
+
+    const name =
+        document.getElementById(
+            'customerName'
+        ).value.trim();
+
+
+    const mobile =
+        document.getElementById(
+            'customerMobile'
+        ).value.trim();
+
+
+    const address =
+        document.getElementById(
+            'customerAddress'
+        ).value.trim();
+
+
+    const city =
+        document.getElementById(
+            'customerCity'
+        ).value.trim();
+
+
+    const state =
+        document.getElementById(
+            'customerState'
+        ).value.trim();
+
+
+    const pin =
+        document.getElementById(
+            'customerPin'
+        ).value.trim();
+
+
+    if(
+        !name ||
+        !mobile ||
+        !address ||
+        !city ||
+        !state ||
+        !pin
+    ){
+
+        alert(
+            'Please complete all delivery details.'
+        );
+
+        return;
+
+    }
+
+
+    if(!/^[0-9]{10}$/.test(mobile)){
+
+        alert(
+            'Please enter a valid 10 digit mobile number.'
+        );
+
+        return;
+
+    }
+
+
+    if(!/^[0-9]{6}$/.test(pin)){
+
+        alert(
+            'Please enter a valid 6 digit PIN code.'
+        );
+
+        return;
+
+    }
+
+
+    showStep(3);
+
+}
+
+
+/* =========================================================
+SELECT PAYMENT
+========================================================= */
+
+function selectPayment(method){
+
+    selectedPayment = method;
+
+
+    document
+        .querySelectorAll('.payment-option')
+        .forEach(option => {
+
+            option.classList.remove('selected');
+
+            const radio =
+                option.querySelector('input');
+
+            if(radio){
+
+                radio.checked =
+                    option.dataset.payment === method;
+
+            }
+
+        });
+
+
+    const selected =
+        document.querySelector(
+            `.payment-option[data-payment="${method}"]`
+        );
+
+
+    if(selected){
+
+        selected.classList.add('selected');
+
+    }
+
+
+    const button =
+        document.getElementById(
+            'placeOrderButton'
+        );
+
+
+    if(method === 'COD'){
+
+        button.textContent =
+            'PLACE ORDER';
+
+    }else{
+
+        button.textContent =
+            'CONTINUE & PLACE ORDER';
+
+    }
+
+}
+
+
+/* =========================================================
+WORKING DAYS
+========================================================= */
+
+function addWorkingDays(
+    date,
+    days
+){
+
+    const result =
+        new Date(date);
+
+
+    while(days > 0){
+
+        result.setDate(
+            result.getDate() + 1
+        );
+
+
+        const day =
+            result.getDay();
+
+
+        if(
+            day !== 0 &&
+            day !== 6
+        ){
+
+            days--;
+
+        }
+
+    }
+
+
+    return result;
+
+}
+
+
+/* =========================================================
+DATE FORMAT
+========================================================= */
+
+function formatDate(date){
+
+    return date.toLocaleDateString(
+        'en-IN',
+        {
+            day:'numeric',
+            month:'short',
+            year:'numeric'
+        }
+    );
+
+}
+
+
+/* =========================================================
+PLACE ORDER
+========================================================= */
+
+function placeOrder(){
+
+    if(!selectedPayment){
+
+        alert(
+            'Please select a payment method.'
+        );
+
+        return;
+
+    }
+
+
+    if(cart.length === 0){
+
+        alert(
+            'Your cart is empty.'
+        );
+
+        return;
+
+    }
+
+
+    const name =
+        document.getElementById(
+            'customerName'
+        ).value.trim();
+
+
+    const mobile =
+        document.getElementById(
+            'customerMobile'
+        ).value.trim();
+
+
+    const address =
+        document.getElementById(
+            'customerAddress'
+        ).value.trim();
+
+
+    const city =
+        document.getElementById(
+            'customerCity'
+        ).value.trim();
+
+
+    const state =
+        document.getElementById(
+            'customerState'
+        ).value.trim();
+
+
+    const pin =
+        document.getElementById(
+            'customerPin'
+        ).value.trim();
+
+
+    if(
+        !name ||
+        !mobile ||
+        !address ||
+        !city ||
+        !state ||
+        !pin
+    ){
+
+        alert(
+            'Please complete your delivery details first.'
+        );
+
+        showStep(2);
+
+        return;
+
+    }
+
+
+    const orderID =
+        'YAD' +
+        Math.floor(
+            100000 +
+            Math.random() * 900000
+        );
+
+
+    const orderDate =
+        new Date();
+
+
+    const deliveryStart =
+        addWorkingDays(
+            orderDate,
+            4
+        );
+
+
+    const deliveryEnd =
+        addWorkingDays(
+            orderDate,
+            7
+        );
+
+
+    const order = {
+
+        orderID:orderID,
+
+        date:orderDate.toISOString(),
+
+        customer:{
+
+            name:name,
+
+            mobile:mobile,
+
+            address:address,
+
+            city:city,
+
+            state:state,
+
+            pin:pin
+
+        },
+
+        items:cart.map(item => {
+
+            const product =
+                findProduct(item.id);
+
+            return {
+
+                id:item.id,
+
+                name:product.name,
+
+                price:product.price,
+
+                size:item.size,
+
+                quantity:item.quantity
+
+            };
+
+        }),
+
+        total:getCartTotal(),
+
+        payment:selectedPayment,
+
+        delivery:{
+
+            start:deliveryStart.toISOString(),
+
+            end:deliveryEnd.toISOString()
+
+        }
+
+    };
+
+
+    localStorage.setItem(
+        'globiraLastOrder',
+        JSON.stringify(order)
+    );
+
+
+    document.getElementById(
+        'orderNumber'
+    ).textContent =
+        'ORDER ID: ' + orderID;
+
+
+    document.getElementById(
+        'deliveryEstimate'
+    ).innerHTML =
+
+        'Estimated delivery: <strong>' +
+
+        formatDate(deliveryStart) +
+
+        ' – ' +
+
+        formatDate(deliveryEnd) +
+
+        '</strong><br>' +
+
+        'Payment method: ' +
+
+        selectedPayment;
+
+
+    showStep(4);
+
+}
+
+
+/* =========================================================
+FINISH ORDER
+========================================================= */
+
+function finishOrder(){
+
+    cart = [];
+
+    localStorage.setItem(
+        'globiraCart',
+        JSON.stringify(cart)
+    );
+
+
+    renderCart();
+
+
+    closeCheckout();
+
+
+    showHome();
+
+
+    showToast(
+        'Thank you for shopping with GLOBIRA.'
+    );
+
+}
+
+
+/* =========================================================
+TOAST
+========================================================= */
+
+function showToast(message){
+
+    const toast =
+        document.getElementById('toast');
+
+
+    toast.textContent =
+        message;
+
+
+    toast.classList.add('show');
+
+
+    setTimeout(() => {
+
+        toast.classList.remove('show');
+
+    },2500);
+
+}
+
+
+/* =========================================================
+ESCAPE KEY
+========================================================= */
+
+document.addEventListener(
+    'keydown',
+    function(event){
+
+        if(event.key === 'Escape'){
+
+            closeProduct();
+
+            closeCart();
+
+            closeCheckout();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+INITIALIZE
+========================================================= */
+
+renderFeatured();
+
+renderCart();
+
+</script>
+
+<!-- =========================================================
+     GLOBIRA MY ACCOUNT
+========================================================= -->
+<div id="globiraAccountOverlay" class="globira-account-overlay">
+    <div class="globira-account-box">
+        <button class="globira-account-close" onclick="closeGlobiraAccount()">×</button>
+        <div class="globira-account-eyebrow">GLOBIRA / MY ACCOUNT</div>
+        <h2 class="globira-account-title" id="globiraAccountName">My Account</h2>
+        <div class="globira-account-email" id="globiraAccountEmail"></div>
+        <div class="globira-account-grid">
+            <div class="globira-account-card" onclick="showGlobiraOrders()"><h3>My Orders</h3><p>View your GLOBIRA orders, order numbers and delivery information.</p></div>
+            <div class="globira-account-card" onclick="showGlobiraProfile()"><h3>Personal Details</h3><p>Manage your name, email and customer information.</p></div>
+            <div class="globira-account-card"><h3>Saved Addresses</h3><p>Coming next — save and manage your delivery addresses.</p></div>
+            <div class="globira-account-card"><h3>Wishlist</h3><p>Coming next — save your favourite GLOBIRA pieces.</p></div>
+            <div class="globira-account-card" onclick="openCart();closeGlobiraAccount()"><h3>My Cart</h3><p>Review the products currently saved in your shopping cart.</p></div>
+            <div class="globira-account-card"><h3>Account Settings</h3><p>Notifications, privacy and other account controls will be added here.</p></div>
+        </div>
+        <div class="globira-account-footer">
+            <span style="font-size:11px;color:#777">Secure account powered by GLOBIRA</span>
+            <button class="globira-account-logout" onclick="logoutGlobira()">LOG OUT</button>
+        </div>
+    </div>
+</div>
+
+<div id="globiraProfileOverlay" class="globira-profile-overlay">
+    <div class="globira-profile-box">
+        <div class="globira-account-eyebrow">WELCOME TO GLOBIRA</div>
+        <h2>Complete your profile</h2>
+        <p>Your email is verified. Add your name so we can personalise your GLOBIRA account.</p>
+        <input id="globiraFirstName" class="globira-profile-input" placeholder="First name" autocomplete="given-name">
+        <input id="globiraLastName" class="globira-profile-input" placeholder="Last name" autocomplete="family-name">
+        <button class="globira-profile-button" onclick="saveGlobiraProfile()">CONTINUE →</button>
+    </div>
+</div>
+
+<!-- =========================================================
+     GLOBIRA REAL SUPABASE EMAIL OTP LOGIN
+========================================================= -->
+
+<style>
+.globira-login-overlay{
+    position:fixed;
+    inset:0;
+    z-index:99999;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:rgba(0,0,0,.62);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+}
+.globira-login-overlay.active{display:flex;animation:globiraFadeIn .25s ease}
+.globira-login-box{
+    position:relative;
+    width:100%;
+    max-width:430px;
+    background:#fff;
+    padding:42px 36px 36px;
+    border-radius:2px;
+    box-shadow:0 25px 80px rgba(0,0,0,.25);
+    animation:globiraLoginScale .3s ease;
+    box-sizing:border-box;
+}
+.globira-login-close{
+    position:absolute;top:15px;right:18px;width:32px;height:32px;
+    border:0;background:transparent;font-size:25px;font-weight:300;
+    cursor:pointer;color:#222;line-height:32px;
+}
+.globira-login-close:hover{opacity:.55}
+.globira-login-logo{text-align:center;font-size:27px;font-weight:700;letter-spacing:6px;margin-bottom:10px;color:#111}
+.globira-login-subtitle{text-align:center;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#777;margin-bottom:32px}
+.globira-login-title{font-size:22px;font-weight:500;text-align:center;margin-bottom:8px;color:#111}
+.globira-login-description{text-align:center;font-size:14px;color:#777;line-height:1.6;margin-bottom:25px}
+.globira-login-step{display:none}.globira-login-step.active{display:block}
+.globira-login-input{
+    width:100%;height:52px;border:1px solid #d7d7d7;padding:0 15px;
+    font-size:15px;outline:none;border-radius:0;box-sizing:border-box;transition:border-color .2s ease;
+}
+.globira-login-input:focus{border-color:#111}
+.globira-otp-input{text-align:center;letter-spacing:6px;font-size:22px;font-weight:600;padding-left:12px}
+.globira-login-button{
+    width:100%;height:52px;margin-top:14px;border:0;background:#111;color:#fff;
+    font-size:13px;font-weight:600;letter-spacing:2px;cursor:pointer;transition:opacity .2s ease;
+}
+.globira-login-button:hover{opacity:.85}.globira-login-button:disabled{opacity:.5;cursor:not-allowed}
+.globira-login-secondary{
+    width:100%;border:0;background:transparent;margin-top:16px;padding:8px;
+    color:#555;font-size:12px;cursor:pointer;letter-spacing:1px;
+}
+.globira-login-secondary:hover{color:#000}
+.globira-login-message{min-height:20px;margin-top:13px;text-align:center;font-size:13px;line-height:1.5}
+.globira-login-message.error{color:#c62828}.globira-login-message.success{color:#2e7d32}
+.globira-login-email-display{text-align:center;margin:0 0 20px;font-size:14px;color:#333;word-break:break-word}
+.globira-login-resend{display:block;margin:15px auto 0;border:0;background:transparent;text-decoration:underline;cursor:pointer;font-size:12px;color:#555}
+.globira-login-skip{display:block;width:100%;margin-top:22px;text-align:center;color:#777;font-size:12px;text-decoration:underline;cursor:pointer;background:transparent;border:0}
+.globira-login-skip:hover{color:#111}
+@keyframes globiraFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes globiraLoginScale{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+@media(max-width:480px){
+    .globira-login-box{padding:38px 22px 28px}
+    .globira-login-logo{font-size:23px;letter-spacing:5px}
+    .globira-login-title{font-size:20px}
+    .globira-otp-input{letter-spacing:4px;padding-left:8px}
+}
+</style>
+
+<div id="globiraLoginOverlay" class="globira-login-overlay" aria-hidden="true">
+    <div class="globira-login-box" role="dialog" aria-modal="true" aria-labelledby="globiraLoginTitle">
+        <button type="button" class="globira-login-close" onclick="closeGlobiraLogin()" aria-label="Close">×</button>
+
+        <div id="globiraEmailStep" class="globira-login-step active">
+            <div class="globira-login-logo">GLOBIRA</div>
+            <div class="globira-login-subtitle">Modern Essentials</div>
+            <div id="globiraLoginTitle" class="globira-login-title">Welcome</div>
+            <div class="globira-login-description">Enter your email to continue. We'll send you a secure one-time password.</div>
+            <input type="email" id="globiraEmail" class="globira-login-input" placeholder="Enter your email" autocomplete="email">
+            <button type="button" id="globiraSendOtpButton" class="globira-login-button" onclick="sendGlobiraOTP()">CONTINUE →</button>
+            <div id="globiraEmailMessage" class="globira-login-message"></div>
+            <button type="button" class="globira-login-skip" onclick="skipGlobiraLogin()">SKIP FOR NOW</button>
+        </div>
+
+        <div id="globiraOtpStep" class="globira-login-step">
+            <div class="globira-login-logo">GLOBIRA</div>
+            <div class="globira-login-subtitle">Secure Verification</div>
+            <div class="globira-login-title">Verify your email</div>
+            <div class="globira-login-description">We've sent an 8-digit verification code to:</div>
+            <div id="globiraOtpEmail" class="globira-login-email-display"></div>
+            <input type="text" id="globiraOtp" class="globira-login-input globira-otp-input" placeholder="00000000" inputmode="numeric" autocomplete="one-time-code" maxlength="8">
+            <button type="button" id="globiraVerifyOtpButton" class="globira-login-button" onclick="verifyGlobiraOTP()">VERIFY &amp; CONTINUE →</button>
+            <div id="globiraOtpMessage" class="globira-login-message"></div>
+            <button type="button" class="globira-login-resend" onclick="resendGlobiraOTP()">RESEND CODE</button>
+            <button type="button" class="globira-login-secondary" onclick="backToGlobiraEmail()">← CHANGE EMAIL</button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* =========================================================
+   GLOBIRA SUPABASE AUTHENTICATION
+========================================================= */
+
+const GLOBIRA_SUPABASE_URL = 'https://kqhuobmzpbokxzwkncml.supabase.co';
+
+/* PASTE YOUR SUPABASE PUBLISHABLE/ANON KEY BELOW.
+   NEVER use the service_role key in this HTML file. */
+const GLOBIRA_SUPABASE_ANON_KEY = 'sb_publishable_OLm0wIyBciSFd8vMPARgmQ_bN5JFQ3D';
+
+const globiraAuth = window.supabase.createClient(
+    GLOBIRA_SUPABASE_URL,
+    GLOBIRA_SUPABASE_ANON_KEY
+);
+
+let globiraOtpEmail = '';
+let globiraPendingCheckout = false;
+
+const globiraLoginOverlay = document.getElementById('globiraLoginOverlay');
+const globiraEmailInput = document.getElementById('globiraEmail');
+const globiraOtpInput = document.getElementById('globiraOtp');
+
+function globiraShowMessage(id, message, type) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = message || '';
+    el.className = 'globira-login-message ' + (type || '');
+}
+
+function globiraClearMessages() {
+    globiraShowMessage('globiraEmailMessage', '', '');
+    globiraShowMessage('globiraOtpMessage', '', '');
+}
+
+function openGlobiraLogin(fromCheckout = false) {
+    globiraPendingCheckout = fromCheckout;
+    globiraLoginOverlay.classList.add('active');
+    globiraLoginOverlay.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('no-scroll');
+    globiraShowEmailStep();
+    setTimeout(() => globiraEmailInput.focus(), 150);
+}
+
+function closeGlobiraLogin() {
+    globiraLoginOverlay.classList.remove('active');
+    globiraLoginOverlay.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('no-scroll');
+    globiraClearMessages();
+}
+
+function globiraShowEmailStep() {
+    document.getElementById('globiraEmailStep').classList.add('active');
+    document.getElementById('globiraOtpStep').classList.remove('active');
+}
+
+function globiraShowOtpStep() {
+    document.getElementById('globiraEmailStep').classList.remove('active');
+    document.getElementById('globiraOtpStep').classList.add('active');
+    document.getElementById('globiraOtpEmail').textContent = globiraOtpEmail;
+    setTimeout(() => globiraOtpInput.focus(), 150);
+}
+
+async function sendGlobiraOTP() {
+    const email = globiraEmailInput.value.trim().toLowerCase();
+    globiraClearMessages();
+
+    if (!email) {
+        globiraShowMessage('globiraEmailMessage', 'Please enter your email address.', 'error');
+        globiraEmailInput.focus();
+        return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        globiraShowMessage('globiraEmailMessage', 'Please enter a valid email address.', 'error');
+        globiraEmailInput.focus();
+        return;
+    }
+
+    const button = document.getElementById('globiraSendOtpButton');
+    button.disabled = true;
+    button.textContent = 'SENDING...';
+
+    try {
+        const { error } = await globiraAuth.auth.signInWithOtp({
+            email,
+            options: { shouldCreateUser: true }
+        });
+
+        if (error) {
+            console.error('GLOBIRA OTP ERROR:', error);
+            globiraShowMessage('globiraEmailMessage', error.message || 'Unable to send verification code.', 'error');
+            return;
+        }
+
+        globiraOtpEmail = email;
+        globiraShowOtpStep();
+        globiraShowMessage('globiraOtpMessage', 'Verification code sent successfully.', 'success');
+    } catch (error) {
+        console.error('GLOBIRA AUTH ERROR:', error);
+        globiraShowMessage('globiraEmailMessage', 'Something went wrong. Please try again.', 'error');
+    } finally {
+        button.disabled = false;
+        button.textContent = 'CONTINUE →';
+    }
+}
+
+async function verifyGlobiraOTP() {
+    const token = globiraOtpInput.value.trim();
+    globiraShowMessage('globiraOtpMessage', '', '');
+
+   if (!/^\d{8}$/.test(token)) {
+    globiraShowMessage('globiraOtpMessage', 'Please enter the 8-digit verification code.', 'error');  
+        globiraOtpInput.focus();
+        return;
+    }
+
+    const button = document.getElementById('globiraVerifyOtpButton');
+    button.disabled = true;
+    button.textContent = 'VERIFYING...';
+
+    try {
+        const { data, error } = await globiraAuth.auth.verifyOtp({
+            email: globiraOtpEmail,
+            token,
+            type: 'email'
+        });
+
+        if (error) {
+            console.error('GLOBIRA VERIFY ERROR:', error);
+            globiraShowMessage('globiraOtpMessage', error.message || 'Invalid or expired verification code.', 'error');
+            return;
+        }
+
+        if (!data || !data.session) {
+            globiraShowMessage('globiraOtpMessage', 'Login could not be completed. Please try again.', 'error');
+            return;
+        }
+
+        console.log('GLOBIRA USER LOGGED IN:', data.user);
+        globiraCurrentUser = data.user;
+        updateGlobiraAccountButton(globiraCurrentUser);
+        const profileMeta = data.user.user_metadata || {};
+        const hasProfileName = !!(profileMeta.full_name || profileMeta.name);
+        globiraShowMessage('globiraOtpMessage', 'Login successful. Welcome to GLOBIRA.', 'success');
+
+        const resumeCheckout = globiraPendingCheckout;
+        globiraPendingCheckout = false;
+
+        setTimeout(() => {
+            closeGlobiraLogin();
+            if (!hasProfileName) {
+                setTimeout(() => showGlobiraProfile(), 150);
+            }
+            if (resumeCheckout) {
+                setTimeout(() => openCheckout(), hasProfileName ? 100 : 450);
+            }
+        }, 500);
+    } catch (error) {
+        console.error('GLOBIRA AUTH ERROR:', error);
+        globiraShowMessage('globiraOtpMessage', 'Something went wrong. Please try again.', 'error');
+    } finally {
+        button.disabled = false;
+        button.textContent = 'VERIFY & CONTINUE →';
+    }
+}
+
+async function resendGlobiraOTP() {
+    if (!globiraOtpEmail) return;
+    globiraShowMessage('globiraOtpMessage', 'Sending a new code...', '');
+
+    try {
+        const { error } = await globiraAuth.auth.signInWithOtp({
+            email: globiraOtpEmail,
+            options: { shouldCreateUser: true }
+        });
+
+        if (error) {
+            globiraShowMessage('globiraOtpMessage', error.message || 'Unable to resend code.', 'error');
+            return;
+        }
+
+        globiraOtpInput.value = '';
+        globiraShowMessage('globiraOtpMessage', 'A new verification code has been sent.', 'success');
+    } catch (error) {
+        console.error(error);
+        globiraShowMessage('globiraOtpMessage', 'Unable to resend the code. Please try again.', 'error');
+    }
+}
+
+function backToGlobiraEmail() {
+    globiraOtpInput.value = '';
+    globiraClearMessages();
+    globiraShowEmailStep();
+    setTimeout(() => globiraEmailInput.focus(), 100);
+}
+
+function skipGlobiraLogin() {
+    globiraPendingCheckout = false;
+    closeGlobiraLogin();
+}
+
+async function isGlobiraLoggedIn() {
+    try {
+        const { data, error } = await globiraAuth.auth.getSession();
+        if (error) {
+            console.error('GLOBIRA SESSION ERROR:', error);
+            return false;
+        }
+        return !!(data && data.session);
+    } catch (error) {
+        console.error(error);
+        return false;
+    }
+}
+
+async function getGlobiraUser() {
+    try {
+        const { data, error } = await globiraAuth.auth.getUser();
+        if (error) {
+            console.error(error);
+            return null;
+        }
+        return data.user || null;
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
+}
+
+async function globiraLogout() {
+    try {
+        const { error } = await globiraAuth.auth.signOut();
+        if (error) console.error('GLOBIRA LOGOUT ERROR:', error);
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+globiraAuth.auth.onAuthStateChange((event, session) => {
+    console.log('GLOBIRA AUTH EVENT:', event, session ? session.user.email : 'No active session');
+});
+
+globiraEmailInput.addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        sendGlobiraOTP();
+    }
+});
+
+globiraOtpInput.addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '').slice(0, 8);
+});
+
+globiraOtpInput.addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        verifyGlobiraOTP();
+    }
+});
+
+globiraLoginOverlay.addEventListener('click', event => {
+    if (event.target === globiraLoginOverlay) skipGlobiraLogin();
+});
+
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && globiraLoginOverlay.classList.contains('active')) {
+        skipGlobiraLogin();
+    }
+});
+
+/* Automatically show the login popup when there is no active session. */
+(async function initializeGlobiraAuth() {
+    try {
+        const { data, error } = await globiraAuth.auth.getSession();
+        if (error) {
+            console.error('GLOBIRA INITIAL AUTH CHECK:', error);
+            return;
+        }
+
+        if (data && data.session) {
+            console.log('Existing GLOBIRA session found:', data.session.user.email);
+            return;
+        }
+
+        setTimeout(() => openGlobiraLogin(false), 1200);
+    } catch (error) {
+        console.error('GLOBIRA INITIAL AUTH CHECK:', error);
+    }
+})();
+
+
+/* =========================================================
+   GLOBIRA ACCOUNT SYSTEM
+========================================================= */
+
+let globiraCurrentUser = null;
+
+function globiraGetDisplayName(user){
+    if(!user) return 'My Account';
+    const meta = user.user_metadata || {};
+    return meta.full_name || meta.name || (user.email ? user.email.split('@')[0] : 'My Account');
+}
+
+function updateGlobiraAccountButton(user){
+    const btn=document.getElementById('globiraAccountButton');
+    if(!btn) return;
+    if(user){
+        const name=globiraGetDisplayName(user);
+        btn.textContent='HI, '+name.toUpperCase();
+    }else{
+        btn.textContent='MY ACCOUNT';
+    }
+}
+
+function openGlobiraAccount(){
+    if(!globiraCurrentUser){
+        openGlobiraLogin(false);
+        return;
+    }
+    document.getElementById('globiraAccountName').textContent=globiraGetDisplayName(globiraCurrentUser);
+    document.getElementById('globiraAccountEmail').textContent=globiraCurrentUser.email || '';
+    document.getElementById('globiraAccountOverlay').classList.add('active');
+}
+
+function closeGlobiraAccount(){
+    document.getElementById('globiraAccountOverlay').classList.remove('active');
+}
+
+function handleGlobiraAccountClick(){
+    if(globiraCurrentUser) openGlobiraAccount();
+    else openGlobiraLogin(false);
+}
+
+function showGlobiraProfile(){
+    if(!globiraCurrentUser) return;
+    const meta=globiraCurrentUser.user_metadata||{};
+    const parts=(meta.full_name||'').split(' ');
+    document.getElementById('globiraFirstName').value=parts.shift()||'';
+    document.getElementById('globiraLastName').value=parts.join(' ');
+    document.getElementById('globiraProfileOverlay').classList.add('active');
+}
+
+async function saveGlobiraProfile(){
+    if(!globiraCurrentUser) return;
+    const first=document.getElementById('globiraFirstName').value.trim();
+    const last=document.getElementById('globiraLastName').value.trim();
+    if(!first){alert('Please enter your first name.');return;}
+    const fullName=(first+' '+last).trim();
+    const {data,error}=await globiraAuth.auth.updateUser({data:{full_name:fullName}});
+    if(error){alert(error.message||'Unable to save your profile.');return;}
+    globiraCurrentUser=data.user;
+    updateGlobiraAccountButton(globiraCurrentUser);
+    document.getElementById('globiraProfileOverlay').classList.remove('active');
+    document.getElementById('globiraAccountName').textContent=fullName;
+    document.getElementById('globiraAccountEmail').textContent=globiraCurrentUser.email||'';
+    showToast('Profile saved successfully.');
+}
+
+function showGlobiraOrders(){
+    const order=JSON.parse(localStorage.getItem('globiraLastOrder')||'null');
+    if(!order){alert('No GLOBIRA orders found yet.');return;}
+    alert('Latest Order\n\n'+order.orderID+'\n'+new Date(order.date).toLocaleDateString()+'\n\nTotal: '+formatPrice(order.total)+'\nPayment: '+order.payment);
+}
+
+async function logoutGlobira(){
+    await globiraAuth.auth.signOut();
+    globiraCurrentUser=null;
+    updateGlobiraAccountButton(null);
+    closeGlobiraAccount();
+    showToast('You have been logged out.');
+}
+
+async function initializeGlobiraAccount(){
+    try{
+        const {data}=await globiraAuth.auth.getSession();
+        globiraCurrentUser=data && data.session ? data.session.user : null;
+        updateGlobiraAccountButton(globiraCurrentUser);
+        globiraAuth.auth.onAuthStateChange((_event,session)=>{
+            globiraCurrentUser=session ? session.user : null;
+            updateGlobiraAccountButton(globiraCurrentUser);
+        });
+    }catch(error){console.error('GLOBIRA ACCOUNT INIT:',error);}
+}
+
+initializeGlobiraAccount();
+</script>
+
+</body>
+</html>

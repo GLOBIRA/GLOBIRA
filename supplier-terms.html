@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Supplier Terms & Conditions | YADHUVII</title>
+
+<meta
+    name="description"
+    content="YADHUVII Supplier Terms and Conditions"
+/>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600;700&display=swap"
+    rel="stylesheet"
+>
+
+<style>
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Inter', Arial, sans-serif;
+    background: #f7f4ee;
+    color: #111;
+    line-height: 1.7;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+header {
+    height: 82px;
+    background: #f7f4ee;
+    border-bottom: 1px solid #ddd8ce;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 6%;
+
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    letter-spacing: 4px;
+    font-weight: 700;
+}
+
+.back-link {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+.back-link:hover {
+    opacity: .55;
+}
+
+/* =========================
+   HERO
+========================= */
+
+.hero {
+    text-align: center;
+    padding: 80px 20px 65px;
+    border-bottom: 1px solid #ddd8ce;
+}
+
+.eyebrow {
+    font-size: 10px;
+    letter-spacing: 3px;
+    font-weight: 600;
+    margin-bottom: 18px;
+}
+
+.hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(40px, 5vw, 62px);
+    line-height: 1.1;
+    margin-bottom: 18px;
+}
+
+.hero p {
+    max-width: 650px;
+    margin: auto;
+    color: #777;
+    font-size: 13px;
+}
+
+/* =========================
+   MAIN
+========================= */
+
+.main {
+    max-width: 1050px;
+    margin: auto;
+    padding: 65px 25px 100px;
+}
+
+.introduction {
+    background: white;
+    border: 1px solid #e0dcd4;
+    padding: 30px;
+    margin-bottom: 25px;
+}
+
+.introduction strong {
+    font-size: 13px;
+}
+
+.introduction p {
+    color: #666;
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+/* =========================
+   TERMS
+========================= */
+
+.terms {
+    background: white;
+    border: 1px solid #e0dcd4;
+    padding: 45px;
+}
+
+.term {
+    padding: 0 0 32px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid #e8e4dc;
+}
+
+.term:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.term-number {
+    color: #999;
+    font-size: 10px;
+    letter-spacing: 2px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.term h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    margin-bottom: 12px;
+}
+
+.term p {
+    color: #5f5f5f;
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+.term ul {
+    padding-left: 22px;
+    color: #5f5f5f;
+    font-size: 13px;
+}
+
+.term li {
+    margin-bottom: 7px;
+}
+
+/* =========================
+   ACCEPTANCE
+========================= */
+
+.acceptance {
+    margin-top: 30px;
+    background: #111;
+    color: white;
+    padding: 38px;
+}
+
+.acceptance-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: #aaa;
+    margin-bottom: 15px;
+}
+
+.acceptance h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 30px;
+    margin-bottom: 12px;
+}
+
+.acceptance-description {
+    color: #aaa;
+    font-size: 12px;
+    max-width: 700px;
+    margin-bottom: 25px;
+}
+
+.checkbox-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.checkbox-row input {
+    width: 18px;
+    height: 18px;
+    margin-top: 3px;
+    cursor: pointer;
+    accent-color: white;
+}
+
+.checkbox-row label {
+    color: #eee;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.continue-button {
+    width: 100%;
+    border: none;
+    background: white;
+    color: #111;
+
+    padding: 16px;
+
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+
+    cursor: pointer;
+    transition: .2s;
+}
+
+.continue-button:hover {
+    background: #e8e8e8;
+}
+
+.continue-button:disabled {
+    background: #444;
+    color: #888;
+    cursor: not-allowed;
+}
+
+.warning {
+    display: none;
+    margin-top: 15px;
+    padding: 11px;
+    background: #3a2222;
+    color: #ffbcbc;
+    font-size: 11px;
+}
+
+.warning.show {
+    display: block;
+}
+
+/* =========================
+   FOOTER
+========================= */
+
+footer {
+    background: #111;
+    color: white;
+    border-top: 1px solid #333;
+
+    padding: 30px 6%;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer-logo {
+    font-family: 'Playfair Display', serif;
+    letter-spacing: 3px;
+    font-size: 17px;
+}
+
+.footer-copy {
+    color: #777;
+    font-size: 10px;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 700px) {
+
+    header {
+        padding: 0 20px;
+    }
+
+    .logo {
+        font-size: 22px;
+    }
+
+    .hero {
+        padding: 60px 20px;
+    }
+
+    .main {
+        padding: 40px 15px 70px;
+    }
+
+    .terms {
+        padding: 25px 20px;
+    }
+
+    .acceptance {
+        padding: 28px 20px;
+    }
+
+    footer {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+
+<!-- =========================
+     HEADER
+========================= -->
+
+<header>
+
+    <a href="index.html" class="logo">
+        YADHUVII
+    </a>
+
+    <a href="supplier-partnership.html" class="back-link">
+        ← Supplier Partnership
+    </a>
+
+</header>
+
+
+<!-- =========================
+     HERO
+========================= -->
+
+<section class="hero">
+
+    <div class="eyebrow">
+        YADHUVII SUPPLIER PROGRAM
+    </div>
+
+    <h1>
+        Supplier Terms & Conditions
+    </h1>
+
+    <p>
+        Please read these terms carefully before creating your
+        YADHUVII supplier account.
+    </p>
+
+</section>
+
+
+<!-- =========================
+     MAIN
+========================= -->
+
+<main class="main">
+
+
+    <div class="introduction">
+
+        <strong>
+            Important Notice
+        </strong>
+
+        <p>
+            These Supplier Terms & Conditions describe the general
+            responsibilities and expectations between YADHUVII and
+            participating suppliers. By continuing, you acknowledge
+            that you have read and understood these terms.
+        </p>
+
+    </div>
+
+
+    <div class="terms">
+
+
+        <!-- 01 -->
+
+        <div class="term">
+
+            <div class="term-number">
+                01
+            </div>
+
+            <h2>
+                Supplier Eligibility
+            </h2>
+
+            <p>
+                Suppliers must provide accurate and complete business
+                information when applying to become a YADHUVII supplier.
+            </p>
+
+            <ul>
+                <li>Supplier information must be truthful and current.</li>
+                <li>Suppliers must be legally permitted to sell their products.</li>
+                <li>YADHUVII may review supplier applications before approval.</li>
+            </ul>
+
+        </div>
+
+
+        <!-- 02 -->
+
+        <div class="term">
+
+            <div class="term-number">
+                02
+            </div>
+
+            <h2>
+                Supplier Approval
+            </h2>
+
+            <p>
+                Creating a supplier account does not automatically guarantee
+                approval.
+            </p>
+
+            <p>
+                YADHUVII may review the supplier's business information,
+                products, quality standards and ability to fulfil orders
+                before approving the account.
+            </p>
+
+        </div>
+
+
+        <!-- 03 -->
+
+        <div class="term">
+
+            <div class="term-number">
+                03
+            </div>
+
+            <h2>
+                Product Authenticity & Quality
+            </h2>
+
+            <p>
+                Suppliers are responsible for ensuring that all products
+                submitted to YADHUVII are authentic, lawful and accurately
+                represented.
+            </p>
+
+            <ul>
+                <li>Products must match their descriptions.</li>
+                <li>Products must meet reasonable quality standards.</li>
+                <li>Counterfeit or unlawfully supplied products are prohibited.</li>
+                <li>Suppliers must inform YADHUVII of material product issues.</li>
+            </ul>
+
+        </div>
+
+
+        <!-- 04 -->
+
+        <div class="term">
+
+            <div class="term-number">
+                04
+            </div>
+
+            <h2>
+                Product Information
+            </h2>
+
+            <p>
+                Suppliers must provide accurate information for every product
+                submitted to YADHUVII.
+            </p>
+
+            <ul>
+                <li>Product name</li>
+                <li>Description</li>
+                <li>Images</li>
+                <li>Price</li>
+                <li>Available stock</li>
+                <li>Variants and specifications</li>
+            </ul>
+
+            <p>
+                Suppliers must promptly update information when products,
+                prices or availability change.
+            </p>
+
+        </div>
+
+
+        <!-- 05 -->
+
+        <div class="term">
+
+            <div class="term-number">
+                05
+            </div>
+
+            <h2>
+                Orders & Fulfilment
+            </h2>
+
+            <p>
+                Customer orders placed through YADHUVII may be forwarded
+                to the relevant supplier for fulfilment according to the
+                applicable supplier process.
+            </p>
+
+            <p>
+                Suppliers are responsible for preparing and fulfilling
+                accepted orders within the agreed timeframe.
+            </p>
+
+            <ul>
+                <li>Orders should be processed promptly.</li>
+                <li>Products should be correctly prepared and packaged.</li>
+                <li>Suppliers should provide accurate fulfilment information.</li>
+                <li>Unexpected delays must be communicated to YADHUVII.</li>
+            </ul>
+
+        </div>
+
+
+        <!-- 06 -->
+
+        <div class="term">
+
+            <div class="term-number">
+                06
+            </div>
+
+            <h2>
+                Stock Availability
+            </h2>
+
+            <p>
+                Suppliers are responsible for keeping stock information
+                reasonably accurate.
+            </p>
+
+            <p>
+                If a product becomes unavailable after an order has been
+                received, the supplier must notify YADHUVII as soon as
+                reasonably possible.
+            </p>
+
+        </div>
+
+
+        <!-- 07 -->
+
+        <div class="term">
+
+            <div class="term-number">
+                07
+            </div>
+
+            <h2>
+                Packaging & Delivery
+            </h2>
+
+            <p>
+                Suppliers must package products appropriately for delivery
+                and follow the fulfilment and shipping arrangements agreed
+                with YADHUVII.
+            </p>
+
+            <p>
+                Responsibility for shipping, packaging and handover may vary
+                depending on the supplier agreement and order arrangement.
+            </p>
+
+        </div>
+
+
+        <!-- 08 -->
+
+        <div class="term">
+
+            <div class="term-number">
+                08
+            </div>
+
+            <h2>
+                Returns, Defective Products & Customer Issues
+            </h2>
+
+            <p>
+                Suppliers must cooperate with YADHUVII when an order involves
+                a defective, damaged, incorrect or materially misrepresented
+                product.
+            </p>
+
+            <p>
+                Return, replacement, refund and related responsibilities will
+                be handled according to the applicable YADHUVII policy and
+                supplier agreement.
+            </p>
+
+        </div>
+
+
+        <!-- 09 -->
+
+        <div class="term">
+
+            <div class="term-number">
+                09
+            </div>
+
+            <h2>
+                Supplier Payments
+            </h2>
+
+            <p>
+                Supplier payments and settlement arrangements will be
+                determined according to the commercial terms agreed between
+                YADHUVII and the supplier.
+            </p>
+
+            <p>
+                Suppliers are responsible for providing accurate payment
+                information where required.
+            </p>
+
+        </div>
+
+
+        <!-- 10 -->
+
+        <div class="term">
+
+            <div class="term-number">
+                10
+            </div>
+
+            <h2>
+                Customer Information & Privacy
+            </h2>
+
+            <p>
+                Any customer information provided to a supplier for order
+                fulfilment must be used only for legitimate fulfilment and
+                service purposes.
+            </p>
+
+            <p>
+                Suppliers must not misuse, sell, share or independently
+                market to customers using information obtained through
+                YADHUVII.
+            </p>
+
+        </div>
+
+
+        <!-- 11 -->
+
+        <div class="term">
+
+            <div class="term-number">
+                11
+            </div>
+
+            <h2>
+                Intellectual Property
+            </h2>
+
+            <p>
+                Suppliers must have the necessary rights or permissions to
+                provide product images, descriptions, logos and other
+                materials submitted to YADHUVII.
+            </p>
+
+            <p>
+                Suppliers must not submit materials that unlawfully infringe
+                the rights of another person or business.
+            </p>
+
+        </div>
+
+
+        <!-- 12 -->
+
+        <div class="term">
+
+            <div class="term-number">
+                12
+            </div>
+
+            <h2>
+                Prohibited Products
+            </h2>
+
+            <p>
+                Suppliers may not submit products that violate applicable
+                laws, regulations or YADHUVII policies.
+            </p>
+
+            <p>
+                YADHUVII may reject or remove products that it considers
+                inappropriate, unsafe, unlawful or unsuitable for the
+                marketplace.
+            </p>
+
+        </div>
+
+
+        <!-- 13 -->
+
+        <div class="term">
+
+            <div class="term-number">
+                13
+            </div>
+
+            <h2>
+                Account Review & Suspension
+            </h2>
+
+            <p>
+                YADHUVII may review supplier accounts and product listings
+                from time to time.
+            </p>
+
+            <p>
+                Accounts or products may be suspended, restricted or removed
+                where there are serious quality, fulfilment, compliance,
+                customer-service or policy concerns.
+            </p>
+
+        </div>
+
+
+        <!-- 14 -->
+
+        <div class="term">
+
+            <div class="term-number">
+                14
+            </div>
+
+            <h2>
+                Ending the Partnership
+            </h2>
+
+            <p>
+                Either party may request to end the supplier relationship
+                subject to any applicable commercial agreement or outstanding
+                order obligations.
+            </p>
+
+            <p>
+                Ending the partnership does not automatically remove
+                responsibilities relating to orders or matters that arose
+                before termination.
+            </p>
+
+        </div>
+
+
+        <!-- 15 -->
+
+        <div class="term">
+
+            <div class="term-number">
+                15
+            </div>
+
+            <h2>
+                Changes to These Terms
+            </h2>
+
+            <p>
+                YADHUVII may update these supplier terms from time to time
+                as the platform, business operations or applicable
+                requirements develop.
+            </p>
+
+            <p>
+                Where appropriate, suppliers may be required to review and
+                accept updated terms before continuing to use supplier
+                services.
+            </p>
+
+        </div>
+
+
+        <!-- 16 -->
+
+        <div class="term">
+
+            <div class="term-number">
+                16
+            </div>
+
+            <h2>
+                Agreement
+            </h2>
+
+            <p>
+                By accepting these terms, the supplier confirms that the
+                information provided during registration is accurate and that
+                the supplier agrees to comply with the applicable YADHUVII
+                supplier requirements.
+            </p>
+
+        </div>
+
+
+    </div>
+
+
+    <!-- =========================
+         ACCEPTANCE
+    ========================= -->
+
+    <div class="acceptance">
+
+        <div class="acceptance-label">
+            SUPPLIER AGREEMENT
+        </div>
+
+        <h2>
+            Ready to become a YADHUVII supplier?
+        </h2>
+
+        <p class="acceptance-description">
+            Please confirm that you have read and understood the Supplier
+            Terms & Conditions before continuing to supplier registration.
+        </p>
+
+
+        <div class="checkbox-row">
+
+            <input
+                type="checkbox"
+                id="acceptTerms"
+                onchange="updateButton()"
+            >
+
+            <label for="acceptTerms">
+
+                I have read and understood the YADHUVII Supplier
+                Terms & Conditions and agree to comply with the
+                applicable supplier requirements.
+
+            </label>
+
+        </div>
+
+
+        <button
+            id="continueButton"
+            class="continue-button"
+            disabled
+            onclick="continueToSupplier()"
+        >
+            Accept & Continue →
+        </button>
+
+
+        <div id="warning" class="warning">
+
+            Please read the terms and tick the agreement checkbox
+            before continuing.
+
+        </div>
+
+    </div>
+
+
+</main>
+
+
+<!-- =========================
+     FOOTER
+========================= -->
+
+<footer>
+
+    <div class="footer-logo">
+        YADHUVII
+    </div>
+
+    <div class="footer-copy">
+        © 2026 YADHUVII. All Rights Reserved.
+    </div>
+
+</footer>
+
+
+<script>
+
+/* =========================
+   TERMS ACCEPTANCE
+========================= */
+
+function updateButton() {
+
+    const checkbox =
+        document.getElementById("acceptTerms");
+
+    const button =
+        document.getElementById("continueButton");
+
+    button.disabled =
+        !checkbox.checked;
+
+}
+
+
+/* =========================
+   CONTINUE
+========================= */
+
+function continueToSupplier() {
+
+    const checkbox =
+        document.getElementById("acceptTerms");
+
+    const warning =
+        document.getElementById("warning");
+
+    if (!checkbox.checked) {
+
+        warning.classList.add("show");
+
+        return;
+
+    }
+
+    /*
+       Temporary front-end acceptance marker.
+
+       Later we will connect this acceptance
+       to the backend/database so YADHUVII
+       records:
+       - supplier
+       - acceptance
+       - date/time
+       - terms version
+    */
+
+    sessionStorage.setItem(
+        "yadhuvii_supplier_terms_accepted",
+        "true"
+    );
+
+    sessionStorage.setItem(
+        "yadhuvii_supplier_terms_version",
+        "2026.1"
+    );
+
+    window.location.href =
+        "supplier.html";
+
+}
+
+</script>
+
+
+</body>
+</html>
