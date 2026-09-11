@@ -1,225 +1,168 @@
-require("dotenv").config();
-
 const express = require("express");
 const path = require("path");
-const cors = require("cors");
-const crypto = require("crypto");
-const fs = require("fs");
 
 const app = express();
 
-// ========================================
-// CONFIGURATION
-// ========================================
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 const PORT = process.env.PORT || 3000;
-const SHOP_ID = 28856493;
-
-const SUPPLIERS_FILE = path.join(__dirname, "suppliers.json");
-
-// ========================================
-// CJ DROPSHIPPING
-// STEP 1: PRODUCT SYNC ONLY
-// ========================================
 
 const CJ_API_BASE =
     "https://developers.cjdropshipping.com/api2.0/v1";
 
-let cjTokenCache = {
-    accessToken: null,
-    refreshToken: null,
-    expiresAt: 0
-};
+let cjAccessToken = null;
+let cjTokenExpiresAt = 0;
 
 
-// ========================================
-// GET CJ ACCESS TOKEN
-// ========================================
+/* =========================================================
+   CJ DROPSHIPPING AUTHENTICATION
+   ========================================================= */
 
 async function getCJAccessToken() {
 
-    const apiKey = process.env.CJ_API_KEY;
+    if (
+        cjAccessToken &&
+        Date.now() < cjTokenExpiresAt - 60 * 1000
+    ) {
+        return cjAccessToken;
+    }
+
+    const apiKey =
+        process.env.CJ_API_KEY ||
+        process.env.CJ_ACCESS_TOKEN;
+
+    const apiSecret =
+        process.env.CJ_API_SECRET;
 
     if (!apiKey) {
         throw new Error(
-            "CJ_API_KEY is not configured in .env"
+            "CJ API key is missing. Add CJ_API_KEY to your environment variables."
         );
     }
 
-    // Use cached token if still valid
-    if (
-        cjTokenCache.accessToken &&
-        Date.now() < cjTokenCache.expiresAt
-    ) {
-        return cjTokenCache.accessToken;
+    /*
+     * If a ready CJ access token is supplied,
+     * use it directly.
+     */
+    if (!apiSecret) {
+        cjAccessToken = apiKey;
+        cjTokenExpiresAt =
+            Date.now() + 50 * 60 * 1000;
+
+        return cjAccessToken;
     }
 
-
-    // Try refresh token first
-    if (cjTokenCache.refreshToken) {
-
-        try {
-
-            const refreshResponse =
-                await fetch(
-                    `${CJ_API_BASE}/authentication/refreshAccessToken`,
-                    {
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body: JSON.stringify({
-                            refreshToken:
-                                cjTokenCache.refreshToken
-                        })
-                    }
-                );
-
-
-            const refreshJson =
-                await refreshResponse.json();
-
-
-            if (
-                refreshResponse.ok &&
-                refreshJson &&
-                refreshJson.result &&
-                refreshJson.data?.accessToken
-            ) {
-
-                cjTokenCache.accessToken =
-                    refreshJson.data.accessToken;
-
-                cjTokenCache.refreshToken =
-                    refreshJson.data.refreshToken ||
-                    cjTokenCache.refreshToken;
-
-                cjTokenCache.expiresAt =
-                    Date.now() +
-                    14 * 24 * 60 * 60 * 1000;
-
-                return cjTokenCache.accessToken;
-            }
-
-        } catch (error) {
-
-            console.warn(
-                "CJ token refresh failed:",
-                error.message
-            );
+    const response = await fetch(
+        `${CJ_API_BASE}/authentication/getAccessToken`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                email: apiKey,
+                password: apiSecret
+            })
         }
+    );
 
-        cjTokenCache = {
-            accessToken: null,
-            refreshToken: null,
-            expiresAt: 0
-        };
-    }
-
-
-    // Get new token using API key
-    const authResponse =
-        await fetch(
-            `${CJ_API_BASE}/authentication/getAccessToken`,
-            {
-                method: "POST",
-
-                headers: {
-                    "Content-Type":
-                        "application/json"
-                },
-
-                body: JSON.stringify({
-                    apiKey: apiKey
-                })
-            }
-        );
-
-
-    const authJson =
-        await authResponse.json();
-
-
-    if (
-        !authResponse.ok ||
-        !authJson?.result ||
-        !authJson?.data?.accessToken
-    ) {
-
+    if (!response.ok) {
         throw new Error(
-            authJson?.message ||
-            "CJ authentication failed"
+            `CJ authentication failed: ${response.status}`
         );
     }
 
+    const json = await response.json();
 
-    cjTokenCache.accessToken =
-        authJson.data.accessToken;
+    const token =
+        json?.data?.accessToken ||
+        json?.data?.access_token ||
+        json?.accessToken;
 
-    cjTokenCache.refreshToken =
-        authJson.data.refreshToken || null;
+    if (!token) {
+        throw new Error(
+            "CJ authentication succeeded but no access token was returned."
+        );
+    }
 
-    cjTokenCache.expiresAt =
+    cjAccessToken = token;
+
+    cjTokenExpiresAt =
         Date.now() +
-        14 * 24 * 60 * 60 * 1000;
+        Number(
+            json?.data?.expiresIn || 3600
+        ) * 1000;
 
-
-    return cjTokenCache.accessToken;
+    return cjAccessToken;
 }
 
 
-// ========================================
-// CJ GET REQUEST
-// ========================================
+/* =========================================================
+   CJ API REQUEST HELPER
+   ========================================================= */
 
 async function cjGet(url) {
 
     const token =
         await getCJAccessToken();
 
-
     const response =
         await fetch(
             url,
             {
+                method: "GET",
                 headers: {
-                    "CJ-Access-Token":
-                        token
+                    "CJ-Access-Token": token,
+                    "Content-Type": "application/json"
                 }
             }
         );
 
+    const text =
+        await response.text();
 
-    const json =
-        await response.json();
+    let json;
 
+    try {
+        json = JSON.parse(text);
+    } catch {
+        json = {
+            message: text
+        };
+    }
 
-    if (
-        !response.ok ||
-        json?.result === false
-    ) {
-
+    if (!response.ok) {
         throw new Error(
             json?.message ||
-            `CJ request failed (${response.status})`
+            json?.msg ||
+            `CJ API request failed: ${response.status}`
         );
     }
 
+    if (
+        json &&
+        json.code &&
+        String(json.code) !== "200"
+    ) {
+        throw new Error(
+            json.message ||
+            json.msg ||
+            `CJ API error: ${json.code}`
+        );
+    }
 
     return json;
 }
 
 
-// ========================================
-// NORMALIZE CJ PRODUCT
-// ========================================
+/* =========================================================
+   NORMALIZE CJ PRODUCT
+   ========================================================= */
 
 function normalizeCJProduct(
     product,
-    details
+    details = null
 ) {
 
     const source =
@@ -227,42 +170,56 @@ function normalizeCJProduct(
         product ||
         {};
 
+    const images = [
 
-    const images =
-        Array.from(
-            new Set(
-                [
-                    source.bigImage,
+        ...(Array.isArray(
+            source.productImage
+        )
+            ? source.productImage
+            : []),
 
-                    ...(Array.isArray(
-                        source.productImageSet
-                    )
-                        ? source.productImageSet
-                        : []),
+        ...(Array.isArray(
+            source.images
+        )
+            ? source.images
+            : []),
 
-                    source.productImage
+        source.productImageUrl,
+        source.image,
+        source.mainImage
 
-                ].filter(Boolean)
-            )
+    ]
+        .filter(Boolean)
+        .map(String)
+        .filter(
+            (value, index, array) =>
+                array.indexOf(value) === index
         );
-
 
     const rawPrice =
         Number(
-            source.sellPrice ??
-            product?.sellPrice ??
+            source.sellPrice ||
+            source.price ||
+            source.productPrice ||
+            source.minPrice ||
             0
-        );
+        ) || 0;
 
 
     return {
 
         id:
-            `cj-${source.pid || source.id}`,
+            "cj-" +
+            (
+                source.pid ||
+                source.id ||
+                Date.now()
+            ),
 
         cjProductId:
             source.pid ||
-            source.id,
+            source.id ||
+            "",
 
         sku:
             source.productSku ||
@@ -288,16 +245,34 @@ function normalizeCJProduct(
                     "https://via.placeholder.com/900x1200?text=CJ+Product"
                 ],
 
-        // Temporary raw CJ value for Step 1
-        // Existing GLOBIRA pricing UI is untouched.
         price:
             rawPrice,
 
         oldPrice:
             rawPrice,
 
+        category:
+            source.categoryNameEn ||
+            source.categoryName ||
+            product?.categoryNameEn ||
+            product?.categoryName ||
+            "",
+
+        subcategory:
+            source.subCategoryNameEn ||
+            source.subcategoryNameEn ||
+            product?.subCategoryNameEn ||
+            "",
+
+        gender:
+            source.gender ||
+            product?.gender ||
+            "",
+
         variants:
-            Array.isArray(source.variants)
+            Array.isArray(
+                source.variants
+            )
                 ? source.variants
                 : [],
 
@@ -307,9 +282,9 @@ function normalizeCJProduct(
 }
 
 
-// ========================================
-// GET CJ PRODUCTS
-// ========================================
+/* =========================================================
+   GET CJ PRODUCTS
+   ========================================================= */
 
 async function getCJProducts(
     req,
@@ -320,19 +295,26 @@ async function getCJProducts(
 
         const keyword =
             String(
-                req.query.keyword ||
-                process.env.CJ_FEATURED_KEYWORD ||
-                "hoodie"
+                req.query.keyword || ""
             ).trim();
 
+        const page =
+            Math.max(
+                Number(
+                    req.query.page
+                ) || 1,
+                1
+            );
 
         const size =
             Math.min(
                 Math.max(
-                    Number(req.query.size) || 6,
+                    Number(
+                        req.query.size
+                    ) || 100,
                     1
                 ),
-                20
+                100
             );
 
 
@@ -344,9 +326,8 @@ async function getCJProducts(
 
         listUrl.searchParams.set(
             "page",
-            "1"
+            String(page)
         );
-
 
         listUrl.searchParams.set(
             "size",
@@ -354,10 +335,13 @@ async function getCJProducts(
         );
 
 
-        listUrl.searchParams.set(
-            "keyWord",
-            keyword
-        );
+        if (keyword) {
+
+            listUrl.searchParams.set(
+                "keyWord",
+                keyword
+            );
+        }
 
 
         listUrl.searchParams.set(
@@ -365,12 +349,10 @@ async function getCJProducts(
             "enable_description,enable_category"
         );
 
-
         listUrl.searchParams.set(
             "sort",
             "desc"
         );
-
 
         listUrl.searchParams.set(
             "orderBy",
@@ -379,8 +361,12 @@ async function getCJProducts(
 
 
         console.log(
-            "Searching CJ products:",
-            keyword
+            "Loading CJ products:",
+            keyword || "ALL",
+            "page:",
+            page,
+            "size:",
+            size
         );
 
 
@@ -390,9 +376,16 @@ async function getCJProducts(
             );
 
 
+        const data =
+            listJson?.data || {};
+
+
         const content =
-            listJson?.data?.content ||
-            [];
+            Array.isArray(
+                data.content
+            )
+                ? data.content
+                : [];
 
 
         const products =
@@ -403,52 +396,31 @@ async function getCJProducts(
 
 
         const normalized =
-            await Promise.all(
-
-                products
-                    .slice(0, size)
-                    .map(
-                        async product => {
-
-                            try {
-
-                                const detailUrl =
-                                    new URL(
-                                        `${CJ_API_BASE}/product/query`
-                                    );
+            products
+                .slice(0, size)
+                .map(
+                    product =>
+                        normalizeCJProduct(
+                            product
+                        )
+                );
 
 
-                                detailUrl.searchParams.set(
-                                    "pid",
-                                    product.id
-                                );
+        const totalRecords =
+            Number(
+                data.totalRecords || 0
+            );
 
 
-                                const detailJson =
-                                    await cjGet(
-                                        detailUrl.toString()
-                                    );
+        const totalPages =
+            Number(
+                data.totalPages || 0
+            );
 
 
-                                return normalizeCJProduct(
-                                    product,
-                                    detailJson?.data
-                                );
-
-                            } catch (detailError) {
-
-                                console.warn(
-                                    "CJ product detail failed:",
-                                    detailError.message
-                                );
-
-
-                                return normalizeCJProduct(
-                                    product
-                                );
-                            }
-                        }
-                    )
+        const currentPage =
+            Number(
+                data.pageNumber || page
             );
 
 
@@ -461,7 +433,25 @@ async function getCJProducts(
                 "cjdropshipping",
 
             keyword:
+
                 keyword,
+
+            page:
+                currentPage,
+
+            size:
+                size,
+
+            totalRecords:
+                totalRecords,
+
+            totalPages:
+                totalPages,
+
+            hasMore:
+                totalPages
+                    ? currentPage < totalPages
+                    : normalized.length === size,
 
             products:
                 normalized
@@ -491,9 +481,9 @@ async function getCJProducts(
 }
 
 
-// ========================================
-// GET ONE CJ PRODUCT
-// ========================================
+/* =========================================================
+   GET ONE CJ PRODUCT
+   ========================================================= */
 
 async function getCJProduct(
     req,
@@ -502,46 +492,47 @@ async function getCJProduct(
 
     try {
 
-        const pid =
+        const productId =
             String(
-                req.params.productId ||
-                ""
-            ).replace(
-                /^cj-/,
-                ""
-            );
+                req.params.productId || ""
+            ).trim();
 
 
-        if (!pid) {
+        if (!productId) {
 
-            return res
-                .status(400)
-                .json({
+            return res.status(400).json({
 
-                    success:
-                        false,
+                success:
+                    false,
 
-                    error:
-                        "Missing CJ product id"
-                });
+                error:
+                    "Product ID is required."
+            });
         }
 
 
-        const detailUrl =
-            new URL(
-                `${CJ_API_BASE}/product/query`
-            );
+        const url =
+            `${CJ_API_BASE}/product/query?pid=${encodeURIComponent(productId)}`;
 
 
-        detailUrl.searchParams.set(
-            "pid",
-            pid
+        console.log(
+            "Loading CJ product:",
+            productId
         );
 
 
         const json =
-            await cjGet(
-                detailUrl.toString()
+            await cjGet(url);
+
+
+        const product =
+            json?.data || {};
+
+
+        const normalized =
+            normalizeCJProduct(
+                product,
+                product
             );
 
 
@@ -550,10 +541,11 @@ async function getCJProduct(
             success:
                 true,
 
+            source:
+                "cjdropshipping",
+
             product:
-                normalizeCJProduct(
-                    json?.data
-                )
+                normalized
         });
 
 
@@ -570,6 +562,9 @@ async function getCJProduct(
             success:
                 false,
 
+            source:
+                "cjdropshipping",
+
             error:
                 error.message
         });
@@ -577,895 +572,9 @@ async function getCJProduct(
 }
 
 
-// ========================================
-// MIDDLEWARE
-// ========================================
-
-app.use(cors());
-
-app.use(
-    express.json()
-);
-
-app.use(
-    express.urlencoded({
-        extended: true
-    })
-);
-
-
-// ========================================
-// SUPPLIER DATABASE
-// ========================================
-
-function ensureSupplierFile() {
-
-    if (
-        !fs.existsSync(
-            SUPPLIERS_FILE
-        )
-    ) {
-
-        fs.writeFileSync(
-
-            SUPPLIERS_FILE,
-
-            JSON.stringify(
-                [],
-                null,
-                2
-            ),
-
-            "utf8"
-        );
-    }
-}
-
-
-function getSuppliers() {
-
-    ensureSupplierFile();
-
-
-    try {
-
-        const data =
-            fs.readFileSync(
-                SUPPLIERS_FILE,
-                "utf8"
-            );
-
-
-        return JSON.parse(
-            data
-        );
-
-    } catch (error) {
-
-        console.error(
-            "SUPPLIER DATABASE ERROR:",
-            error
-        );
-
-
-        return [];
-    }
-}
-
-
-function saveSuppliers(
-    suppliers
-) {
-
-    fs.writeFileSync(
-
-        SUPPLIERS_FILE,
-
-        JSON.stringify(
-            suppliers,
-            null,
-            2
-        ),
-
-        "utf8"
-    );
-}
-
-
-ensureSupplierFile();
-
-
-// ========================================
-// PASSWORD SECURITY
-// ========================================
-
-function hashPassword(
-    password
-) {
-
-    const salt =
-        crypto
-            .randomBytes(16)
-            .toString("hex");
-
-
-    const hash =
-        crypto
-            .pbkdf2Sync(
-                password,
-                salt,
-                100000,
-                64,
-                "sha512"
-            )
-            .toString("hex");
-
-
-    return {
-
-        salt:
-            salt,
-
-        hash:
-            hash
-    };
-}
-
-
-function verifyPassword(
-    password,
-    storedHash,
-    salt
-) {
-
-    const hash =
-        crypto
-            .pbkdf2Sync(
-                password,
-                salt,
-                100000,
-                64,
-                "sha512"
-            )
-            .toString("hex");
-
-
-    return crypto.timingSafeEqual(
-
-        Buffer.from(
-            hash,
-            "hex"
-        ),
-
-        Buffer.from(
-            storedHash,
-            "hex"
-        )
-    );
-}
-
-
-// ========================================
-// SESSION SYSTEM
-// ========================================
-
-const sessions =
-    new Map();
-
-
-function createSession(
-    supplierId
-) {
-
-    const token =
-        crypto
-            .randomBytes(32)
-            .toString("hex");
-
-
-    sessions.set(
-
-        token,
-
-        {
-            supplierId:
-                supplierId,
-
-            createdAt:
-                Date.now()
-        }
-    );
-
-
-    return token;
-}
-
-
-function getSessionToken(
-    req
-) {
-
-    const cookieHeader =
-        req.headers.cookie;
-
-
-    if (!cookieHeader) {
-        return null;
-    }
-
-
-    const cookies =
-        cookieHeader
-            .split(";")
-            .map(
-                function(cookie) {
-                    return cookie.trim();
-                }
-            );
-
-
-    const sessionCookie =
-        cookies.find(
-            function(cookie) {
-
-                return cookie.startsWith(
-                    "yadhuvii_supplier_session="
-                );
-            }
-        );
-
-
-    if (!sessionCookie) {
-        return null;
-    }
-
-
-    return sessionCookie.split("=")[1];
-}
-
-
-function getLoggedInSupplier(
-    req
-) {
-
-    const token =
-        getSessionToken(req);
-
-
-    if (!token) {
-        return null;
-    }
-
-
-    const session =
-        sessions.get(token);
-
-
-    if (!session) {
-        return null;
-    }
-
-
-    const suppliers =
-        getSuppliers();
-
-
-    return suppliers.find(
-        function(supplier) {
-
-            return supplier.id ===
-                session.supplierId;
-
-        }
-    ) || null;
-}
-
-
-// ========================================
-// AUTHENTICATION MIDDLEWARE
-// ========================================
-
-function requireSupplierAuth(
-    req,
-    res,
-    next
-) {
-
-    const supplier =
-        getLoggedInSupplier(req);
-
-
-    if (!supplier) {
-
-        if (
-            req.path ===
-                "/supplier-dashboard.html" ||
-
-            req.path ===
-                "/api/supplier/me"
-        ) {
-
-            return res
-                .status(401)
-                .json({
-
-                    success:
-                        false,
-
-                    error:
-                        "Not authenticated"
-                });
-        }
-
-
-        return res
-            .status(401)
-            .json({
-
-                success:
-                    false,
-
-                error:
-                    "Authentication required"
-            });
-    }
-
-
-    req.supplier =
-        supplier;
-
-
-    next();
-}
-
-
-// ========================================
-// SUPPLIER ROUTES
-// ========================================
-
-app.post(
-    "/api/supplier/register",
-    function(req, res) {
-
-        try {
-
-            const {
-                name,
-                email,
-                password
-            } = req.body;
-
-
-            if (
-                !name ||
-                !email ||
-                !password
-            ) {
-
-                return res
-                    .status(400)
-                    .json({
-
-                        success:
-                            false,
-
-                        error:
-                            "Name, email and password are required"
-                    });
-            }
-
-
-            const suppliers =
-                getSuppliers();
-
-
-            const existing =
-                suppliers.find(
-                    function(supplier) {
-
-                        return supplier.email
-                            .toLowerCase() ===
-                            email.toLowerCase();
-
-                    }
-                );
-
-
-            if (existing) {
-
-                return res
-                    .status(400)
-                    .json({
-
-                        success:
-                            false,
-
-                        error:
-                            "Supplier already exists"
-                    });
-            }
-
-
-            const passwordData =
-                hashPassword(
-                    password
-                );
-
-
-            const supplier = {
-
-                id:
-                    crypto
-                        .randomBytes(16)
-                        .toString("hex"),
-
-                name:
-                    name,
-
-                email:
-                    email.toLowerCase(),
-
-                passwordHash:
-                    passwordData.hash,
-
-                passwordSalt:
-                    passwordData.salt,
-
-                createdAt:
-                    new Date().toISOString()
-            };
-
-
-            suppliers.push(
-                supplier
-            );
-
-
-            saveSuppliers(
-                suppliers
-            );
-
-
-            const token =
-                createSession(
-                    supplier.id
-                );
-
-
-            res.setHeader(
-                "Set-Cookie",
-                `yadhuvii_supplier_session=${token}; HttpOnly; Path=/; SameSite=Lax`
-            );
-
-
-            return res.json({
-
-                success:
-                    true,
-
-                supplier: {
-
-                    id:
-                        supplier.id,
-
-                    name:
-                        supplier.name,
-
-                    email:
-                        supplier.email
-                }
-            });
-
-
-        } catch (error) {
-
-            console.error(
-                "SUPPLIER REGISTER ERROR:",
-                error
-            );
-
-
-            return res
-                .status(500)
-                .json({
-
-                    success:
-                        false,
-
-                    error:
-                        error.message
-                });
-        }
-    }
-);
-
-
-app.post(
-    "/api/supplier/login",
-    function(req, res) {
-
-        try {
-
-            const {
-                email,
-                password
-            } = req.body;
-
-
-            const suppliers =
-                getSuppliers();
-
-
-            const supplier =
-                suppliers.find(
-                    function(item) {
-
-                        return item.email
-                            .toLowerCase() ===
-                            String(email || "")
-                                .toLowerCase();
-
-                    }
-                );
-
-
-            if (!supplier) {
-
-                return res
-                    .status(401)
-                    .json({
-
-                        success:
-                            false,
-
-                        error:
-                            "Invalid email or password"
-                    });
-            }
-
-
-            const valid =
-                verifyPassword(
-                    password,
-                    supplier.passwordHash,
-                    supplier.passwordSalt
-                );
-
-
-            if (!valid) {
-
-                return res
-                    .status(401)
-                    .json({
-
-                        success:
-                            false,
-
-                        error:
-                            "Invalid email or password"
-                    });
-            }
-
-
-            const token =
-                createSession(
-                    supplier.id
-                );
-
-
-            res.setHeader(
-                "Set-Cookie",
-                `yadhuvii_supplier_session=${token}; HttpOnly; Path=/; SameSite=Lax`
-            );
-
-
-            return res.json({
-
-                success:
-                    true,
-
-                supplier: {
-
-                    id:
-                        supplier.id,
-
-                    name:
-                        supplier.name,
-
-                    email:
-                        supplier.email
-                }
-            });
-
-
-        } catch (error) {
-
-            console.error(
-                "SUPPLIER LOGIN ERROR:",
-                error
-            );
-
-
-            return res
-                .status(500)
-                .json({
-
-                    success:
-                        false,
-
-                    error:
-                        error.message
-                });
-        }
-    }
-);
-
-
-app.get(
-    "/api/supplier/me",
-    function(req, res) {
-
-        const supplier =
-            getLoggedInSupplier(req);
-
-
-        if (!supplier) {
-
-            return res
-                .status(401)
-                .json({
-
-                    success:
-                        false,
-
-                    error:
-                        "Not authenticated"
-                });
-        }
-
-
-        return res.json({
-
-            success:
-                true,
-
-            supplier: {
-
-                id:
-                    supplier.id,
-
-                name:
-                    supplier.name,
-
-                email:
-                    supplier.email
-            }
-        });
-    }
-);
-
-
-app.post(
-    "/api/supplier/logout",
-    function(req, res) {
-
-        const token =
-            getSessionToken(req);
-
-
-        if (token) {
-            sessions.delete(token);
-        }
-
-
-        res.setHeader(
-            "Set-Cookie",
-            "yadhuvii_supplier_session=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax"
-        );
-
-
-        return res.json({
-
-            success:
-                true
-        });
-    }
-);
-
-
-// ========================================
-// PRINTIFY PRODUCTS
-// ========================================
-
-async function getPrintifyProducts(
-    req,
-    res
-) {
-
-    try {
-
-        const token =
-            process.env.PRINTIFY_API_TOKEN;
-
-
-        if (!token) {
-
-            return res
-                .status(500)
-                .json({
-
-                    success:
-                        false,
-
-                    error:
-                        "PRINTIFY_API_TOKEN is missing from .env"
-                });
-        }
-
-
-        console.log(
-            "================================"
-        );
-
-        console.log(
-            "GETTING PRINTIFY PRODUCTS"
-        );
-
-        console.log(
-            "================================"
-        );
-
-
-        const url =
-            "https://api.printify.com/v1/shops/" +
-            SHOP_ID +
-            "/products.json";
-
-
-        console.log(
-            "Printify URL:",
-            url
-        );
-
-
-        const response =
-            await fetch(
-
-                url,
-
-                {
-
-                    method:
-                        "GET",
-
-                    headers: {
-
-                        "Authorization":
-                            "Bearer " + token,
-
-                        "Content-Type":
-                            "application/json"
-                    }
-                }
-            );
-
-
-        const text =
-            await response.text();
-
-
-        console.log(
-            "Printify response status:",
-            response.status
-        );
-
-
-        let data;
-
-
-        try {
-
-            data =
-                JSON.parse(
-                    text
-                );
-
-        } catch (error) {
-
-            console.error(
-                "Could not parse Printify response"
-            );
-
-
-            return res
-                .status(500)
-                .json({
-
-                    success:
-                        false,
-
-                    error:
-                        "Invalid response from Printify",
-
-                    response:
-                        text
-                });
-        }
-
-
-        if (!response.ok) {
-
-            console.error(
-                "Printify returned an error:"
-            );
-
-
-            console.error(
-                data
-            );
-
-
-            return res
-                .status(
-                    response.status
-                )
-                .json({
-
-                    success:
-                        false,
-
-                    printify_status:
-                        response.status,
-
-                    printify_response:
-                        data
-                });
-        }
-
-
-        console.log(
-            "Products loaded successfully."
-        );
-
-
-        return res.json({
-
-            success:
-                true,
-
-            shop_id:
-                SHOP_ID,
-
-            products:
-                data
-        });
-
-
-    } catch (error) {
-
-        console.error(
-            "PRODUCTS ERROR",
-            error
-        );
-
-
-        return res
-            .status(500)
-            .json({
-
-                success:
-                    false,
-
-                error:
-                    error.message
-            });
-    }
-}
-
-
-// ========================================
-// PRODUCT ROUTES
-// ========================================
+/* =========================================================
+   API ROUTES
+   ========================================================= */
 
 app.get(
     "/api/cj-products",
@@ -1479,374 +588,83 @@ app.get(
 );
 
 
-app.get(
-    "/api/products",
-    getPrintifyProducts
-);
-
-
-app.get(
-    "/printify-products",
-    getPrintifyProducts
-);
-
-
-// ========================================
-// GET ONE PRINTIFY PRODUCT
-// ========================================
-
-app.get(
-    "/product/:productId",
-    async function(req, res) {
-
-        try {
-
-            const token =
-                process.env.PRINTIFY_API_TOKEN;
-
-
-            const productId =
-                req.params.productId;
-
-
-            if (!token) {
-
-                return res
-                    .status(500)
-                    .json({
-
-                        success:
-                            false,
-
-                        error:
-                            "PRINTIFY_API_TOKEN is missing from .env"
-                    });
-            }
-
-
-            console.log(
-                "Getting product:",
-                productId
-            );
-
-
-            const response =
-                await fetch(
-
-                    "https://api.printify.com/v1/shops/" +
-                    SHOP_ID +
-                    "/products/" +
-                    productId +
-                    ".json",
-
-                    {
-
-                        method:
-                            "GET",
-
-                        headers: {
-
-                            "Authorization":
-                                "Bearer " + token,
-
-                            "Content-Type":
-                                "application/json"
-                        }
-                    }
-                );
-
-
-            const text =
-                await response.text();
-
-
-            let data;
-
-
-            try {
-
-                data =
-                    JSON.parse(
-                        text
-                    );
-
-            } catch (error) {
-
-                return res
-                    .status(500)
-                    .json({
-
-                        success:
-                            false,
-
-                        error:
-                            "Invalid response from Printify",
-
-                        response:
-                            text
-                    });
-            }
-
-
-            if (!response.ok) {
-
-                return res
-                    .status(
-                        response.status
-                    )
-                    .json({
-
-                        success:
-                            false,
-
-                        printify_status:
-                            response.status,
-
-                        printify_response:
-                            data
-                    });
-            }
-
-
-            const cleanProduct = {
-
-                id:
-                    data.id,
-
-                title:
-                    data.title,
-
-                description:
-                    data.description,
-
-                images:
-                    (data.images || [])
-                        .map(
-                            function(image) {
-
-                                return {
-
-                                    src:
-                                        image.src,
-
-                                    position:
-                                        image.position
-                                };
-                            }
-                        ),
-
-                variants:
-                    (data.variants || [])
-                        .map(
-                            function(variant) {
-
-                                return {
-
-                                    id:
-                                        variant.id,
-
-                                    title:
-                                        variant.title,
-
-                                    price:
-                                        variant.price,
-
-                                    available:
-                                        variant.is_enabled,
-
-                                    sku:
-                                        variant.sku ||
-                                        null
-                                };
-                            }
-                        ),
-
-                prices:
-                    (data.variants || [])
-                        .map(
-                            function(variant) {
-
-                                return {
-
-                                    variant_id:
-                                        variant.id,
-
-                                    variant:
-                                        variant.title,
-
-                                    price:
-                                        variant.price,
-
-                                    currency:
-                                        "USD"
-                                };
-                            }
-                        ),
-
-                availability:
-                    (data.variants || [])
-                        .map(
-                            function(variant) {
-
-                                return {
-
-                                    variant_id:
-                                        variant.id,
-
-                                    variant:
-                                        variant.title,
-
-                                    available:
-                                        variant.is_enabled
-                                };
-                            }
-                        )
-            };
-
-
-            return res.json({
-
-                success:
-                    true,
-
-                shop_id:
-                    SHOP_ID,
-
-                product:
-                    cleanProduct
-            });
-
-
-        } catch (error) {
-
-            console.error(
-                "PRODUCT ERROR:",
-                error
-            );
-
-
-            return res
-                .status(500)
-                .json({
-
-                    success:
-                        false,
-
-                    error:
-                        error.message
-                });
-        }
-    }
-);
-
-
-// ========================================
-// STATIC WEBSITE
-// ========================================
+/* =========================================================
+   FRONTEND
+   ========================================================= */
 
 app.use(
     express.static(
-        __dirname
+        path.join(__dirname)
     )
 );
 
 
-// ========================================
-// 404 HANDLER
-// ========================================
+/* =========================================================
+   HOME PAGE
+   ========================================================= */
+
+app.get(
+    "/",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                __dirname,
+                "index.html"
+            )
+        );
+    }
+);
+
+
+/* =========================================================
+   ERROR HANDLER
+   ========================================================= */
 
 app.use(
-    function(req, res) {
+    (err, req, res, next) => {
 
-        res
-            .status(404)
-            .json({
+        console.error(
+            "SERVER ERROR:",
+            err
+        );
 
-                success:
-                    false,
 
-                error:
-                    "Route not found",
+        res.status(500).json({
 
-                requested_url:
-                    req.originalUrl
-            });
+            success:
+                false,
+
+            error:
+                err.message ||
+                "Internal server error."
+        });
     }
 );
 
 
-// ========================================
-// START SERVER
-// ========================================
+/* =========================================================
+   START SERVER
+   ========================================================= */
 
-app.listen(
-    PORT,
-    function() {
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`
+========================================
+          GLOBIRA SERVER
+========================================
+Server: http://localhost:${PORT}
+Website:
+http://localhost:${PORT}
+CJ Products:
+http://localhost:${PORT}/api/cj-products?keyword=hoodie&size=1
+Printify Products:
+http://localhost:${PORT}/api/products
+CJ API:
+${CJ_API_BASE}
+========================================
+        `);
+    });
+}
 
-        console.log("");
-        console.log(
-            "========================================"
-        );
-
-        console.log(
-            "          GLOBIRA SERVER"
-        );
-
-        console.log(
-            "========================================"
-        );
-
-        console.log(
-            "Server: http://localhost:" +
-            PORT
-        );
-
-        console.log("");
-
-        console.log(
-            "Website:"
-        );
-
-        console.log(
-            "http://localhost:" +
-            PORT
-        );
-
-        console.log("");
-
-        console.log(
-            "CJ Products:"
-        );
-
-        console.log(
-            "http://localhost:" +
-            PORT +
-            "/api/cj-products?keyword=hoodie&size=1"
-        );
-
-        console.log("");
-
-        console.log(
-            "Printify Products:"
-        );
-
-        console.log(
-            "http://localhost:" +
-            PORT +
-            "/api/products"
-        );
-
-        console.log("");
-
-        console.log(
-            "Shop ID:",
-            SHOP_ID
-        );
-
-        console.log(
-            "========================================"
-        );
-
-        console.log("");
-    }
-);
+module.exports = app;
