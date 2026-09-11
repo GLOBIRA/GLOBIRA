@@ -15,25 +15,14 @@ let cjAccessToken = null;
 let cjRefreshToken = null;
 let cjTokenExpiresAt = 0;
 
-let cjRequestChain = Promise.resolve();
-let lastCJRequestAt = 0;
-
 
 /* =========================================================
-   HELPERS
-   ========================================================= */
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-
-/* =========================================================
-   CJ AUTHENTICATION
+   CJ DROPSHIPPING AUTHENTICATION
    ========================================================= */
 
 async function getCJAccessToken() {
 
+    // Reuse existing access token while it is still valid.
     if (
         cjAccessToken &&
         Date.now() < cjTokenExpiresAt - 60 * 1000
@@ -42,69 +31,86 @@ async function getCJAccessToken() {
     }
 
     const apiKey =
-        String(process.env.CJ_API_KEY || "").trim();
+        String(
+            process.env.CJ_API_KEY || ""
+        ).trim();
 
     if (!apiKey) {
         throw new Error(
-            "CJ API key is missing. Add CJ_API_KEY to Vercel Environment Variables."
+            "CJ API key is missing. Add CJ_API_KEY to your environment variables."
         );
     }
 
     /*
-     * Try the refresh token first when available.
+     * If we already have a refresh token, try refreshing first.
      */
     if (cjRefreshToken) {
 
         try {
 
-            const response = await fetch(
-                `${CJ_API_BASE}/authentication/refreshAccessToken`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Accept": "application/json"
-                    },
-                    body: JSON.stringify({
-                        refreshToken: cjRefreshToken
-                    })
-                }
-            );
+            const refreshResponse =
+                await fetch(
+                    `${CJ_API_BASE}/authentication/refreshAccessToken`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            refreshToken:
+                                cjRefreshToken
+                        })
+                    }
+                );
 
-            const text = await response.text();
+            const refreshText =
+                await refreshResponse.text();
 
-            let json;
+            let refreshJson;
 
             try {
-                json = JSON.parse(text);
+                refreshJson =
+                    JSON.parse(refreshText);
             } catch {
-                json = {};
+                refreshJson = {};
             }
 
-            const token =
-                json?.data?.accessToken ||
-                json?.data?.access_token ||
-                json?.accessToken;
+            const refreshedToken =
+                refreshJson?.data?.accessToken ||
+                refreshJson?.data?.access_token ||
+                refreshJson?.accessToken;
 
-            if (response.ok && token) {
+            if (
+                refreshResponse.ok &&
+                refreshedToken
+            ) {
 
-                cjAccessToken = token;
+                cjAccessToken =
+                    refreshedToken;
 
                 cjRefreshToken =
-                    json?.data?.refreshToken ||
-                    json?.data?.refresh_token ||
+                    refreshJson?.data?.refreshToken ||
+                    refreshJson?.data?.refresh_token ||
                     cjRefreshToken;
 
-                const expiry =
-                    json?.data?.accessTokenExpiryDate ||
-                    json?.data?.access_token_expiry_date;
+                const expiryDate =
+                    refreshJson?.data?.accessTokenExpiryDate ||
+                    refreshJson?.data?.access_token_expiry_date;
 
-                if (expiry) {
+                if (expiryDate) {
+
                     const expiryTime =
-                        new Date(expiry).getTime();
+                        new Date(
+                            expiryDate
+                        ).getTime();
 
-                    if (Number.isFinite(expiryTime)) {
-                        cjTokenExpiresAt = expiryTime;
+                    if (
+                        Number.isFinite(
+                            expiryTime
+                        )
+                    ) {
+                        cjTokenExpiresAt =
+                            expiryTime;
                     }
                 }
 
@@ -118,7 +124,7 @@ async function getCJAccessToken() {
                 }
 
                 console.log(
-                    "GLOBIRA: CJ access token refreshed."
+                    "CJ access token refreshed successfully."
                 );
 
                 return cjAccessToken;
@@ -127,7 +133,7 @@ async function getCJAccessToken() {
         } catch (error) {
 
             console.warn(
-                "GLOBIRA: CJ refresh failed. Requesting a new token.",
+                "CJ refresh token request failed. Requesting a new access token.",
                 error.message
             );
         }
@@ -135,45 +141,52 @@ async function getCJAccessToken() {
 
 
     /*
-     * CURRENT CJ API-KEY AUTHENTICATION
+     * IMPORTANT:
      *
-     * The existing CJ_API_KEY is sent as:
+     * CJ's current API-key authentication endpoint expects:
      *
      * {
-     *     apiKey: "..."
+     *     "apiKey": "CJUserNum@api@..."
      * }
+     *
+     * It does NOT use the old email/password format.
      */
     console.log(
-        "GLOBIRA: Requesting new CJ access token..."
+        "Requesting new CJ access token..."
     );
 
-    const response = await fetch(
-        `${CJ_API_BASE}/authentication/getAccessToken`,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            },
-            body: JSON.stringify({
-                apiKey: apiKey
-            })
-        }
-    );
+    const response =
+        await fetch(
+            `${CJ_API_BASE}/authentication/getAccessToken`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    apiKey: apiKey
+                })
+            }
+        );
 
-    const text = await response.text();
+
+    const text =
+        await response.text();
 
     let json;
 
     try {
-        json = JSON.parse(text);
+        json =
+            JSON.parse(text);
     } catch {
         json = {
             message: text
         };
     }
 
+
     if (!response.ok) {
+
         throw new Error(
             json?.message ||
             json?.msg ||
@@ -181,10 +194,13 @@ async function getCJAccessToken() {
         );
     }
 
+
     if (
-        json?.code &&
+        json &&
+        json.code &&
         String(json.code) !== "200"
     ) {
+
         throw new Error(
             json.message ||
             json.msg ||
@@ -192,38 +208,62 @@ async function getCJAccessToken() {
         );
     }
 
+
     const token =
         json?.data?.accessToken ||
         json?.data?.access_token ||
         json?.accessToken;
 
+
     if (!token) {
+
         throw new Error(
             "CJ authentication succeeded but no access token was returned."
         );
     }
 
-    cjAccessToken = token;
+
+    cjAccessToken =
+        token;
+
 
     cjRefreshToken =
         json?.data?.refreshToken ||
         json?.data?.refresh_token ||
         null;
 
-    const expiry =
+
+    /*
+     * CJ returns the actual access-token expiry date.
+     * Prefer that over guessing a fixed lifetime.
+     */
+    const expiryDate =
         json?.data?.accessTokenExpiryDate ||
         json?.data?.access_token_expiry_date;
 
-    if (expiry) {
+
+    if (expiryDate) {
 
         const expiryTime =
-            new Date(expiry).getTime();
+            new Date(
+                expiryDate
+            ).getTime();
 
-        if (Number.isFinite(expiryTime)) {
-            cjTokenExpiresAt = expiryTime;
+        if (
+            Number.isFinite(
+                expiryTime
+            )
+        ) {
+
+            cjTokenExpiresAt =
+                expiryTime;
         }
     }
 
+
+    /*
+     * Fallback only if CJ did not return an expiry date.
+     */
     if (
         !cjTokenExpiresAt ||
         cjTokenExpiresAt <= Date.now()
@@ -241,191 +281,83 @@ async function getCJAccessToken() {
             expiresIn * 1000;
     }
 
+
     console.log(
-        "GLOBIRA: CJ access token obtained."
+        "CJ access token obtained successfully."
     );
+
 
     return cjAccessToken;
 }
 
 
 /* =========================================================
-   CJ GET REQUEST
+   CJ API REQUEST HELPER
    ========================================================= */
 
 async function cjGet(url) {
 
-    const previousRequest =
-        cjRequestChain;
-
-    let release;
-
-    cjRequestChain =
-        new Promise(resolve => {
-            release = resolve;
-        });
-
-    await previousRequest;
-
-    try {
-
-        const maxRetries = 5;
-
-        for (
-            let attempt = 1;
-            attempt <= maxRetries;
-            attempt++
-        ) {
-
-            const token =
-                await getCJAccessToken();
-
-            const elapsed =
-                Date.now() - lastCJRequestAt;
-
-            if (elapsed < 1100) {
-                await sleep(1100 - elapsed);
-            }
-
-            lastCJRequestAt =
-                Date.now();
-
-            const response =
-                await fetch(
-                    url,
-                    {
-                        method: "GET",
-                        headers: {
-                            "CJ-Access-Token": token,
-                            "Content-Type": "application/json",
-                            "Accept": "application/json"
-                        }
-                    }
-                );
-
-            const text =
-                await response.text();
-
-            let json;
-
-            try {
-                json = JSON.parse(text);
-            } catch {
-                json = {
-                    message: text
-                };
-            }
-
-            const code =
-                String(json?.code ?? "");
-
-            const message =
-                String(
-                    json?.message ||
-                    json?.msg ||
-                    ""
-                );
+    const token =
+        await getCJAccessToken();
 
 
-            /*
-             * TOKEN EXPIRED
-             */
+    const response =
+        await fetch(
+            url,
+            {
+                method: "GET",
+                headers: {
+                    "CJ-Access-Token":
+                        token,
 
-            if (
-                response.status === 401 ||
-                code === "401" ||
-                code === "1600001"
-            ) {
-
-                cjAccessToken = null;
-                cjTokenExpiresAt = 0;
-
-                if (attempt < maxRetries) {
-
-                    console.log(
-                        "GLOBIRA: CJ token expired. Retrying authentication..."
-                    );
-
-                    await sleep(700);
-
-                    continue;
+                    "Content-Type":
+                        "application/json"
                 }
             }
-
-
-            /*
-             * RATE LIMIT
-             */
-
-            const isRateLimited =
-                response.status === 429 ||
-                code === "429" ||
-                /too many requests|qps limit|rate limit/i.test(
-                    message
-                );
-
-            if (isRateLimited) {
-
-                const waitTime =
-                    2000 +
-                    attempt * 1500;
-
-                console.log(
-                    `GLOBIRA: CJ rate limit. Retry ${attempt}/${maxRetries} in ${waitTime}ms`
-                );
-
-                if (attempt < maxRetries) {
-
-                    await sleep(waitTime);
-
-                    continue;
-                }
-            }
-
-
-            /*
-             * HTTP ERROR
-             */
-
-            if (!response.ok) {
-
-                throw new Error(
-                    json?.message ||
-                    json?.msg ||
-                    `CJ API request failed: ${response.status}`
-                );
-            }
-
-
-            /*
-             * CJ APPLICATION ERROR
-             */
-
-            if (
-                json &&
-                json.code &&
-                code !== "200"
-            ) {
-
-                throw new Error(
-                    json.message ||
-                    json.msg ||
-                    `CJ API error: ${json.code}`
-                );
-            }
-
-
-            return json;
-        }
-
-        throw new Error(
-            "CJ API request failed after multiple retries."
         );
 
-    } finally {
 
-        release();
+    const text =
+        await response.text();
+
+
+    let json;
+
+    try {
+        json =
+            JSON.parse(text);
+    } catch {
+        json = {
+            message: text
+        };
     }
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            json?.message ||
+            json?.msg ||
+            `CJ API request failed: ${response.status}`
+        );
+    }
+
+
+    if (
+        json &&
+        json.code &&
+        String(json.code) !== "200"
+    ) {
+
+        throw new Error(
+            json.message ||
+            json.msg ||
+            `CJ API error: ${json.code}`
+        );
+    }
+
+
+    return json;
 }
 
 
@@ -443,7 +375,8 @@ function normalizeCJProduct(
         product ||
         {};
 
-    const rawImages = [
+
+    const images = [
 
         ...(Array.isArray(
             source.productImage
@@ -461,16 +394,14 @@ function normalizeCJProduct(
         source.image,
         source.mainImage
 
-    ];
+    ]
+        .filter(Boolean)
+        .map(String)
+        .filter(
+            (value, index, array) =>
+                array.indexOf(value) === index
+        );
 
-    const images =
-        rawImages
-            .filter(Boolean)
-            .map(String)
-            .filter(
-                (value, index, array) =>
-                    array.indexOf(value) === index
-            );
 
     const rawPrice =
         Number(
@@ -481,10 +412,12 @@ function normalizeCJProduct(
             0
         ) || 0;
 
+
     const productId =
         source.pid ||
         source.id ||
         "";
+
 
     return {
 
@@ -504,9 +437,10 @@ function normalizeCJProduct(
         name:
             source.productNameEn ||
             source.nameEn ||
-            source.productName ||
             product?.productNameEn ||
             product?.nameEn ||
+            source.productName ||
+            product?.productName ||
             "CJ Product",
 
         description:
@@ -560,10 +494,13 @@ function normalizeCJProduct(
 
 
 /* =========================================================
-   CJ PRODUCT LIST
+   GET CJ PRODUCTS
    ========================================================= */
 
-async function getCJProducts(req, res) {
+async function getCJProducts(
+    req,
+    res
+) {
 
     try {
 
@@ -572,6 +509,7 @@ async function getCJProducts(req, res) {
                 req.query.keyword || ""
             ).trim();
 
+
         const page =
             Math.max(
                 Number(
@@ -579,6 +517,7 @@ async function getCJProducts(req, res) {
                 ) || 1,
                 1
             );
+
 
         const size =
             Math.min(
@@ -591,45 +530,58 @@ async function getCJProducts(req, res) {
                 100
             );
 
+
         const listUrl =
             new URL(
                 `${CJ_API_BASE}/product/listV2`
             );
+
 
         listUrl.searchParams.set(
             "page",
             String(page)
         );
 
+
         listUrl.searchParams.set(
             "size",
             String(size)
         );
 
+
         if (keyword) {
+
             listUrl.searchParams.set(
                 "keyWord",
                 keyword
             );
         }
 
+
+        /*
+         * Ask CJ for description and category
+         * information when available.
+         */
         listUrl.searchParams.set(
             "features",
             "enable_description,enable_category"
         );
+
 
         listUrl.searchParams.set(
             "sort",
             "desc"
         );
 
+
         listUrl.searchParams.set(
             "orderBy",
             "0"
         );
 
+
         console.log(
-            "GLOBIRA: Loading CJ products:",
+            "Loading CJ products:",
             keyword || "ALL",
             "page:",
             page,
@@ -637,14 +589,23 @@ async function getCJProducts(req, res) {
             size
         );
 
+
         const listJson =
             await cjGet(
                 listUrl.toString()
             );
 
+
         const data =
             listJson?.data || {};
 
+
+        /*
+         * CJ listV2 normally returns:
+         *
+         * data.content[]
+         *   -> productList[]
+         */
         const content =
             Array.isArray(
                 data.content
@@ -652,7 +613,8 @@ async function getCJProducts(req, res) {
                 ? data.content
                 : [];
 
-        const nestedProducts =
+
+        const products =
             content.flatMap(
                 item =>
                     Array.isArray(
@@ -662,6 +624,11 @@ async function getCJProducts(req, res) {
                         : []
             );
 
+
+        /*
+         * Some CJ responses may return product
+         * objects directly inside content.
+         */
         const directProducts =
             content.filter(
                 item =>
@@ -677,13 +644,15 @@ async function getCJProducts(req, res) {
                     )
             );
 
-        const products =
-            nestedProducts.length
-                ? nestedProducts
+
+        const combinedProducts =
+            products.length
+                ? products
                 : directProducts;
 
+
         const normalized =
-            products
+            combinedProducts
                 .slice(0, size)
                 .map(
                     product =>
@@ -692,20 +661,24 @@ async function getCJProducts(req, res) {
                         )
                 );
 
+
         const totalRecords =
             Number(
                 data.totalRecords || 0
             );
+
 
         const totalPages =
             Number(
                 data.totalPages || 0
             );
 
+
         const currentPage =
             Number(
                 data.pageNumber || page
             );
+
 
         res.json({
 
@@ -739,12 +712,14 @@ async function getCJProducts(req, res) {
                 normalized
         });
 
+
     } catch (error) {
 
         console.error(
-            "GLOBIRA CJ PRODUCTS ERROR:",
+            "CJ PRODUCTS ERROR:",
             error
         );
+
 
         res.status(500).json({
 
@@ -763,10 +738,13 @@ async function getCJProducts(req, res) {
 
 
 /* =========================================================
-   SINGLE CJ PRODUCT
+   GET ONE CJ PRODUCT
    ========================================================= */
 
-async function getCJProduct(req, res) {
+async function getCJProduct(
+    req,
+    res
+) {
 
     try {
 
@@ -774,6 +752,7 @@ async function getCJProduct(req, res) {
             String(
                 req.params.productId || ""
             ).trim();
+
 
         if (!productId) {
 
@@ -787,25 +766,31 @@ async function getCJProduct(req, res) {
             });
         }
 
+
         const url =
             `${CJ_API_BASE}/product/query?pid=${encodeURIComponent(productId)}`;
 
+
         console.log(
-            "GLOBIRA: Loading CJ product:",
+            "Loading CJ product:",
             productId
         );
+
 
         const json =
             await cjGet(url);
 
+
         const product =
             json?.data || {};
+
 
         const normalized =
             normalizeCJProduct(
                 product,
                 product
             );
+
 
         res.json({
 
@@ -819,12 +804,14 @@ async function getCJProduct(req, res) {
                 normalized
         });
 
+
     } catch (error) {
 
         console.error(
-            "GLOBIRA CJ PRODUCT ERROR:",
+            "CJ PRODUCT ERROR:",
             error
         );
+
 
         res.status(500).json({
 
@@ -851,6 +838,7 @@ app.get(
     getCJProducts
 );
 
+
 app.get(
     "/api/cj-product/:productId",
     getCJProduct
@@ -858,7 +846,7 @@ app.get(
 
 
 /* =========================================================
-   STATIC WEBSITE
+   FRONTEND STATIC FILES
    ========================================================= */
 
 app.use(
@@ -894,9 +882,10 @@ app.use(
     (err, req, res, next) => {
 
         console.error(
-            "GLOBIRA SERVER ERROR:",
+            "SERVER ERROR:",
             err
         );
+
 
         res.status(500).json({
 
@@ -912,8 +901,20 @@ app.use(
 
 
 /* =========================================================
-   LOCAL SERVER
+   START SERVER
    ========================================================= */
+
+/*
+ * IMPORTANT FOR VERCEL:
+ *
+ * Only start a local HTTP server when this file
+ * is executed directly with:
+ *
+ *     node server.js
+ *
+ * Vercel imports this file as a module/function,
+ * so app.listen() must not run during import.
+ */
 
 if (
     require.main === module
@@ -935,24 +936,49 @@ if (
             );
 
             console.log(
-                `Local server: http://localhost:${PORT}`
+                `Server: http://localhost:${PORT}`
+            );
+
+            console.log("");
+
+            console.log(
+                "Website:"
             );
 
             console.log(
-                `CJ API: http://localhost:${PORT}/api/cj-products?page=1&size=1`
+                `http://localhost:${PORT}`
+            );
+
+            console.log("");
+
+            console.log(
+                "CJ Products:"
+            );
+
+            console.log(
+                `http://localhost:${PORT}/api/cj-products?page=1&size=1`
+            );
+
+            console.log("");
+
+            console.log(
+                "CJ API:"
+            );
+
+            console.log(
+                CJ_API_BASE
             );
 
             console.log(
                 "========================================"
             );
-            console.log("");
         }
     );
 }
 
 
 /* =========================================================
-   VERCEL EXPORT
+   EXPORT FOR VERCEL
    ========================================================= */
 
 module.exports = app;
