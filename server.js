@@ -11,8 +11,25 @@ const PORT = process.env.PORT || 3000;
 const CJ_API_BASE =
     "https://developers.cjdropshipping.com/api2.0/v1";
 
+
+/* =========================================================
+   CJ AUTHENTICATION STATE
+   ========================================================= */
+
 let cjAccessToken = null;
 let cjTokenExpiresAt = 0;
+
+
+/* =========================================================
+   CJ REQUEST QUEUE / RATE LIMIT PROTECTION
+   ========================================================= */
+
+let cjRequestChain = Promise.resolve();
+let lastCJRequestAt = 0;
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 
 /* =========================================================
@@ -21,6 +38,9 @@ let cjTokenExpiresAt = 0;
 
 async function getCJAccessToken() {
 
+    /*
+     * Reuse a valid token.
+     */
     if (
         cjAccessToken &&
         Date.now() < cjTokenExpiresAt - 60 * 1000
@@ -37,29 +57,38 @@ async function getCJAccessToken() {
 
     if (!apiKey) {
         throw new Error(
-            "CJ API key is missing. Add CJ_API_KEY to your environment variables."
+            "CJ API key is missing. Add CJ_API_KEY to Vercel Environment Variables."
         );
     }
 
     /*
-     * If a ready CJ access token is supplied,
-     * use it directly.
+     * GLOBIRA currently supports using CJ_API_KEY
+     * directly as the ready CJ access token.
      */
     if (!apiSecret) {
+
         cjAccessToken = apiKey;
+
         cjTokenExpiresAt =
             Date.now() + 50 * 60 * 1000;
 
         return cjAccessToken;
     }
 
+    /*
+     * If email/password authentication is configured,
+     * obtain a fresh CJ access token.
+     */
     const response = await fetch(
         `${CJ_API_BASE}/authentication/getAccessToken`,
         {
             method: "POST",
+
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Accept": "application/json"
             },
+
             body: JSON.stringify({
                 email: apiKey,
                 password: apiSecret
@@ -67,13 +96,27 @@ async function getCJAccessToken() {
         }
     );
 
+    const text =
+        await response.text();
+
+    let json;
+
+    try {
+        json = JSON.parse(text);
+    } catch {
+        json = {
+            message: text
+        };
+    }
+
     if (!response.ok) {
+
         throw new Error(
+            json?.message ||
+            json?.msg ||
             `CJ authentication failed: ${response.status}`
         );
     }
-
-    const json = await response.json();
 
     const token =
         json?.data?.accessToken ||
@@ -81,6 +124,7 @@ async function getCJAccessToken() {
         json?.accessToken;
 
     if (!token) {
+
         throw new Error(
             "CJ authentication succeeded but no access token was returned."
         );
@@ -99,394 +143,286 @@ async function getCJAccessToken() {
 
 
 /* =========================================================
-   CJ API REQUEST HELPER
+   CJ API GET HELPER
    ========================================================= */
 
-async function cjGet(url)
+async function cjGet(url) {
 
-/* =========================================================
-   GET CJ PRODUCTS
-   ========================================================= */
+    /*
+     * Queue all CJ requests.
+     *
+     * This prevents several browser requests from
+     * hitting CJ at exactly the same time.
+     */
+    const previousRequest =
+        cjRequestChain;
 
-async function getCJProducts(
-    req,
-    res
-) {
+    let release;
+
+    cjRequestChain =
+        new Promise(resolve => {
+            release = resolve;
+        });
+
+    await previousRequest;
 
     try {
 
-        const keyword =
-            String(
-                req.query.keyword || ""
-            ).trim();
+        const maxRetries = 5;
 
-        const page =
-            Math.max(
-                Number(
-                    req.query.page
-                ) || 1,
-                1
-            );
+        for (
+            let attempt = 1;
+            attempt <= maxRetries;
+            attempt++
+        ) {
 
-        const size =
-            Math.min(
-                Math.max(
-                    Number(
-                        req.query.size
-                    ) || 100,
-                    1
-                ),
-                100
-            );
+            const token =
+                await getCJAccessToken();
 
+            /*
+             * Keep CJ requests approximately
+             * 1.1 seconds apart.
+             */
+            const elapsed =
+                Date.now() - lastCJRequestAt;
 
-        const listUrl =
-            new URL(
-                `${CJ_API_BASE}/product/listV2`
-            );
+            if (elapsed < 1100) {
 
+                await sleep(
+                    1100 - elapsed
+                );
+            }
 
-        listUrl.searchParams.set(
-            "page",
-            String(page)
-        );
+            lastCJRequestAt =
+                Date.now();
 
-        listUrl.searchParams.set(
-            "size",
-            String(size)
-        );
+            const response =
+                await fetch(
+                    url,
+                    {
+                        method: "GET",
 
+                        headers: {
+                            "CJ-Access-Token":
+                                token,
 
-        if (keyword) {
+                            "Content-Type":
+                                "application/json",
 
-            listUrl.searchParams.set(
-                "keyWord",
-                keyword
-            );
-        }
+                            "Accept":
+                                "application/json"
+                        }
+                    }
+                );
 
+            const text =
+                await response.text();
 
-        listUrl.searchParams.set(
-            "features",
-            "enable_description,enable_category"
-        );
+            let json;
 
-        listUrl.searchParams.set(
-            "sort",
-            "desc"
-        );
+            try {
 
-        listUrl.searchParams.set(
-            "orderBy",
-            "0"
-        );
+                json =
+                    JSON.parse(text);
 
+            } catch {
 
-        console.log(
-            "Loading CJ products:",
-            keyword || "ALL",
-            "page:",
-            page,
-            "size:",
-            size
-        );
+                json = {
+                    message: text
+                };
+            }
 
+            const code =
+                String(
+                    json?.code ?? ""
+                );
 
-        const listJson =
-            await cjGet(
-                listUrl.toString()
-            );
-
-
-        const data =
-            listJson?.data || {};
-
-
-        const content =
-            Array.isArray(
-                data.content
-            )
-                ? data.content
-                : [];
-
-
-        const products =
-            content.flatMap(
-                item =>
-                    item?.productList || []
-            );
-
-
-        const normalized =
-            products
-                .slice(0, size)
-                .map(
-                    product =>
-                        normalizeCJProduct(
-                            product
-                        )
+            const message =
+                String(
+                    json?.message ||
+                    json?.msg ||
+                    ""
                 );
 
 
-        const totalRecords =
-            Number(
-                data.totalRecords || 0
-            );
+            /* -------------------------------------------------
+               TOKEN EXPIRED
+               ------------------------------------------------- */
+
+            if (
+                response.status === 401 ||
+                code === "401"
+            ) {
+
+                cjAccessToken = null;
+                cjTokenExpiresAt = 0;
+
+                if (
+                    attempt < maxRetries
+                ) {
+
+                    console.log(
+                        "GLOBIRA: CJ access token expired. Refreshing..."
+                    );
+
+                    await sleep(700);
+
+                    continue;
+                }
+            }
 
 
-        const totalPages =
-            Number(
-                data.totalPages || 0
-            );
+            /* -------------------------------------------------
+               RATE LIMIT
+               ------------------------------------------------- */
+
+            const isRateLimited =
+                response.status === 429 ||
+                code === "429" ||
+                /too many requests|qps limit|rate limit/i.test(
+                    message
+                );
+
+            if (isRateLimited) {
+
+                const waitTime =
+                    2000 +
+                    attempt * 1500;
+
+                console.log(
+                    `GLOBIRA: CJ rate limit. Retry ${attempt}/${maxRetries} in ${waitTime}ms`
+                );
+
+                if (
+                    attempt < maxRetries
+                ) {
+
+                    await sleep(
+                        waitTime
+                    );
+
+                    continue;
+                }
+            }
 
 
-        const currentPage =
-            Number(
-                data.pageNumber || page
-            );
+            /* -------------------------------------------------
+               HTTP ERROR
+               ------------------------------------------------- */
+
+            if (!response.ok) {
+
+                throw new Error(
+                    json?.message ||
+                    json?.msg ||
+                    `CJ API request failed: ${response.status}`
+                );
+            }
 
 
-        res.json({
+            /* -------------------------------------------------
+               CJ APPLICATION ERROR
+               ------------------------------------------------- */
 
-            success:
-                true,
+            if (
+                json &&
+                json.code &&
+                code !== "200"
+            ) {
 
-            source:
-                "cjdropshipping",
-
-            keyword:
-
-                keyword,
-
-            page:
-                currentPage,
-
-            size:
-                size,
-
-            totalRecords:
-                totalRecords,
-
-            totalPages:
-                totalPages,
-
-            hasMore:
-                totalPages
-                    ? currentPage < totalPages
-                    : normalized.length === size,
-
-            products:
-                normalized
-        });
+                throw new Error(
+                    json.message ||
+                    json.msg ||
+                    `CJ API error: ${json.code}`
+                );
+            }
 
 
-    } catch (error) {
-
-        console.error(
-            "CJ PRODUCTS ERROR:",
-            error
-        );
-
-
-        res.status(500).json({
-
-            success:
-                false,
-
-            source:
-                "cjdropshipping",
-
-            error:
-                error.message
-        });
-    }
-}
-
-
-/* =========================================================
-   GET ONE CJ PRODUCT
-   ========================================================= */
-
-async function getCJProduct(
-    req,
-    res
-) {
-
-    try {
-
-        const productId =
-            String(
-                req.params.productId || ""
-            ).trim();
-
-
-        if (!productId) {
-
-            return res.status(400).json({
-
-                success:
-                    false,
-
-                error:
-                    "Product ID is required."
-            });
+            return json;
         }
 
 
-        const url =
-            `${CJ_API_BASE}/product/query?pid=${encodeURIComponent(productId)}`;
-
-
-        console.log(
-            "Loading CJ product:",
-            productId
+        throw new Error(
+            "CJ API request failed after multiple retries."
         );
 
+    } finally {
 
-        const json =
-            await cjGet(url);
-
-
-        const product =
-            json?.data || {};
+        release();
+    }
+}
 
 
-        const normalized =
-            normalizeCJProduct(
-                product,
-                product
+/* =========================================================
+   NORMALIZE CJ PRODUCT
+   ========================================================= */
+
+function normalizeCJProduct(
+    product,
+    details = null
+) {
+
+    const source =
+        details ||
+        product ||
+        {};
+
+
+    /* -------------------------------------------------------
+       IMAGES
+       ------------------------------------------------------- */
+
+    const rawImages = [
+
+        ...(Array.isArray(
+            source.productImage
+        )
+            ? source.productImage
+            : []),
+
+        ...(Array.isArray(
+            source.images
+        )
+            ? source.images
+            : []),
+
+        source.productImageUrl,
+
+        source.image,
+
+        source.mainImage
+
+    ];
+
+
+    const images =
+        rawImages
+            .filter(Boolean)
+            .map(String)
+            .filter(
+                (
+                    value,
+                    index,
+                    array
+                ) =>
+                    array.indexOf(
+                        value
+                    ) === index
             );
 
 
-        res.json({
+    /* -------------------------------------------------------
+       PRICE
+       ------------------------------------------------------- */
 
-            success:
-                true,
-
-            source:
-                "cjdropshipping",
-
-            product:
-                normalized
-        });
-
-
-    } catch (error) {
-
-        console.error(
-            "CJ PRODUCT ERROR:",
-            error
-        );
+    const rawPrice =
+        Number(
+            source.sellPrice ||
+            source.price ||
+            source.productPrice ||
+            source.minPrice ||
+            0
+        ) || 0;
 
 
-        res.status(500).json({
-
-            success:
-                false,
-
-            source:
-                "cjdropshipping",
-
-            error:
-                error.message
-        });
-    }
-}
-
-
-/* =========================================================
-   API ROUTES
-   ========================================================= */
-
-app.get(
-    "/api/cj-products",
-    getCJProducts
-);
-
-
-app.get(
-    "/api/cj-product/:productId",
-    getCJProduct
-);
-
-
-/* =========================================================
-   FRONTEND
-   ========================================================= */
-
-app.use(
-    express.static(
-        path.join(__dirname)
-    )
-);
-
-
-/* =========================================================
-   HOME PAGE
-   ========================================================= */
-
-app.get(
-    "/",
-    (req, res) => {
-
-        res.sendFile(
-            path.join(
-                __dirname,
-                "index.html"
-            )
-        );
-    }
-);
-
-
-/* =========================================================
-   ERROR HANDLER
-   ========================================================= */
-
-app.use(
-    (err, req, res, next) => {
-
-        console.error(
-            "SERVER ERROR:",
-            err
-        );
-
-
-        res.status(500).json({
-
-            success:
-                false,
-
-            error:
-                err.message ||
-                "Internal server error."
-        });
-    }
-);
-
-
-/* =========================================================
-   START SERVER
-   ========================================================= */
-
-if (require.main === module) {
-    app.listen(PORT, () => {
-        console.log(`
-========================================
-          GLOBIRA SERVER
-========================================
-Server: http://localhost:${PORT}
-Website:
-http://localhost:${PORT}
-CJ Products:
-http://localhost:${PORT}/api/cj-products?keyword=hoodie&size=1
-Printify Products:
-http://localhost:${PORT}/api/products
-CJ API:
-${CJ_API_BASE}
-========================================
-        `);
-    });
-}
-
-module.exports = app;
+    /* -------------------------------------------------------
