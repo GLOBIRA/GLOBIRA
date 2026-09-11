@@ -426,3 +426,570 @@ function normalizeCJProduct(
 
 
     /* -------------------------------------------------------
+       PRODUCT
+       ------------------------------------------------------- */
+
+    const productId =
+        source.pid ||
+        source.id ||
+        product?.pid ||
+        product?.id ||
+        "";
+
+
+    return {
+
+        id:
+            "cj-" +
+            (
+                productId ||
+                Date.now()
+            ),
+
+        cjProductId:
+            productId,
+
+        sku:
+            source.productSku ||
+            source.sku ||
+            product?.productSku ||
+            product?.sku ||
+            "",
+
+        name:
+            source.productNameEn ||
+            source.nameEn ||
+            source.productName ||
+            product?.productNameEn ||
+            product?.nameEn ||
+            product?.productName ||
+            "CJ Product",
+
+        description:
+            source.description ||
+            product?.description ||
+            "Authentic product sourced through CJdropshipping.",
+
+        images:
+            images.length
+                ? images
+                : [
+                    "https://via.placeholder.com/900x1200?text=CJ+Product"
+                ],
+
+        price:
+            rawPrice,
+
+        oldPrice:
+            rawPrice,
+
+        category:
+            source.categoryNameEn ||
+            source.categoryName ||
+            product?.categoryNameEn ||
+            product?.categoryName ||
+            "",
+
+        subcategory:
+            source.subCategoryNameEn ||
+            source.subcategoryNameEn ||
+            source.subCategoryName ||
+            product?.subCategoryNameEn ||
+            product?.subcategoryNameEn ||
+            "",
+
+        gender:
+            source.gender ||
+            product?.gender ||
+            "",
+
+        variants:
+            Array.isArray(
+                source.variants
+            )
+                ? source.variants
+                : [],
+
+        source:
+            "cjdropshipping"
+    };
+}
+
+
+/* =========================================================
+   GET CJ PRODUCT LIST
+   ========================================================= */
+
+async function getCJProducts(
+    req,
+    res
+) {
+
+    try {
+
+        const keyword =
+            String(
+                req.query.keyword ||
+                req.query.keyWord ||
+                ""
+            ).trim();
+
+
+        const page =
+            Math.max(
+                Number(
+                    req.query.page
+                ) || 1,
+                1
+            );
+
+
+        /*
+         * Maximum 100 products per CJ request.
+         */
+        const size =
+            Math.min(
+                Math.max(
+                    Number(
+                        req.query.size
+                    ) || 100,
+                    1
+                ),
+                100
+            );
+
+
+        const listUrl =
+            new URL(
+                `${CJ_API_BASE}/product/listV2`
+            );
+
+
+        listUrl.searchParams.set(
+            "page",
+            String(page)
+        );
+
+
+        listUrl.searchParams.set(
+            "size",
+            String(size)
+        );
+
+
+        if (keyword) {
+
+            listUrl.searchParams.set(
+                "keyWord",
+                keyword
+            );
+        }
+
+
+        /*
+         * Request descriptions and categories
+         * so GLOBIRA can classify products.
+         */
+        listUrl.searchParams.set(
+            "features",
+            "enable_description,enable_category"
+        );
+
+
+        listUrl.searchParams.set(
+            "sort",
+            "desc"
+        );
+
+
+        listUrl.searchParams.set(
+            "orderBy",
+            "0"
+        );
+
+
+        console.log(
+            "GLOBIRA: Loading CJ products:",
+            keyword || "ALL",
+            "page:",
+            page,
+            "size:",
+            size
+        );
+
+
+        const listJson =
+            await cjGet(
+                listUrl.toString()
+            );
+
+
+        const data =
+            listJson?.data || {};
+
+
+        /*
+         * Standard CJ listV2 response.
+         */
+        const content =
+            Array.isArray(
+                data.content
+            )
+                ? data.content
+                : [];
+
+
+        const products =
+            content.flatMap(
+                item =>
+                    Array.isArray(
+                        item?.productList
+                    )
+                        ? item.productList
+                        : []
+            );
+
+
+        /*
+         * Compatibility with alternative
+         * CJ response structures.
+         */
+        if (
+            products.length === 0 &&
+            Array.isArray(
+                data.productList
+            )
+        ) {
+
+            products.push(
+                ...data.productList
+            );
+        }
+
+
+        if (
+            products.length === 0 &&
+            Array.isArray(
+                data.products
+            )
+        ) {
+
+            products.push(
+                ...data.products
+            );
+        }
+
+
+        const normalized =
+            products
+                .slice(0, size)
+                .map(
+                    product =>
+                        normalizeCJProduct(
+                            product
+                        )
+                );
+
+
+        const totalRecords =
+            Number(
+                data.totalRecords ||
+                data.total ||
+                0
+            );
+
+
+        const totalPages =
+            Number(
+                data.totalPages ||
+                0
+            );
+
+
+        const currentPage =
+            Number(
+                data.pageNumber ||
+                data.page ||
+                page
+            );
+
+
+        const hasMore =
+            totalPages
+                ? currentPage <
+                  totalPages
+                : normalized.length ===
+                  size;
+
+
+        console.log(
+            "GLOBIRA: CJ products returned:",
+            normalized.length,
+            "page:",
+            currentPage
+        );
+
+
+        return res.json({
+
+            success:
+                true,
+
+            source:
+                "cjdropshipping",
+
+            keyword:
+                keyword,
+
+            page:
+                currentPage,
+
+            size:
+                size,
+
+            totalRecords:
+                totalRecords,
+
+            totalPages:
+                totalPages,
+
+            hasMore:
+                hasMore,
+
+            products:
+                normalized
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "GLOBIRA CJ PRODUCTS ERROR:",
+            error
+        );
+
+
+        return res.status(500).json({
+
+            success:
+                false,
+
+            source:
+                "cjdropshipping",
+
+            error:
+                error.message ||
+                "Unable to load CJ products."
+        });
+    }
+}
+
+
+/* =========================================================
+   GET ONE CJ PRODUCT
+   ========================================================= */
+
+async function getCJProduct(
+    req,
+    res
+) {
+
+    try {
+
+        const productId =
+            String(
+                req.params.productId ||
+                ""
+            ).trim();
+
+
+        if (!productId) {
+
+            return res.status(400).json({
+
+                success:
+                    false,
+
+                error:
+                    "Product ID is required."
+            });
+        }
+
+
+        const url =
+            `${CJ_API_BASE}/product/query?pid=${encodeURIComponent(productId)}`;
+
+
+        console.log(
+            "GLOBIRA: Loading CJ product:",
+            productId
+        );
+
+
+        const json =
+            await cjGet(url);
+
+
+        const product =
+            json?.data || {};
+
+
+        const normalized =
+            normalizeCJProduct(
+                product,
+                product
+            );
+
+
+        return res.json({
+
+            success:
+                true,
+
+            source:
+                "cjdropshipping",
+
+            product:
+                normalized
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "GLOBIRA CJ PRODUCT ERROR:",
+            error
+        );
+
+
+        return res.status(500).json({
+
+            success:
+                false,
+
+            source:
+                "cjdropshipping",
+
+            error:
+                error.message ||
+                "Unable to load CJ product."
+        });
+    }
+}
+
+
+/* =========================================================
+   API ROUTES
+   ========================================================= */
+
+app.get(
+    "/api/cj-products",
+    getCJProducts
+);
+
+
+app.get(
+    "/api/cj-product/:productId",
+    getCJProduct
+);
+
+
+/* =========================================================
+   FRONTEND STATIC FILES
+   ========================================================= */
+
+app.use(
+    express.static(
+        path.join(__dirname)
+    )
+);
+
+
+/* =========================================================
+   HOME PAGE
+   ========================================================= */
+
+app.get(
+    "/",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                __dirname,
+                "index.html"
+            )
+        );
+    }
+);
+
+
+/* =========================================================
+   ERROR HANDLER
+   ========================================================= */
+
+app.use(
+    (err, req, res, next) => {
+
+        console.error(
+            "GLOBIRA SERVER ERROR:",
+            err
+        );
+
+
+        res.status(500).json({
+
+            success:
+                false,
+
+            error:
+                err.message ||
+                "Internal server error."
+        });
+    }
+);
+
+
+/* =========================================================
+   START SERVER
+   ========================================================= */
+
+if (
+    require.main === module
+) {
+
+    app.listen(
+        PORT,
+        () => {
+
+            console.log(`
+========================================
+          GLOBIRA SERVER
+========================================
+
+Server:
+http://localhost:${PORT}
+
+Website:
+http://localhost:${PORT}
+
+CJ Products:
+http://localhost:${PORT}/api/cj-products?size=1
+
+CJ Product:
+http://localhost:${PORT}/api/cj-product/PRODUCT_ID
+
+CJ API:
+${CJ_API_BASE}
+
+========================================
+            `);
+        }
+    );
+}
+
+
+/* =========================================================
+   VERCEL EXPORT
+   ========================================================= */
+
+module.exports = app;
