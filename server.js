@@ -12,28 +12,14 @@ const CJ_API_BASE =
     "https://developers.cjdropshipping.com/api2.0/v1";
 
 let cjAccessToken = null;
-let cjRefreshToken = null;
 let cjTokenExpiresAt = 0;
 
-let cjRequestChain = Promise.resolve();
-let lastCJRequestAt = 0;
-
 
 /* =========================================================
-   HELPERS
-   ========================================================= */
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-
-/* =========================================================
-   CJ AUTHENTICATION
+   CJ DROPSHIPPING AUTHENTICATION
    ========================================================= */
 
 async function getCJAccessToken() {
-
     if (
         cjAccessToken &&
         Date.now() < cjTokenExpiresAt - 60 * 1000
@@ -41,119 +27,20 @@ async function getCJAccessToken() {
         return cjAccessToken;
     }
 
-    const apiKey =
-        String(process.env.CJ_API_KEY || "").trim();
+    const apiKey = process.env.CJ_API_KEY;
 
     if (!apiKey) {
         throw new Error(
-            "CJ API key is missing. Add CJ_API_KEY to Vercel Environment Variables."
+            "CJ API key is missing. Add CJ_API_KEY to your Vercel environment variables."
         );
     }
-
-    /*
-     * Try the refresh token first when available.
-     */
-    if (cjRefreshToken) {
-
-        try {
-
-            const response = await fetch(
-                `${CJ_API_BASE}/authentication/refreshAccessToken`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Accept": "application/json"
-                    },
-                    body: JSON.stringify({
-                        refreshToken: cjRefreshToken
-                    })
-                }
-            );
-
-            const text = await response.text();
-
-            let json;
-
-            try {
-                json = JSON.parse(text);
-            } catch {
-                json = {};
-            }
-
-            const token =
-                json?.data?.accessToken ||
-                json?.data?.access_token ||
-                json?.accessToken;
-
-            if (response.ok && token) {
-
-                cjAccessToken = token;
-
-                cjRefreshToken =
-                    json?.data?.refreshToken ||
-                    json?.data?.refresh_token ||
-                    cjRefreshToken;
-
-                const expiry =
-                    json?.data?.accessTokenExpiryDate ||
-                    json?.data?.access_token_expiry_date;
-
-                if (expiry) {
-                    const expiryTime =
-                        new Date(expiry).getTime();
-
-                    if (Number.isFinite(expiryTime)) {
-                        cjTokenExpiresAt = expiryTime;
-                    }
-                }
-
-                if (
-                    !cjTokenExpiresAt ||
-                    cjTokenExpiresAt <= Date.now()
-                ) {
-                    cjTokenExpiresAt =
-                        Date.now() +
-                        14 * 24 * 60 * 60 * 1000;
-                }
-
-                console.log(
-                    "GLOBIRA: CJ access token refreshed."
-                );
-
-                return cjAccessToken;
-            }
-
-        } catch (error) {
-
-            console.warn(
-                "GLOBIRA: CJ refresh failed. Requesting a new token.",
-                error.message
-            );
-        }
-    }
-
-
-    /*
-     * CURRENT CJ API-KEY AUTHENTICATION
-     *
-     * The existing CJ_API_KEY is sent as:
-     *
-     * {
-     *     apiKey: "..."
-     * }
-     */
-    console.log(
-        "GLOBIRA: Requesting new CJ access token..."
-    );
 
     const response = await fetch(
         `${CJ_API_BASE}/authentication/getAccessToken`,
         {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
                 apiKey: apiKey
@@ -194,8 +81,7 @@ async function getCJAccessToken() {
 
     const token =
         json?.data?.accessToken ||
-        json?.data?.access_token ||
-        json?.accessToken;
+        json?.data?.access_token;
 
     if (!token) {
         throw new Error(
@@ -205,233 +91,206 @@ async function getCJAccessToken() {
 
     cjAccessToken = token;
 
-    cjRefreshToken =
-        json?.data?.refreshToken ||
-        json?.data?.refresh_token ||
-        null;
+    const expiryDate =
+        json?.data?.accessTokenExpiryDate;
 
-    const expiry =
-        json?.data?.accessTokenExpiryDate ||
-        json?.data?.access_token_expiry_date;
-
-    if (expiry) {
-
-        const expiryTime =
-            new Date(expiry).getTime();
-
-        if (Number.isFinite(expiryTime)) {
-            cjTokenExpiresAt = expiryTime;
-        }
-    }
-
-    if (
-        !cjTokenExpiresAt ||
-        cjTokenExpiresAt <= Date.now()
-    ) {
-
-        const expiresIn =
-            Number(
-                json?.data?.expiresIn ||
-                json?.data?.expires_in ||
-                14 * 24 * 60 * 60
-            );
+    if (expiryDate) {
+        const expiryMs = Date.parse(expiryDate);
 
         cjTokenExpiresAt =
-            Date.now() +
-            expiresIn * 1000;
+            Number.isFinite(expiryMs)
+                ? expiryMs
+                : Date.now() + 50 * 60 * 1000;
+    } else {
+        cjTokenExpiresAt =
+            Date.now() + 50 * 60 * 1000;
     }
-
-    console.log(
-        "GLOBIRA: CJ access token obtained."
-    );
 
     return cjAccessToken;
 }
 
 
-/* =========================================================
-   CJ GET REQUEST
-   ========================================================= */
-
 async function cjGet(url) {
 
-    const previousRequest =
-        cjRequestChain;
+    const token =
+        await getCJAccessToken();
 
-    let release;
-
-    cjRequestChain =
-        new Promise(resolve => {
-            release = resolve;
-        });
-
-    await previousRequest;
-
-    try {
-
-        const maxRetries = 5;
-
-        for (
-            let attempt = 1;
-            attempt <= maxRetries;
-            attempt++
-        ) {
-
-            const token =
-                await getCJAccessToken();
-
-            const elapsed =
-                Date.now() - lastCJRequestAt;
-
-            if (elapsed < 1100) {
-                await sleep(1100 - elapsed);
-            }
-
-            lastCJRequestAt =
-                Date.now();
-
-            const response =
-                await fetch(
-                    url,
-                    {
-                        method: "GET",
-                        headers: {
-                            "CJ-Access-Token": token,
-                            "Content-Type": "application/json",
-                            "Accept": "application/json"
-                        }
-                    }
-                );
-
-            const text =
-                await response.text();
-
-            let json;
-
-            try {
-                json = JSON.parse(text);
-            } catch {
-                json = {
-                    message: text
-                };
-            }
-
-            const code =
-                String(json?.code ?? "");
-
-            const message =
-                String(
-                    json?.message ||
-                    json?.msg ||
-                    ""
-                );
-
-
-            /*
-             * TOKEN EXPIRED
-             */
-
-            if (
-                response.status === 401 ||
-                code === "401" ||
-                code === "1600001"
-            ) {
-
-                cjAccessToken = null;
-                cjTokenExpiresAt = 0;
-
-                if (attempt < maxRetries) {
-
-                    console.log(
-                        "GLOBIRA: CJ token expired. Retrying authentication..."
-                    );
-
-                    await sleep(700);
-
-                    continue;
+    const response =
+        await fetch(
+            url,
+            {
+                method: "GET",
+                headers: {
+                    "CJ-Access-Token":
+                        token,
+                    "Content-Type":
+                        "application/json"
                 }
             }
-
-
-            /*
-             * RATE LIMIT
-             */
-
-            const isRateLimited =
-                response.status === 429 ||
-                code === "429" ||
-                /too many requests|qps limit|rate limit/i.test(
-                    message
-                );
-
-            if (isRateLimited) {
-
-                const waitTime =
-                    2000 +
-                    attempt * 1500;
-
-                console.log(
-                    `GLOBIRA: CJ rate limit. Retry ${attempt}/${maxRetries} in ${waitTime}ms`
-                );
-
-                if (attempt < maxRetries) {
-
-                    await sleep(waitTime);
-
-                    continue;
-                }
-            }
-
-
-            /*
-             * HTTP ERROR
-             */
-
-            if (!response.ok) {
-
-                throw new Error(
-                    json?.message ||
-                    json?.msg ||
-                    `CJ API request failed: ${response.status}`
-                );
-            }
-
-
-            /*
-             * CJ APPLICATION ERROR
-             */
-
-            if (
-                json &&
-                json.code &&
-                code !== "200"
-            ) {
-
-                throw new Error(
-                    json.message ||
-                    json.msg ||
-                    `CJ API error: ${json.code}`
-                );
-            }
-
-
-            return json;
-        }
-
-        throw new Error(
-            "CJ API request failed after multiple retries."
         );
 
-    } finally {
+    const text =
+        await response.text();
 
-        release();
+    let json;
+
+    try {
+        json =
+            JSON.parse(text);
+    } catch {
+        json = {
+            message: text
+        };
     }
+
+    if (!response.ok) {
+        throw new Error(
+            json?.message ||
+            json?.msg ||
+            `CJ API request failed: ${response.status}`
+        );
+    }
+
+    if (
+        json &&
+        json.code &&
+        String(json.code) !== "200"
+    ) {
+        throw new Error(
+            json.message ||
+            json.msg ||
+            `CJ API error: ${json.code}`
+        );
+    }
+
+    return json;
 }
 
 
 /* =========================================================
    NORMALIZE CJ PRODUCT
    ========================================================= */
+
+function collectCJImages(value, output = []) {
+
+    if (value == null) {
+        return output;
+    }
+
+    if (Array.isArray(value)) {
+
+        for (const item of value) {
+            collectCJImages(
+                item,
+                output
+            );
+        }
+
+        return output;
+    }
+
+    if (typeof value === "object") {
+
+        const preferredKeys = [
+            "url",
+            "imageUrl",
+            "imageURL",
+            "productImageUrl",
+            "bigImage",
+            "mainImage",
+            "src"
+        ];
+
+        for (const key of preferredKeys) {
+
+            if (value[key]) {
+                collectCJImages(
+                    value[key],
+                    output
+                );
+            }
+        }
+
+        return output;
+    }
+
+    const text =
+        String(value).trim();
+
+    if (!text) {
+        return output;
+    }
+
+    // CJ may return image arrays as JSON strings.
+
+    if (
+        (text.startsWith("[") &&
+            text.endsWith("]")) ||
+        (text.startsWith("{") &&
+            text.endsWith("}"))
+    ) {
+
+        try {
+
+            const parsed =
+                JSON.parse(text);
+
+            collectCJImages(
+                parsed,
+                output
+            );
+
+            return output;
+
+        } catch {
+            // Keep the original value below if it was not valid JSON.
+        }
+    }
+
+    // Some image values are returned as comma/line separated URLs.
+
+    if (
+        text.includes(",") &&
+        /https?:\/\//i.test(text)
+    ) {
+
+        for (
+            const part of text.split(",")
+        ) {
+
+            const trimmed =
+                part.trim();
+
+            if (trimmed) {
+                collectCJImages(
+                    trimmed,
+                    output
+                );
+            }
+        }
+
+        return output;
+    }
+
+    if (text.startsWith("//")) {
+
+        output.push(
+            "https:" + text
+        );
+
+        return output;
+    }
+
+    if (
+        /^https?:\/\//i.test(text)
+    ) {
+
+        output.push(text);
+    }
+
+    return output;
+}
+
 
 function normalizeCJProduct(
     product,
@@ -443,34 +302,64 @@ function normalizeCJProduct(
         product ||
         {};
 
-    const rawImages = [
+    const imageValues = [
 
-        ...(Array.isArray(
-            source.productImage
-        )
-            ? source.productImage
-            : []),
+        source.bigImage,
 
-        ...(Array.isArray(
-            source.images
-        )
-            ? source.images
-            : []),
+        source.productImage,
+
+        source.productImageSet,
+
+        source.images,
 
         source.productImageUrl,
+
         source.image,
-        source.mainImage
+
+        source.mainImage,
+
+        source.picUrl,
+
+        source.imageUrl,
+
+        source.imageURL,
+
+        product?.bigImage,
+
+        product?.productImage,
+
+        product?.productImageSet,
+
+        product?.images,
+
+        product?.productImageUrl,
+
+        product?.image,
+
+        product?.mainImage,
+
+        product?.picUrl,
+
+        product?.imageUrl,
+
+        product?.imageURL
 
     ];
 
     const images =
-        rawImages
-            .filter(Boolean)
-            .map(String)
-            .filter(
-                (value, index, array) =>
-                    array.indexOf(value) === index
-            );
+        Array.from(
+            new Set(
+                imageValues
+                    .flatMap(
+                        value =>
+                            collectCJImages(
+                                value,
+                                []
+                            )
+                    )
+                    .filter(Boolean)
+            )
+        );
 
     const rawPrice =
         Number(
@@ -481,20 +370,20 @@ function normalizeCJProduct(
             0
         ) || 0;
 
-    const productId =
-        source.pid ||
-        source.id ||
-        "";
-
     return {
 
         id:
-            productId
-                ? "cj-" + productId
-                : "cj-" + Date.now(),
+            "cj-" +
+            (
+                source.pid ||
+                source.id ||
+                Date.now()
+            ),
 
         cjProductId:
-            productId,
+            source.pid ||
+            source.id ||
+            "",
 
         sku:
             source.productSku ||
@@ -504,7 +393,6 @@ function normalizeCJProduct(
         name:
             source.productNameEn ||
             source.nameEn ||
-            source.productName ||
             product?.productNameEn ||
             product?.nameEn ||
             "CJ Product",
@@ -517,9 +405,7 @@ function normalizeCJProduct(
         images:
             images.length
                 ? images
-                : [
-                    "https://via.placeholder.com/900x1200?text=CJ+Product"
-                ],
+                : [],
 
         price:
             rawPrice,
@@ -538,7 +424,6 @@ function normalizeCJProduct(
             source.subCategoryNameEn ||
             source.subcategoryNameEn ||
             product?.subCategoryNameEn ||
-            product?.subcategoryNameEn ||
             "",
 
         gender:
@@ -560,10 +445,13 @@ function normalizeCJProduct(
 
 
 /* =========================================================
-   CJ PRODUCT LIST
+   GET CJ PRODUCTS
    ========================================================= */
 
-async function getCJProducts(req, res) {
+async function getCJProducts(
+    req,
+    res
+) {
 
     try {
 
@@ -591,10 +479,12 @@ async function getCJProducts(req, res) {
                 100
             );
 
+
         const listUrl =
             new URL(
                 `${CJ_API_BASE}/product/listV2`
             );
+
 
         listUrl.searchParams.set(
             "page",
@@ -606,12 +496,15 @@ async function getCJProducts(req, res) {
             String(size)
         );
 
+
         if (keyword) {
+
             listUrl.searchParams.set(
                 "keyWord",
                 keyword
             );
         }
+
 
         listUrl.searchParams.set(
             "features",
@@ -628,8 +521,9 @@ async function getCJProducts(req, res) {
             "0"
         );
 
+
         console.log(
-            "GLOBIRA: Loading CJ products:",
+            "Loading CJ products:",
             keyword || "ALL",
             "page:",
             page,
@@ -637,13 +531,16 @@ async function getCJProducts(req, res) {
             size
         );
 
+
         const listJson =
             await cjGet(
                 listUrl.toString()
             );
 
+
         const data =
             listJson?.data || {};
+
 
         const content =
             Array.isArray(
@@ -652,35 +549,13 @@ async function getCJProducts(req, res) {
                 ? data.content
                 : [];
 
-        const nestedProducts =
-            content.flatMap(
-                item =>
-                    Array.isArray(
-                        item?.productList
-                    )
-                        ? item.productList
-                        : []
-            );
-
-        const directProducts =
-            content.filter(
-                item =>
-                    item &&
-                    !Array.isArray(
-                        item?.productList
-                    ) &&
-                    (
-                        item.pid ||
-                        item.id ||
-                        item.productNameEn ||
-                        item.nameEn
-                    )
-            );
 
         const products =
-            nestedProducts.length
-                ? nestedProducts
-                : directProducts;
+            content.flatMap(
+                item =>
+                    item?.productList || []
+            );
+
 
         const normalized =
             products
@@ -692,20 +567,24 @@ async function getCJProducts(req, res) {
                         )
                 );
 
+
         const totalRecords =
             Number(
                 data.totalRecords || 0
             );
+
 
         const totalPages =
             Number(
                 data.totalPages || 0
             );
 
+
         const currentPage =
             Number(
                 data.pageNumber || page
             );
+
 
         res.json({
 
@@ -739,12 +618,14 @@ async function getCJProducts(req, res) {
                 normalized
         });
 
+
     } catch (error) {
 
         console.error(
-            "GLOBIRA CJ PRODUCTS ERROR:",
+            "CJ PRODUCTS ERROR:",
             error
         );
+
 
         res.status(500).json({
 
@@ -755,18 +636,20 @@ async function getCJProducts(req, res) {
                 "cjdropshipping",
 
             error:
-                error.message ||
-                "Unable to load CJ products."
+                error.message
         });
     }
 }
 
 
 /* =========================================================
-   SINGLE CJ PRODUCT
+   GET ONE CJ PRODUCT
    ========================================================= */
 
-async function getCJProduct(req, res) {
+async function getCJProduct(
+    req,
+    res
+) {
 
     try {
 
@@ -774,6 +657,7 @@ async function getCJProduct(req, res) {
             String(
                 req.params.productId || ""
             ).trim();
+
 
         if (!productId) {
 
@@ -787,25 +671,31 @@ async function getCJProduct(req, res) {
             });
         }
 
+
         const url =
             `${CJ_API_BASE}/product/query?pid=${encodeURIComponent(productId)}`;
 
+
         console.log(
-            "GLOBIRA: Loading CJ product:",
+            "Loading CJ product:",
             productId
         );
+
 
         const json =
             await cjGet(url);
 
+
         const product =
             json?.data || {};
+
 
         const normalized =
             normalizeCJProduct(
                 product,
                 product
             );
+
 
         res.json({
 
@@ -819,12 +709,14 @@ async function getCJProduct(req, res) {
                 normalized
         });
 
+
     } catch (error) {
 
         console.error(
-            "GLOBIRA CJ PRODUCT ERROR:",
+            "CJ PRODUCT ERROR:",
             error
         );
+
 
         res.status(500).json({
 
@@ -835,8 +727,7 @@ async function getCJProduct(req, res) {
                 "cjdropshipping",
 
             error:
-                error.message ||
-                "Unable to load CJ product."
+                error.message
         });
     }
 }
@@ -851,6 +742,7 @@ app.get(
     getCJProducts
 );
 
+
 app.get(
     "/api/cj-product/:productId",
     getCJProduct
@@ -858,7 +750,7 @@ app.get(
 
 
 /* =========================================================
-   STATIC WEBSITE
+   FRONTEND
    ========================================================= */
 
 app.use(
@@ -894,9 +786,10 @@ app.use(
     (err, req, res, next) => {
 
         console.error(
-            "GLOBIRA SERVER ERROR:",
+            "SERVER ERROR:",
             err
         );
+
 
         res.status(500).json({
 
@@ -912,47 +805,79 @@ app.use(
 
 
 /* =========================================================
-   LOCAL SERVER
+   START SERVER
    ========================================================= */
 
-if (
-    require.main === module
-) {
+if (require.main === module) {
 
     app.listen(
         PORT,
         () => {
 
             console.log("");
+
             console.log(
                 "========================================"
             );
+
             console.log(
                 "          GLOBIRA SERVER"
             );
-            console.log(
-                "========================================"
-            );
-
-            console.log(
-                `Local server: http://localhost:${PORT}`
-            );
-
-            console.log(
-                `CJ API: http://localhost:${PORT}/api/cj-products?page=1&size=1`
-            );
 
             console.log(
                 "========================================"
             );
+
+            console.log(
+                `Server: http://localhost:${PORT}`
+            );
+
             console.log("");
+
+            console.log(
+                "Website:"
+            );
+
+            console.log(
+                `http://localhost:${PORT}`
+            );
+
+            console.log("");
+
+            console.log(
+                "CJ Products:"
+            );
+
+            console.log(
+                `http://localhost:${PORT}/api/cj-products?keyword=hoodie&size=1`
+            );
+
+            console.log("");
+
+            console.log(
+                "Printify Products:"
+            );
+
+            console.log(
+                `http://localhost:${PORT}/api/products`
+            );
+
+            console.log("");
+
+            console.log(
+                "CJ API:"
+            );
+
+            console.log(
+                CJ_API_BASE
+            );
+
+            console.log(
+                "========================================"
+            );
         }
     );
 }
 
-
-/* =========================================================
-   VERCEL EXPORT
-   ========================================================= */
 
 module.exports = app;
