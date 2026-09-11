@@ -5303,6 +5303,74 @@ CJ DROPSHIPPING / STEP 1 PRODUCT LOAD
    CJ DROPSHIPPING / AUTOMATIC CATALOG
    ========================================================= */
 
+/* =========================================================
+   CJ PRODUCT CLASSIFICATION
+   Keeps the existing GLOBIRA category pages/design unchanged.
+   ========================================================= */
+function classifyCJProduct(product){
+    const source = product || {};
+    const name = String(source.name || '').toLowerCase();
+    const category = String(source.category || '').toLowerCase();
+    const subcategory = String(source.subcategory || '').toLowerCase();
+    const gender = String(source.gender || '').toLowerCase();
+    const description = String(source.description || '').toLowerCase();
+
+    const text = [name, category, subcategory, gender, description]
+        .filter(Boolean).join(' ');
+
+    const hasAny = words => words.some(word => text.includes(word));
+
+    const bagWords = [
+        'bag','handbag','backpack','purse','tote','clutch',
+        'crossbody','shoulder bag','wallet','luggage','suitcase'
+    ];
+    const shoeWords = [
+        'shoe','shoes','sneaker','sneakers','sandal','sandals',
+        'boot','boots','heel','heels','loafer','loafers',
+        'slipper','slippers','moccasin','footwear'
+    ];
+    const accessoryWords = [
+        'watch','watches','jewelry','jewellery','necklace',
+        'bracelet','ring','earring','belt','sunglasses',
+        'glasses','scarf','hat','cap','accessory','accessories'
+    ];
+    const menWords = [
+        'men','mens',"men's",'male','man',
+        'men clothing','mens clothing','menswear'
+    ];
+    const womenWords = [
+        'women','womens',"women's",'female','woman',
+        'women clothing','womens clothing','womenswear',
+        'dress','skirt','blouse','lingerie','bra'
+    ];
+
+    let finalCategory = String(source.category || '').trim();
+    let finalGender = String(source.gender || '').trim();
+
+    if(hasAny(bagWords)){
+        finalCategory = 'bags';
+    }else if(hasAny(shoeWords)){
+        finalCategory = 'shoes';
+    }else if(hasAny(accessoryWords)){
+        finalCategory = 'accessories';
+    }else if(hasAny(menWords)){
+        finalCategory = 'men';
+        finalGender = 'men';
+    }else if(hasAny(womenWords)){
+        finalCategory = 'women';
+        finalGender = 'women';
+    }else if(!finalCategory){
+        finalCategory = 'women';
+        finalGender = finalGender || 'women';
+    }
+
+    return {
+        ...source,
+        category: finalCategory,
+        gender: finalGender
+    };
+}
+
 async function loadCJFeaturedProduct(){
 
     try{
