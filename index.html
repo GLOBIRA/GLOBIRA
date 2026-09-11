@@ -3467,13 +3467,14 @@ function formatPrice(price){
 ALL PRODUCTS
 ========================================================= */
 
-function allProducts(){
+let cjProducts = [];
 
+function allProducts(){
     return [
         ...womenProducts,
-        ...menProducts
+        ...menProducts,
+        ...cjProducts
     ];
-
 }
 
 
@@ -5298,25 +5299,132 @@ document.addEventListener(
 CJ DROPSHIPPING / STEP 1 PRODUCT LOAD
 ========================================================= */
 
+/* =========================================================
+   CJ DROPSHIPPING / AUTOMATIC CATALOG
+   ========================================================= */
+
 async function loadCJFeaturedProduct(){
+
     try{
-        const response = await fetch('/api/cj-products?keyword=hoodie&size=1');
-        if(!response.ok) throw new Error(`CJ API returned ${response.status}`);
 
-        const payload = await response.json();
-        const cjProduct = payload?.products?.[0];
-        if(!cjProduct) throw new Error('No CJ product was returned.');
+        cjProducts = [];
 
-        // Keep the existing GLOBIRA product/card/modal/cart system.
-        // Only the product data source is being added here.
-        womenProducts.push(cjProduct);
+        /*
+         * GLOBIRA CJ CATALOG
+         * Loads a large fashion catalog by searching multiple CJ
+         * product groups. This keeps the existing design untouched.
+         */
+        /*
+         * PUBLIC CJ CATALOG
+         * Keep the existing GLOBIRA design and category sections exactly as they are.
+         * Load up to 1000 unique CJ products through the existing public backend.
+         */
+        const targetProducts = 1000;
+        const pageSize = 100;
+        const maxPages = Math.ceil(targetProducts / pageSize);
+
+        function wait(ms){
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function loadCatalogPage(page){
+
+            try{
+
+                console.log(
+                    `GLOBIRA: Loading public CJ catalog page ${page}/${maxPages}...`
+                );
+
+                const response = await fetch(
+                    `/api/cj-products?page=${page}&size=${pageSize}`
+                );
+
+                if(!response.ok){
+                    throw new Error(
+                        `CJ API returned ${response.status}`
+                    );
+                }
+
+                const payload = await response.json();
+
+                if(!payload.success){
+                    throw new Error(
+                        payload.error ||
+                        'CJ catalog request failed.'
+                    );
+                }
+
+                const products =
+                    Array.isArray(payload.products)
+                        ? payload.products
+                        : [];
+
+                return products.map(classifyCJProduct);
+
+            }catch(error){
+
+                console.error(
+                    `GLOBIRA CJ CATALOG PAGE ERROR (${page}):`,
+                    error
+                );
+
+                return [];
+            }
+        }
+
+        function addUniqueCJProducts(products){
+
+            const unique = new Map(
+                cjProducts.map(product => [product.id, product])
+            );
+
+            products.forEach(product => {
+                if(product && product.id && !unique.has(product.id)){
+                    unique.set(product.id, product);
+                }
+            });
+
+            cjProducts = Array.from(unique.values());
+        }
+
+        for(
+            let page = 1;
+            page <= maxPages && cjProducts.length < targetProducts;
+            page++
+        ){
+
+            const products = await loadCatalogPage(page);
+            addUniqueCJProducts(products);
+
+            console.log(
+                `GLOBIRA: ${cjProducts.length} unique public CJ products loaded.`
+            );
+
+            /* CJ allows approximately 1 request per second. */
+            if(page < maxPages && cjProducts.length < targetProducts){
+                await wait(1200);
+            }
+        }
+
+        console.log(
+            `GLOBIRA: CJ catalog ready with ${cjProducts.length} unique products.`
+        );
 
         renderFeatured();
         renderCart();
 
-        console.log('GLOBIRA: CJ product connected', cjProduct);
+        /* Refresh the currently visible category if one is open. */
+        if(typeof currentCategory !== 'undefined' && currentCategory){
+            showCategory(currentCategory);
+        }
+
     }catch(error){
-        console.error('GLOBIRA CJ PRODUCT LOAD:', error);
+
+        console.error(
+            'GLOBIRA CJ CATALOG LOAD:',
+            error
+        );
+
     }
 }
 
@@ -5325,66 +5433,28 @@ INITIALIZE
 ========================================================= */
 
 renderFeatured();
-
 renderCart();
-
 loadCJFeaturedProduct();
 
 </script>
 
-<!-- =========================================================
-     GLOBIRA MY ACCOUNT
-========================================================= -->
-<div id="globiraAccountOverlay" class="globira-account-overlay">
-    <div class="globira-account-box">
-        <button class="globira-account-close" onclick="closeGlobiraAccount()">×</button>
-        <div class="globira-account-eyebrow">GLOBIRA / MY ACCOUNT</div>
-        <h2 class="globira-account-title" id="globiraAccountName">My Account</h2>
-        <div class="globira-account-email" id="globiraAccountEmail"></div>
-        <div class="globira-account-grid">
-            <div class="globira-account-card" onclick="showGlobiraOrders()"><h3>My Orders</h3><p>View your GLOBIRA orders, order numbers and delivery information.</p></div>
-            <div class="globira-account-card" onclick="showGlobiraProfile()"><h3>Personal Details</h3><p>Manage your name, email and customer information.</p></div>
-            <div class="globira-account-card"><h3>Saved Addresses</h3><p>Coming next — save and manage your delivery addresses.</p></div>
-            <div class="globira-account-card"><h3>Wishlist</h3><p>Coming next — save your favourite GLOBIRA pieces.</p></div>
-            <div class="globira-account-card" onclick="openCart();closeGlobiraAccount()"><h3>My Cart</h3><p>Review the products currently saved in your shopping cart.</p></div>
-            <div class="globira-account-card"><h3>Account Settings</h3><p>Notifications, privacy and other account controls will be added here.</p></div>
-        </div>
-        <div class="globira-account-footer">
-            <span style="font-size:11px;color:#777">Secure account powered by GLOBIRA</span>
-            <button class="globira-account-logout" onclick="logoutGlobira()">LOG OUT</button>
-        </div>
-    </div>
-</div>
-
-<div id="globiraProfileOverlay" class="globira-profile-overlay">
-    <div class="globira-profile-box">
-        <div class="globira-account-eyebrow">WELCOME TO GLOBIRA</div>
-        <h2>Complete your profile</h2>
-        <p>Your email is verified. Add your name so we can personalise your GLOBIRA account.</p>
-        <input id="globiraFirstName" class="globira-profile-input" placeholder="First name" autocomplete="given-name">
-        <input id="globiraLastName" class="globira-profile-input" placeholder="Last name" autocomplete="family-name">
-        <button class="globira-profile-button" onclick="saveGlobiraProfile()">CONTINUE →</button>
-    </div>
-</div>
-
-<!-- =========================================================
-     GLOBIRA REAL SUPABASE EMAIL OTP LOGIN
-========================================================= -->
-
 <style>
 .globira-login-overlay{
-    position:fixed;
-    inset:0;
-    z-index:99999;
+    position:fixed !important;
+    inset:0 !important;
+    width:100vw !important;
+    height:100vh !important;
+    z-index:99999 !important;
     display:none;
-    align-items:center;
-    justify-content:center;
+    align-items:center !important;
+    justify-content:center !important;
     padding:20px;
+    box-sizing:border-box;
     background:rgba(0,0,0,.62);
     backdrop-filter:blur(12px);
     -webkit-backdrop-filter:blur(12px);
 }
-.globira-login-overlay.active{display:flex;animation:globiraFadeIn .25s ease}
+.globira-login-overlay.active{display:flex !important;animation:globiraFadeIn .25s ease}
 .globira-login-box{
     position:relative;
     width:100%;
