@@ -101,6 +101,32 @@ header{
 }
 .account-btn:hover{background:#111;color:#fff}
 .header-actions{display:flex;gap:10px;align-items:center}
+.header-search{
+    display:flex;
+    align-items:center;
+    width:min(280px,22vw);
+    border:1px solid #cfc9bd;
+    background:#fff;
+    border-radius:30px;
+    overflow:hidden;
+}
+.header-search input{
+    width:100%;
+    border:0;
+    outline:0;
+    background:transparent;
+    padding:12px 14px;
+    font-family:inherit;
+    font-size:12px;
+}
+.header-search button{
+    border:0;
+    background:transparent;
+    padding:0 14px;
+    font-size:20px;
+    line-height:1;
+}
+
 
 /* =========================
 ACCOUNT
@@ -133,25 +159,47 @@ ACCOUNT
 .globira-profile-box p{font-size:13px;color:#777;line-height:1.6;margin-bottom:22px}
 .globira-profile-input{width:100%;padding:14px;border:1px solid #ccc;margin-bottom:12px;font-family:inherit}
 .globira-profile-button{width:100%;padding:15px;background:#111;color:#fff;border:0;letter-spacing:1px}
-@media(max-width:700px){.header-actions{gap:6px}.account-btn{padding:10px 12px;font-size:10px}.cart-btn{padding:10px 12px}.globira-account-box{padding:30px 20px}.globira-account-grid{grid-template-columns:1fr}.globira-account-title{font-size:35px}}
+@media(max-width:900px){
+    header{height:auto;min-height:82px;flex-wrap:wrap;gap:12px;padding:14px 5%;}
+    .nav{order:3;width:100%;overflow-x:auto;justify-content:flex-start;gap:22px;padding-bottom:3px;}
+    .nav a{font-size:11px;}
+    .header-search{order:2;flex:1;width:auto;min-width:180px;}
+    .header-actions{gap:6px;}
+    .account-btn{padding:10px 12px;font-size:10px;}
+    .cart-btn{padding:10px 12px;}
+}
+@media(max-width:700px){
+    .logo{font-size:25px;letter-spacing:3px;}
+    .header-search{min-width:150px;}
+    .header-search input{padding:10px 12px;font-size:11px;}
+    .header-search button{padding:0 10px;}
+    .globira-account-box{padding:30px 20px;}
+    .globira-account-grid{grid-template-columns:1fr;}
+    .globira-account-title{font-size:35px;}
+}
 
 /* =========================
 HERO
 ========================= */
 
 .hero{
-    min-height:690px;
+    min-height:590px;
     display:grid;
-    grid-template-columns:48% 52%;
-    padding:45px 5% 65px;
-    gap:40px;
+    grid-template-columns:50% 50%;
+    padding:0;
+    gap:0;
+    position:relative;
+    overflow:visible;
+    background:#f7f4ee;
 }
 
 .hero-content{
     display:flex;
     flex-direction:column;
     justify-content:center;
-    padding-left:7%;
+    padding:70px 8% 120px 12%;
+    position:relative;
+    z-index:2;
 }
 
 .eyebrow{
@@ -198,14 +246,52 @@ HERO
 
 .hero-image{
     position:relative;
-    min-height:600px;
+    min-height:590px;
+    height:590px;
     overflow:hidden;
 }
-
 .hero-image img{
     width:100%;
     height:100%;
     object-fit:cover;
+    display:block;
+}
+
+.hero-slider-controls{
+    position:absolute;
+    right:28px;
+    top:50%;
+    transform:translateY(-50%);
+    z-index:5;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+}
+.hero-slider-controls button{
+    width:42px;
+    height:42px;
+    border:1px solid rgba(255,255,255,.75);
+    border-radius:50%;
+    background:rgba(0,0,0,.12);
+    color:#fff;
+    font-size:20px;
+    backdrop-filter:blur(5px);
+}
+.hero-slider-controls button:hover{
+    background:#fff;
+    color:#111;
+}
+.hero-slide-count{
+    color:#fff;
+    font-size:11px;
+    letter-spacing:2px;
+    margin-top:4px;
+}
+.hero-slide-line{
+    width:1px;
+    height:34px;
+    background:rgba(255,255,255,.45);
 }
 
 .hero-label{
@@ -250,7 +336,7 @@ CATEGORY
 
 .category-grid{
     display:grid;
-    grid-template-columns:1fr 1fr;
+    grid-template-columns:repeat(3,1fr);
     gap:20px;
 }
 
@@ -297,6 +383,24 @@ PRODUCT GRID
     grid-template-columns:repeat(4,1fr);
     gap:20px;
 }
+.empty-category{
+    grid-column:1 / -1;
+    background:#fff;
+    border:1px solid #e3dfd6;
+    padding:70px 30px;
+    text-align:center;
+}
+.empty-category h3{
+    font-family:'Playfair Display',serif;
+    font-size:30px;
+    font-weight:500;
+    margin-bottom:10px;
+}
+.empty-category p{
+    color:#777;
+    font-size:13px;
+}
+
 
 .product{
     background:#fff;
@@ -365,13 +469,63 @@ PRODUCT GRID
 }
 
 /* =========================
+FLOATING HERO SEARCH
+========================= */
+.hero-search-wrap{
+    position:relative;
+    z-index:20;
+    height:0;
+}
+.hero-search{
+    position:absolute;
+    left:12%;
+    right:12%;
+    top:-45px;
+    min-height:92px;
+    display:flex;
+    align-items:center;
+    padding:0 28px;
+    background:rgba(255,255,255,.97);
+    border:1px solid rgba(220,216,208,.8);
+    border-radius:18px;
+    box-shadow:0 18px 45px rgba(30,25,18,.12);
+}
+.hero-search-icon{
+    font-size:27px;
+    margin-right:18px;
+    transform:rotate(-20deg);
+}
+.hero-search input{
+    flex:1;
+    border:0;
+    outline:0;
+    background:transparent;
+    font-family:inherit;
+    font-size:16px;
+    color:#222;
+}
+.hero-search input::placeholder{color:#999;}
+.hero-search-divider{
+    width:1px;
+    height:34px;
+    background:#ddd8ce;
+    margin:0 22px;
+}
+.hero-search button{
+    border:0;
+    background:transparent;
+    font-size:26px;
+    transform:rotate(-20deg);
+}
+
+/* =========================
 COLLECTION STRIP
 ========================= */
 
 .collection-strip{
     background:#111;
     color:#fff;
-    padding:28px 5%;
+    padding:55px 5% 28px;
     display:flex;
     justify-content:space-around;
     text-align:center;
@@ -1469,6 +1623,403 @@ MOBILE
 
 
 }
+.hero-image img{transition:opacity .25s ease;}
+
+@media(max-width:900px){
+    .hero{
+        grid-template-columns:1fr;
+        min-height:auto;
+    }
+    .hero-content{
+        padding:70px 7% 45px;
+    }
+    .hero-image{
+        min-height:520px;
+        height:520px;
+    }
+    .hero-search-wrap{height:auto;}
+    .hero-search{
+        position:relative;
+        left:auto;
+        right:auto;
+        top:auto;
+        margin:-35px 5% 0;
+        min-height:76px;
+    }
+}
+@media(max-width:600px){
+    .hero-content{padding:55px 20px 35px;}
+    .hero h1{font-size:55px;}
+    .hero-image{min-height:440px;height:440px;}
+    .hero-search{
+        margin:-28px 20px 0;
+        padding:0 18px;
+        min-height:68px;
+    }
+    .hero-search input{font-size:13px;}
+    .hero-search-icon{font-size:22px;margin-right:10px;}
+    .hero-search-divider{margin:0 12px;}
+}
+
+/* =========================================================
+   GLOBIRA REFERENCE HOMEPAGE — CLEAN EDITORIAL LAYOUT
+   ========================================================= */
+
+body{
+    background:#f8f7f3;
+}
+
+.globira-main-header{
+    width:calc(100% - 46px);
+    margin:25px 23px 0;
+    height:65px;
+    padding:0 74px;
+    background:rgba(255,255,255,.92);
+    border-bottom:1px solid #eeeae2;
+    display:grid;
+    grid-template-columns:1fr auto 1fr;
+    align-items:center;
+    position:relative;
+    z-index:100;
+    box-sizing:border-box;
+}
+
+.globira-main-header .logo{
+    justify-self:start;
+    font-family:'Playfair Display',serif;
+    font-size:31px;
+    font-weight:500;
+    letter-spacing:5px;
+    line-height:1;
+}
+
+.globira-main-header .nav{
+    justify-self:center;
+    display:flex;
+    align-items:center;
+    gap:34px;
+    height:100%;
+}
+
+.globira-main-header .nav a{
+    position:relative;
+    color:#222;
+    text-decoration:none;
+    font-size:13px;
+    letter-spacing:.1px;
+    white-space:nowrap;
+}
+
+.globira-main-header .nav a:first-child:after{
+    content:"";
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    bottom:-17px;
+    width:23px;
+    height:1px;
+    background:#222;
+}
+
+.globira-main-header .header-actions{
+    justify-self:end;
+    display:flex;
+    align-items:center;
+    gap:22px;
+}
+
+.header-icon-btn,
+.header-cart-btn{
+    position:relative;
+    width:25px;
+    height:30px;
+    padding:0;
+    border:0;
+    background:transparent;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    color:#222;
+}
+
+.header-icon-btn svg,
+.header-cart-btn svg{
+    width:21px;
+    height:21px;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:1.35;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+}
+
+.header-cart-count{
+    position:absolute;
+    right:-8px;
+    top:-7px;
+    min-width:15px;
+    height:15px;
+    padding:0 3px;
+    border-radius:50%;
+    background:#222;
+    color:#fff;
+    font-size:9px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-sizing:border-box;
+}
+
+.hero{
+    width:calc(100% - 46px);
+    margin:0 23px;
+    min-height:402px;
+    height:402px;
+    grid-template-columns:52% 48%;
+    padding:0;
+    gap:0;
+    background:#f4f1e9;
+    overflow:visible;
+}
+
+.hero-content{
+    padding:38px 7% 55px 15%;
+    justify-content:center;
+    box-sizing:border-box;
+}
+
+.hero .eyebrow{
+    font-size:10px;
+    letter-spacing:4px;
+    margin-bottom:18px;
+}
+
+.hero h1{
+    font-family:'Playfair Display',serif;
+    font-size:60px;
+    line-height:.88;
+    letter-spacing:-1.8px;
+    font-weight:500;
+    margin:0 0 18px;
+}
+
+.hero-content p{
+    max-width:365px;
+    margin:0 0 22px;
+    font-size:12px;
+    line-height:1.75;
+    letter-spacing:1px;
+    color:#555;
+}
+
+.hero-buttons{
+    margin-top:0;
+}
+
+.primary-btn{
+    min-width:145px;
+    height:39px;
+    padding:0 18px;
+    background:#202020;
+    color:#fff;
+    border:0;
+    font-size:10px;
+    letter-spacing:1px;
+}
+
+.hero-arrow{
+    margin-left:13px;
+    font-size:17px;
+    vertical-align:-1px;
+}
+
+.hero-image{
+    min-height:402px;
+    height:402px;
+    overflow:hidden;
+}
+
+.hero-image img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    object-position:center center;
+}
+
+.hero-label{
+    display:none;
+}
+
+.hero-slider-controls{
+    right:57px;
+    gap:10px;
+}
+
+.hero-slider-controls button{
+    width:32px;
+    height:32px;
+    background:rgba(255,255,255,.08);
+    border-color:rgba(255,255,255,.7);
+    font-size:19px;
+}
+
+.hero-slide-line{
+    height:24px;
+    opacity:.65;
+}
+
+.hero-slide-count{
+    font-size:10px;
+}
+
+.hero-search-wrap{
+    width:calc(100% - 46px);
+    margin:0 23px;
+    height:0;
+}
+
+.hero-search{
+    left:12%;
+    right:12%;
+    top:-36px;
+    min-height:74px;
+    padding:0 25px;
+    border-radius:15px;
+    box-shadow:0 9px 28px rgba(30,25,18,.10);
+}
+
+.hero-search-icon{
+    font-size:24px;
+    margin-right:13px;
+}
+
+.hero-search input{
+    font-size:14px;
+    letter-spacing:.1px;
+}
+
+.hero-search-divider{
+    height:30px;
+    margin:0 20px;
+}
+
+.hero-search button{
+    font-size:22px;
+}
+
+.globira-hide-strip{
+    display:none !important;
+}
+
+.section{
+    padding-top:72px;
+    padding-bottom:80px;
+}
+
+.section-heading{
+    padding:0 12%;
+    margin-bottom:30px;
+}
+
+.section-heading p{
+    display:none;
+}
+
+.section-heading h2{
+    font-family:'Playfair Display',serif;
+    font-size:31px;
+    font-weight:500;
+    margin:0;
+}
+
+.category-grid{
+    padding:0 12%;
+}
+
+/* Header search input is intentionally not shown in the top header:
+   the large floating search is the primary search control. */
+.header-search{
+    display:none !important;
+}
+
+@media(max-width:1000px){
+    .globira-main-header{
+        padding:0 30px;
+    }
+    .globira-main-header .nav{
+        gap:18px;
+    }
+    .hero-content{
+        padding-left:9%;
+    }
+    .hero h1{
+        font-size:52px;
+    }
+}
+
+@media(max-width:700px){
+    .globira-main-header{
+        width:100%;
+        margin:0;
+        height:auto;
+        min-height:72px;
+        padding:16px 20px;
+        display:flex;
+        flex-wrap:wrap;
+        gap:12px;
+    }
+    .globira-main-header .logo{
+        font-size:25px;
+    }
+    .globira-main-header .nav{
+        order:3;
+        width:100%;
+        overflow-x:auto;
+        justify-content:flex-start;
+        padding-bottom:4px;
+        gap:22px;
+    }
+    .globira-main-header .nav a:first-child:after{
+        bottom:-8px;
+    }
+    .hero{
+        width:100%;
+        margin:0;
+        height:auto;
+        min-height:0;
+        grid-template-columns:1fr;
+    }
+    .hero-content{
+        padding:60px 25px 40px;
+    }
+    .hero h1{
+        font-size:55px;
+    }
+    .hero-image{
+        height:430px;
+        min-height:430px;
+    }
+    .hero-slider-controls{
+        right:22px;
+    }
+    .hero-search-wrap{
+        width:100%;
+        margin:0;
+    }
+    .hero-search{
+        left:20px;
+        right:20px;
+        top:-32px;
+        min-height:68px;
+    }
+    .section-heading,
+    .category-grid{
+        padding-left:20px;
+        padding-right:20px;
+    }
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1480,7 +2031,7 @@ MOBILE
 HEADER
 ========================= -->
 
-<header>
+<header class="globira-main-header">
 
     <div class="logo">GLOBIRA</div>
 
@@ -1488,15 +2039,37 @@ HEADER
         <a href="#" onclick="showHome();return false;">Home</a>
         <a href="#" onclick="showCategory('women');return false;">Women</a>
         <a href="#" onclick="showCategory('men');return false;">Men</a>
-        <a href="#new">New Arrivals</a>
+        <a href="#" onclick="showCategory('bags');return false;">Bags</a>
+        <a href="#" onclick="showCategory('shoes');return false;">Shoes</a>
+        <a href="#" onclick="showCategory('accessories');return false;">Accessories</a>
+        <a href="#" onclick="showNewArrivals();return false;">New Arrivals</a>
     </nav>
 
     <div class="header-actions">
-        <button class="account-btn" id="globiraAccountButton" onclick="handleGlobiraAccountClick()">
-            MY ACCOUNT
+        <button class="header-icon-btn" type="button"
+                onclick="document.getElementById('globiraHeroSearchInput')?.focus()"
+                aria-label="Search">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="11" cy="11" r="6.5"></circle>
+                <path d="M16 16l5 5"></path>
+            </svg>
         </button>
-        <button class="cart-btn" onclick="openCart()">
-            Cart (<span id="cartCount">0</span>)
+
+        <button class="header-icon-btn" type="button"
+                onclick="handleGlobiraAccountClick()"
+                aria-label="My Account">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="7" r="3.2"></circle>
+                <path d="M5.5 20c.6-4 3-6 6.5-6s5.9 2 6.5 6"></path>
+            </svg>
+        </button>
+
+        <button class="header-cart-btn" type="button" onclick="openCart()" aria-label="Cart">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 8h14l-1 11H6L5 8Z"></path>
+                <path d="M9 8V6a3 3 0 0 1 6 0v2"></path>
+            </svg>
+            <span id="cartCount" class="header-cart-count">0</span>
         </button>
     </div>
 
@@ -1513,46 +2086,61 @@ HOME
 
     <div class="hero-content">
 
-        <div class="eyebrow">GLOBIRA COLLECTION 2026</div>
+        <div class="eyebrow">NEW COLLECTION 2026</div>
 
-        <h1>Style<br>Without<br>Limits.</h1>
+        <h1>Style<br>Without<br>Limits</h1>
 
         <p>
-            Discover refined essentials, contemporary silhouettes
-            and timeless pieces designed for the modern wardrobe.
+            Discover timeless fashion, crafted for
+            every version of you.
         </p>
 
         <div class="hero-buttons">
-
-            <button class="primary-btn"
-                    onclick="showCategory('women')">
-                SHOP WOMEN
+            <button class="primary-btn" onclick="showNewArrivals()">
+                SHOP NOW <span class="hero-arrow">→</span>
             </button>
-
-            <button class="secondary-btn"
-                    onclick="showCategory('men')">
-                SHOP MEN
-            </button>
-
         </div>
 
     </div>
 
     <div class="hero-image">
-
-        <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1200&q=90">
+        <img id="heroSlideImage" src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1400&q=90" alt="GLOBIRA new collection">
 
         <div class="hero-label">
             <small>THE NEW EDIT</small>
             AUTUMN / WINTER
         </div>
 
+        <div class="hero-slider-controls">
+            <button type="button" onclick="changeHeroSlide(-1)" aria-label="Previous slide">‹</button>
+            <div class="hero-slide-line"></div>
+            <button type="button" onclick="changeHeroSlide(1)" aria-label="Next slide">›</button>
+            <span class="hero-slide-count" id="heroSlideCount">1 / 3</span>
+        </div>
     </div>
 
 </section>
 
+<!-- FLOATING HOMEPAGE SEARCH -->
+<div class="hero-search-wrap">
+    <div class="hero-search">
+        <span class="hero-search-icon">⌕</span>
+        <input id="globiraHeroSearchInput"
+               type="search"
+               placeholder="Search for products, brands and more..."
+               autocomplete="off"
+               onkeydown="if(event.key==='Enter'){
+                   const topSearch=document.getElementById('globiraSearchInput');
+                   if(topSearch) topSearch.value=this.value;
+                   searchProducts();
+               }">
+        <span class="hero-search-divider"></span>
+        <button type="button" onclick="searchProducts()" aria-label="Search">⌕</button>
+    </div>
+</div>
 
-<div class="collection-strip">
+
+<div class="collection-strip globira-hide-strip">
 
     <span>PREMIUM FABRICS</span>
     <span>MODERN SILHOUETTES</span>
@@ -1575,27 +2163,34 @@ HOME
 
     <div class="category-grid">
 
-        <div class="category"
-             onclick="showCategory('women')">
-
-            <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1000&q=90">
-
-            <div class="category-overlay">
-                <h3>Women</h3>
-            </div>
-
+        <div class="category" onclick="showCategory('women')">
+            <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1000&q=90" alt="Women">
+            <div class="category-overlay"><h3>Women</h3></div>
         </div>
 
+        <div class="category" onclick="showCategory('men')">
+            <img src="https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&w=1000&q=90" alt="Men">
+            <div class="category-overlay"><h3>Men</h3></div>
+        </div>
 
-        <div class="category"
-             onclick="showCategory('men')">
+        <div class="category" onclick="showCategory('bags')">
+            <img src="https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1000&q=90" alt="Bags">
+            <div class="category-overlay"><h3>Bags</h3></div>
+        </div>
 
-            <img src="https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&w=1000&q=90">
+        <div class="category" onclick="showCategory('shoes')">
+            <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1000&q=90" alt="Shoes">
+            <div class="category-overlay"><h3>Shoes</h3></div>
+        </div>
 
-            <div class="category-overlay">
-                <h3>Men</h3>
-            </div>
+        <div class="category" onclick="showCategory('accessories')">
+            <img src="https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=1000&q=90" alt="Accessories">
+            <div class="category-overlay"><h3>Accessories</h3></div>
+        </div>
 
+        <div class="category" onclick="showNewArrivals()">
+            <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1000&q=90" alt="New Arrivals">
+            <div class="category-overlay"><h3>New Arrivals</h3></div>
         </div>
 
     </div>
@@ -2999,46 +3594,177 @@ function productCard(product){
 CATEGORY
 ========================================================= */
 
+function getCategoryProducts(category){
+
+    const products = allProducts();
+
+    if(category === 'women'){
+        return products.filter(product =>
+            product.category === 'women' ||
+            product.gender === 'women' ||
+            womenProducts.some(item => item.id === product.id)
+        );
+    }
+
+    if(category === 'men'){
+        return products.filter(product =>
+            product.category === 'men' ||
+            product.gender === 'men' ||
+            menProducts.some(item => item.id === product.id)
+        );
+    }
+
+    const keywords = {
+        bags: ['bag','handbag','backpack','purse','tote','wallet','clutch'],
+        shoes: ['shoe','sneaker','sandal','boot','heel','loafer','slipper'],
+        accessories: ['watch','jewelry','jewellery','necklace','bracelet','ring','earring','belt','sunglasses','wallet','accessory']
+    };
+
+    if(keywords[category]){
+        return products.filter(product => {
+            const text = [
+                product.name,
+                product.category,
+                product.subcategory,
+                product.description
+            ].filter(Boolean).join(' ').toLowerCase();
+
+            return product.category === category ||
+                   keywords[category].some(word => text.includes(word));
+        });
+    }
+
+    return products;
+}
+
+
 function showCategory(category){
 
-    document.getElementById('homePage')
-        .style.display='none';
+    document.getElementById('homePage').style.display='none';
+    document.getElementById('categoryPage').classList.add('active');
 
-    document.getElementById('categoryPage')
-        .classList.add('active');
+    const products = getCategoryProducts(category);
 
-    const products =
-        category === 'women'
-        ? womenProducts
-        : menProducts;
+    const titles = {
+        women:'Women',
+        men:'Men',
+        bags:'Bags',
+        shoes:'Shoes',
+        accessories:'Accessories'
+    };
 
-    document.getElementById('categoryTitle')
-        .textContent =
-        category === 'women'
-        ? 'Women'
-        : 'Men';
+    document.getElementById('categoryTitle').textContent =
+        titles[category] || 'Collection';
 
-    document.getElementById('categoryEyebrow')
-        .textContent =
-        category === 'women'
-        ? 'WOMEN / GLOBIRA COLLECTION'
-        : 'MEN / GLOBIRA COLLECTION';
+    document.getElementById('categoryEyebrow').textContent =
+        'GLOBIRA / ' + (titles[category] || 'COLLECTION').toUpperCase();
 
-    document.getElementById('categoryProducts')
-        .innerHTML =
-        products.map(productCard).join('');
+    const container = document.getElementById('categoryProducts');
 
-    window.scrollTo({
-        top:0,
-        behavior:'smooth'
+    container.innerHTML = products.length
+        ? products.map(productCard).join('')
+        : '<div class="empty-category"><h3>No products available yet</h3><p>More products will appear here automatically as they are added to GLOBIRA.</p></div>';
+
+    window.scrollTo({top:0,behavior:'smooth'});
+}
+
+
+function showNewArrivals(){
+
+    document.getElementById('homePage').style.display='none';
+    document.getElementById('categoryPage').classList.add('active');
+
+    const products = allProducts();
+
+    document.getElementById('categoryTitle').textContent = 'New Arrivals';
+    document.getElementById('categoryEyebrow').textContent = 'GLOBIRA / NEW ARRIVALS';
+
+    document.getElementById('categoryProducts').innerHTML =
+        products.length
+        ? products.map(productCard).join('')
+        : '<div class="empty-category"><h3>No new products available yet</h3></div>';
+
+    window.scrollTo({top:0,behavior:'smooth'});
+}
+
+
+function searchProducts(){
+
+    const input = document.getElementById('globiraSearchInput');
+    const query = input ? input.value.trim().toLowerCase() : '';
+
+    if(!query){
+        showHome();
+        return;
+    }
+
+    const products = allProducts().filter(product => {
+
+        const text = [
+            product.name,
+            product.category,
+            product.subcategory,
+            product.gender,
+            product.description,
+            product.source
+        ].filter(Boolean).join(' ').toLowerCase();
+
+        return text.includes(query);
     });
 
+    document.getElementById('homePage').style.display='none';
+    document.getElementById('categoryPage').classList.add('active');
+
+    document.getElementById('categoryTitle').textContent =
+        'Search: ' + input.value.trim();
+
+    document.getElementById('categoryEyebrow').textContent =
+        'GLOBIRA / SEARCH RESULTS';
+
+    document.getElementById('categoryProducts').innerHTML =
+        products.length
+        ? products.map(productCard).join('')
+        : '<div class="empty-category"><h3>No products found</h3><p>Try another product name or category.</p></div>';
+
+    window.scrollTo({top:0,behavior:'smooth'});
 }
 
 
 /* =========================================================
 HOME
 ========================================================= */
+
+const globiraHeroSlides = [
+    'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1400&q=90',
+    'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1400&q=90',
+    'https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&fit=crop&w=1400&q=90'
+];
+
+let globiraHeroSlideIndex = 0;
+
+function changeHeroSlide(direction){
+    globiraHeroSlideIndex =
+        (globiraHeroSlideIndex + direction + globiraHeroSlides.length)
+        % globiraHeroSlides.length;
+
+    const image = document.getElementById('heroSlideImage');
+    const count = document.getElementById('heroSlideCount');
+
+    if(image){
+        image.style.opacity = '0.35';
+        setTimeout(() => {
+            image.src = globiraHeroSlides[globiraHeroSlideIndex];
+            image.style.opacity = '1';
+        }, 120);
+    }
+
+    if(count){
+        count.textContent =
+            (globiraHeroSlideIndex + 1) + ' / ' + globiraHeroSlides.length;
+    }
+}
+
+setInterval(() => changeHeroSlide(1), 6000);
 
 function showHome(){
 
