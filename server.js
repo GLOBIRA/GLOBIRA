@@ -20,6 +20,7 @@ let cjTokenExpiresAt = 0;
    ========================================================= */
 
 async function getCJAccessToken() {
+
     if (
         cjAccessToken &&
         Date.now() < cjTokenExpiresAt - 60 * 1000
@@ -39,9 +40,11 @@ async function getCJAccessToken() {
         `${CJ_API_BASE}/authentication/getAccessToken`,
         {
             method: "POST",
+
             headers: {
                 "Content-Type": "application/json"
             },
+
             body: JSON.stringify({
                 apiKey: apiKey
             })
@@ -95,13 +98,17 @@ async function getCJAccessToken() {
         json?.data?.accessTokenExpiryDate;
 
     if (expiryDate) {
-        const expiryMs = Date.parse(expiryDate);
+
+        const expiryMs =
+            Date.parse(expiryDate);
 
         cjTokenExpiresAt =
             Number.isFinite(expiryMs)
                 ? expiryMs
                 : Date.now() + 50 * 60 * 1000;
+
     } else {
+
         cjTokenExpiresAt =
             Date.now() + 50 * 60 * 1000;
     }
@@ -109,6 +116,10 @@ async function getCJAccessToken() {
     return cjAccessToken;
 }
 
+
+/* =========================================================
+   CJ GET REQUEST
+   ========================================================= */
 
 async function cjGet(url) {
 
@@ -120,9 +131,11 @@ async function cjGet(url) {
             url,
             {
                 method: "GET",
+
                 headers: {
                     "CJ-Access-Token":
                         token,
+
                     "Content-Type":
                         "application/json"
                 }
@@ -135,15 +148,19 @@ async function cjGet(url) {
     let json;
 
     try {
+
         json =
             JSON.parse(text);
+
     } catch {
+
         json = {
             message: text
         };
     }
 
     if (!response.ok) {
+
         throw new Error(
             json?.message ||
             json?.msg ||
@@ -156,6 +173,7 @@ async function cjGet(url) {
         json.code &&
         String(json.code) !== "200"
     ) {
+
         throw new Error(
             json.message ||
             json.msg ||
@@ -168,10 +186,13 @@ async function cjGet(url) {
 
 
 /* =========================================================
-   NORMALIZE CJ PRODUCT
+   COLLECT CJ IMAGES
    ========================================================= */
 
-function collectCJImages(value, output = []) {
+function collectCJImages(
+    value,
+    output = []
+) {
 
     if (value == null) {
         return output;
@@ -180,6 +201,7 @@ function collectCJImages(value, output = []) {
     if (Array.isArray(value)) {
 
         for (const item of value) {
+
             collectCJImages(
                 item,
                 output
@@ -192,6 +214,7 @@ function collectCJImages(value, output = []) {
     if (typeof value === "object") {
 
         const preferredKeys = [
+
             "url",
             "imageUrl",
             "imageURL",
@@ -199,11 +222,13 @@ function collectCJImages(value, output = []) {
             "bigImage",
             "mainImage",
             "src"
+
         ];
 
         for (const key of preferredKeys) {
 
             if (value[key]) {
+
                 collectCJImages(
                     value[key],
                     output
@@ -221,13 +246,18 @@ function collectCJImages(value, output = []) {
         return output;
     }
 
-    // CJ may return image arrays as JSON strings.
+
+    /* CJ sometimes returns JSON image arrays */
 
     if (
-        (text.startsWith("[") &&
-            text.endsWith("]")) ||
-        (text.startsWith("{") &&
-            text.endsWith("}"))
+        (
+            text.startsWith("[") &&
+            text.endsWith("]")
+        ) ||
+        (
+            text.startsWith("{") &&
+            text.endsWith("}")
+        )
     ) {
 
         try {
@@ -243,11 +273,12 @@ function collectCJImages(value, output = []) {
             return output;
 
         } catch {
-            // Keep the original value below if it was not valid JSON.
+            /* Continue below */
         }
     }
 
-    // Some image values are returned as comma/line separated URLs.
+
+    /* Comma-separated image URLs */
 
     if (
         text.includes(",") &&
@@ -262,6 +293,7 @@ function collectCJImages(value, output = []) {
                 part.trim();
 
             if (trimmed) {
+
                 collectCJImages(
                     trimmed,
                     output
@@ -272,6 +304,9 @@ function collectCJImages(value, output = []) {
         return output;
     }
 
+
+    /* Protocol-relative URL */
+
     if (text.startsWith("//")) {
 
         output.push(
@@ -280,6 +315,9 @@ function collectCJImages(value, output = []) {
 
         return output;
     }
+
+
+    /* Normal URL */
 
     if (
         /^https?:\/\//i.test(text)
@@ -292,6 +330,10 @@ function collectCJImages(value, output = []) {
 }
 
 
+/* =========================================================
+   NORMALIZE CJ PRODUCT
+   ========================================================= */
+
 function normalizeCJProduct(
     product,
     details = null
@@ -302,46 +344,50 @@ function normalizeCJProduct(
         product ||
         {};
 
+    const getValue = (...values) => {
+
+        for (const value of values) {
+
+            if (
+                value !== undefined &&
+                value !== null &&
+                String(value).trim() !== ""
+            ) {
+
+                return value;
+            }
+        }
+
+        return "";
+    };
+
+
+    /* ---------------------------------------------------------
+       IMAGES
+       --------------------------------------------------------- */
+
     const imageValues = [
 
         source.bigImage,
-
         source.productImage,
-
         source.productImageSet,
-
         source.images,
-
         source.productImageUrl,
-
         source.image,
-
         source.mainImage,
-
         source.picUrl,
-
         source.imageUrl,
-
         source.imageURL,
 
         product?.bigImage,
-
         product?.productImage,
-
         product?.productImageSet,
-
         product?.images,
-
         product?.productImageUrl,
-
         product?.image,
-
         product?.mainImage,
-
         product?.picUrl,
-
         product?.imageUrl,
-
         product?.imageURL
 
     ];
@@ -361,82 +407,218 @@ function normalizeCJProduct(
             )
         );
 
-    const rawPrice =
+
+    /* ---------------------------------------------------------
+       PRICES
+       --------------------------------------------------------- */
+
+    const discountPrice =
         Number(
-            source.sellPrice ||
-            source.price ||
-            source.productPrice ||
-            source.minPrice ||
-            0
+            getValue(
+                source.discountPrice,
+                source.nowPrice,
+                product?.discountPrice,
+                product?.nowPrice
+            )
         ) || 0;
+
+    const sellPrice =
+        Number(
+            getValue(
+                source.sellPrice,
+                product?.sellPrice
+            )
+        ) || 0;
+
+    const normalPrice =
+        Number(
+            getValue(
+                source.price,
+                source.productPrice,
+                source.minPrice,
+                product?.price,
+                product?.productPrice,
+                product?.minPrice
+            )
+        ) || 0;
+
+    const price =
+        discountPrice ||
+        sellPrice ||
+        normalPrice ||
+        0;
+
+    const oldPrice =
+        sellPrice > price
+            ? sellPrice
+            : normalPrice > price
+                ? normalPrice
+                : price;
+
+
+    /* ---------------------------------------------------------
+       PRODUCT ID
+       --------------------------------------------------------- */
+
+    const productId =
+        getValue(
+
+            source.pid,
+            source.productId,
+            source.id,
+
+            product?.pid,
+            product?.productId,
+            product?.id
+
+        );
+
+
+    /* ---------------------------------------------------------
+       PRODUCT NAME
+       --------------------------------------------------------- */
+
+    const name =
+        getValue(
+
+            source.productNameEn,
+            source.nameEn,
+            source.productName,
+            source.name,
+
+            product?.productNameEn,
+            product?.nameEn,
+            product?.productName,
+            product?.name,
+
+            "CJ Product"
+
+        );
+
+
+    /* ---------------------------------------------------------
+       SKU
+       --------------------------------------------------------- */
+
+    const sku =
+        getValue(
+
+            source.productSku,
+            source.sku,
+            source.spu,
+
+            product?.productSku,
+            product?.sku,
+            product?.spu
+
+        );
+
+
+    /* ---------------------------------------------------------
+       CATEGORY
+       --------------------------------------------------------- */
+
+    const category =
+        getValue(
+
+            source.oneCategoryName,
+            source.twoCategoryName,
+            source.threeCategoryName,
+
+            source.categoryNameEn,
+            source.categoryName,
+            source.category,
+
+            product?.oneCategoryName,
+            product?.twoCategoryName,
+            product?.threeCategoryName,
+
+            product?.categoryNameEn,
+            product?.categoryName
+
+        );
+
+
+    /* ---------------------------------------------------------
+       SUBCATEGORY
+       --------------------------------------------------------- */
+
+    const subcategory =
+        getValue(
+
+            source.threeCategoryName,
+            source.subCategoryNameEn,
+            source.subcategoryNameEn,
+            source.subCategoryName,
+            source.subcategoryName,
+
+            product?.threeCategoryName,
+            product?.subCategoryNameEn,
+            product?.subcategoryNameEn,
+            product?.subCategoryName,
+            product?.subcategoryName
+
+        );
+
+
+    /* ---------------------------------------------------------
+       FINAL PRODUCT
+       --------------------------------------------------------- */
 
     return {
 
         id:
             "cj-" +
             (
-                source.pid ||
-                source.id ||
-                Date.now()
+                productId ||
+                `unknown-${Date.now()}-${Math.random()
+                    .toString(36)
+                    .slice(2, 8)}`
             ),
 
         cjProductId:
-            source.pid ||
-            source.id ||
-            "",
+            productId || "",
 
-        sku:
-            source.productSku ||
-            source.sku ||
-            "",
+        sku,
 
-        name:
-            source.productNameEn ||
-            source.nameEn ||
-            product?.productNameEn ||
-            product?.nameEn ||
-            "CJ Product",
+        name,
 
         description:
-            source.description ||
-            product?.description ||
-            "Authentic product sourced through CJdropshipping.",
+            getValue(
 
-        images:
-            images.length
-                ? images
-                : [],
+                source.description,
+                product?.description,
 
-        price:
-            rawPrice,
+                "Authentic product sourced through CJdropshipping."
 
-        oldPrice:
-            rawPrice,
+            ),
 
-        category:
-            source.categoryNameEn ||
-            source.categoryName ||
-            product?.categoryNameEn ||
-            product?.categoryName ||
-            "",
+        images,
 
-        subcategory:
-            source.subCategoryNameEn ||
-            source.subcategoryNameEn ||
-            product?.subCategoryNameEn ||
-            "",
+        price,
+
+        oldPrice,
+
+        category,
+
+        subcategory,
 
         gender:
-            source.gender ||
-            product?.gender ||
-            "",
+            getValue(
+                source.gender,
+                product?.gender
+            ),
 
         variants:
             Array.isArray(
                 source.variants
             )
                 ? source.variants
-                : [],
+                : Array.isArray(
+                    product?.variants
+                )
+                    ? product.variants
+                    : [],
 
         source:
             "cjdropshipping"
@@ -473,18 +655,21 @@ async function getCJProducts(
                 Math.max(
                     Number(
                         req.query.size
-                    ) || 100,
+                    ) || 20,
                     1
                 ),
                 100
             );
 
 
+        /* ---------------------------------------------------------
+           CJ PRODUCT LIST URL
+           --------------------------------------------------------- */
+
         const listUrl =
             new URL(
                 `${CJ_API_BASE}/product/listV2`
             );
-
 
         listUrl.searchParams.set(
             "page",
@@ -506,10 +691,20 @@ async function getCJProducts(
         }
 
 
-        listUrl.searchParams.set(
+        /*
+         * CJ expects features as repeated parameters.
+         */
+
+        listUrl.searchParams.append(
             "features",
-            "enable_description,enable_category"
+            "enable_description"
         );
+
+        listUrl.searchParams.append(
+            "features",
+            "enable_category"
+        );
+
 
         listUrl.searchParams.set(
             "sort",
@@ -523,12 +718,27 @@ async function getCJProducts(
 
 
         console.log(
-            "Loading CJ products:",
-            keyword || "ALL",
-            "page:",
+            "========================================"
+        );
+
+        console.log(
+            "GLOBIRA: Loading CJ products"
+        );
+
+        console.log(
+            "Keyword:",
+            keyword || "ALL"
+        );
+
+        console.log(
+            "Page:",
             page,
-            "size:",
+            "Size:",
             size
+        );
+
+        console.log(
+            "========================================"
         );
 
 
@@ -537,34 +747,84 @@ async function getCJProducts(
                 listUrl.toString()
             );
 
-
         const data =
             listJson?.data || {};
 
 
-        const content =
+        /* ---------------------------------------------------------
+           READ CJ RESPONSE
+           --------------------------------------------------------- */
+
+        let products = [];
+
+
+        if (
             Array.isArray(
                 data.content
             )
-                ? data.content
-                : [];
+        ) {
+
+            products =
+                data.content.flatMap(
+                    item =>
+
+                        Array.isArray(
+                            item?.productList
+                        )
+                            ? item.productList
+                            : []
+
+                );
+        }
 
 
-        const products =
-            content.flatMap(
-                item =>
-                    item?.productList || []
-            );
+        /*
+         * Compatibility with other CJ response formats.
+         */
 
+        if (
+            !products.length &&
+            Array.isArray(
+                data.productList
+            )
+        ) {
+
+            products =
+                data.productList;
+        }
+
+
+        if (
+            !products.length &&
+            Array.isArray(
+                data.list
+            )
+        ) {
+
+            products =
+                data.list;
+        }
+
+
+        /* ---------------------------------------------------------
+           NORMALIZE
+           --------------------------------------------------------- */
 
         const normalized =
             products
-                .slice(0, size)
+
                 .map(
                     product =>
                         normalizeCJProduct(
                             product
                         )
+                )
+
+                .filter(
+                    product =>
+                        product &&
+                        product.cjProductId &&
+                        product.name
                 );
 
 
@@ -573,18 +833,31 @@ async function getCJProducts(
                 data.totalRecords || 0
             );
 
-
         const totalPages =
             Number(
                 data.totalPages || 0
             );
-
 
         const currentPage =
             Number(
                 data.pageNumber || page
             );
 
+
+        const hasMore =
+            totalPages > 0
+                ? currentPage < totalPages
+                : normalized.length >= size;
+
+
+        console.log(
+            `GLOBIRA: CJ returned ${normalized.length} products`
+        );
+
+
+        /* ---------------------------------------------------------
+           RESPONSE
+           --------------------------------------------------------- */
 
         res.json({
 
@@ -594,40 +867,61 @@ async function getCJProducts(
             source:
                 "cjdropshipping",
 
-            keyword:
-                keyword,
+            keyword,
 
             page:
                 currentPage,
 
-            size:
-                size,
+            size,
 
-            totalRecords:
-                totalRecords,
+            totalRecords,
 
-            totalPages:
-                totalPages,
+            totalPages,
 
-            hasMore:
-                totalPages
-                    ? currentPage < totalPages
-                    : normalized.length === size,
+            hasMore,
 
             products:
                 normalized
+
         });
 
 
     } catch (error) {
 
         console.error(
-            "CJ PRODUCTS ERROR:",
+            "========================================"
+        );
+
+        console.error(
+            "GLOBIRA CJ PRODUCTS ERROR"
+        );
+
+        console.error(
+            error?.message ||
             error
         );
 
+        console.error(
+            "========================================"
+        );
 
-        res.status(500).json({
+
+        const message =
+            error?.message ||
+            "CJ Dropshipping API request failed.";
+
+
+        const status =
+            message.includes(
+                "CJ API key is missing"
+            )
+                ? 503
+                : 500;
+
+
+        res.status(
+            status
+        ).json({
 
             success:
                 false,
@@ -636,7 +930,8 @@ async function getCJProducts(
                 "cjdropshipping",
 
             error:
-                error.message
+                message
+
         });
     }
 }
@@ -661,13 +956,16 @@ async function getCJProduct(
 
         if (!productId) {
 
-            return res.status(400).json({
+            return res.status(
+                400
+            ).json({
 
                 success:
                     false,
 
                 error:
                     "Product ID is required."
+
             });
         }
 
@@ -683,7 +981,9 @@ async function getCJProduct(
 
 
         const json =
-            await cjGet(url);
+            await cjGet(
+                url
+            );
 
 
         const product =
@@ -707,6 +1007,7 @@ async function getCJProduct(
 
             product:
                 normalized
+
         });
 
 
@@ -714,11 +1015,14 @@ async function getCJProduct(
 
         console.error(
             "CJ PRODUCT ERROR:",
+            error?.message ||
             error
         );
 
 
-        res.status(500).json({
+        res.status(
+            500
+        ).json({
 
             success:
                 false,
@@ -727,7 +1031,9 @@ async function getCJProduct(
                 "cjdropshipping",
 
             error:
-                error.message
+                error?.message ||
+                "Unable to load CJ product."
+
         });
     }
 }
@@ -742,6 +1048,172 @@ app.get(
     getCJProducts
 );
 
+
+/* =========================================================
+   CJ CONNECTION STATUS
+   ========================================================= */
+
+app.get(
+    "/api/cj-status",
+    async (req, res) => {
+
+        const configured =
+            Boolean(
+                process.env.CJ_API_KEY
+            );
+
+
+        if (!configured) {
+
+            return res.status(
+                503
+            ).json({
+
+                success:
+                    false,
+
+                configured:
+                    false,
+
+                cjConnected:
+                    false,
+
+                productCount:
+                    0,
+
+                error:
+                    "CJ_API_KEY is missing from the server environment."
+
+            });
+        }
+
+
+        try {
+
+            const listUrl =
+                new URL(
+                    `${CJ_API_BASE}/product/listV2`
+                );
+
+
+            listUrl.searchParams.set(
+                "page",
+                "1"
+            );
+
+            listUrl.searchParams.set(
+                "size",
+                "1"
+            );
+
+
+            listUrl.searchParams.append(
+                "features",
+                "enable_description"
+            );
+
+            listUrl.searchParams.append(
+                "features",
+                "enable_category"
+            );
+
+
+            const json =
+                await cjGet(
+                    listUrl.toString()
+                );
+
+
+            const data =
+                json?.data || {};
+
+
+            let products = [];
+
+
+            if (
+                Array.isArray(
+                    data.content
+                )
+            ) {
+
+                products =
+                    data.content.flatMap(
+                        item =>
+
+                            Array.isArray(
+                                item?.productList
+                            )
+                                ? item.productList
+                                : []
+
+                    );
+            }
+
+
+            res.json({
+
+                success:
+                    true,
+
+                configured:
+                    true,
+
+                cjConnected:
+                    true,
+
+                productCount:
+                    products.length,
+
+                totalRecords:
+                    Number(
+                        data.totalRecords || 0
+                    ),
+
+                message:
+                    "CJ API connection is working."
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "CJ STATUS ERROR:",
+                error?.message ||
+                error
+            );
+
+
+            res.status(
+                500
+            ).json({
+
+                success:
+                    false,
+
+                configured:
+                    true,
+
+                cjConnected:
+                    false,
+
+                productCount:
+                    0,
+
+                error:
+                    error?.message ||
+                    "Unable to connect to CJ Dropshipping."
+
+            });
+        }
+    }
+);
+
+
+/* =========================================================
+   SINGLE PRODUCT ROUTE
+   ========================================================= */
 
 app.get(
     "/api/cj-product/:productId",
@@ -783,7 +1255,12 @@ app.get(
    ========================================================= */
 
 app.use(
-    (err, req, res, next) => {
+    (
+        err,
+        req,
+        res,
+        next
+    ) => {
 
         console.error(
             "SERVER ERROR:",
@@ -791,7 +1268,9 @@ app.use(
         );
 
 
-        res.status(500).json({
+        res.status(
+            500
+        ).json({
 
             success:
                 false,
@@ -799,6 +1278,7 @@ app.use(
             error:
                 err.message ||
                 "Internal server error."
+
         });
     }
 );
@@ -808,7 +1288,9 @@ app.use(
    START SERVER
    ========================================================= */
 
-if (require.main === module) {
+if (
+    require.main === module
+) {
 
     app.listen(
         PORT,
@@ -855,11 +1337,11 @@ if (require.main === module) {
             console.log("");
 
             console.log(
-                "Printify Products:"
+                "CJ Status:"
             );
 
             console.log(
-                `http://localhost:${PORT}/api/products`
+                `http://localhost:${PORT}/api/cj-status`
             );
 
             console.log("");
@@ -871,6 +1353,8 @@ if (require.main === module) {
             console.log(
                 CJ_API_BASE
             );
+
+            console.log("");
 
             console.log(
                 "========================================"
