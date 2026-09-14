@@ -2778,6 +2778,7 @@ body{
   gap:13px !important;
 }
 .category-result-grid .gw-product-image{height:220px !important}
+.category-landing-after-products{margin-top:34px !important}
 
 /* CART / MODALS: keep functionality, modernize only */
 .cart-drawer{width:min(430px,100%) !important}
@@ -2845,6 +2846,44 @@ body{
 }
 </style>
 
+<style id="globira-live-display-fix">
+/* FINAL DISPLAY FIX: live CJ cards must have stable dimensions. */
+.category-page .category-result-grid,
+.category-result-grid{
+  width:100% !important;
+  display:grid !important;
+  grid-template-columns:repeat(6,minmax(0,1fr)) !important;
+  gap:15px !important;
+  align-items:start !important;
+}
+.category-result-grid .gw-product-card{
+  width:100% !important;
+  min-width:0 !important;
+  max-width:none !important;
+  display:block !important;
+}
+.category-result-grid .gw-product-image{
+  width:100% !important;
+  height:270px !important;
+  min-height:270px !important;
+  display:block !important;
+  position:relative !important;
+  overflow:hidden !important;
+}
+.category-result-grid .gw-product-image img{
+  width:100% !important;
+  height:100% !important;
+  display:block !important;
+  object-fit:cover !important;
+}
+.category-result-grid .gw-product-info{width:100% !important;display:block !important;}
+.ref-categories button>span{background:#f1f2f3;}
+.ref-categories button img{display:block;width:100%;height:100%;object-fit:cover;}
+.ref-categories button img[src=""]{display:none;}
+@media(max-width:1200px){.category-page .category-result-grid,.category-result-grid{grid-template-columns:repeat(4,minmax(0,1fr)) !important}.category-result-grid .gw-product-image{height:245px !important;min-height:245px !important}}
+@media(max-width:850px){.category-page .category-result-grid,.category-result-grid{grid-template-columns:repeat(3,minmax(0,1fr)) !important}.category-result-grid .gw-product-image{height:230px !important;min-height:230px !important}}
+@media(max-width:560px){.category-page .category-result-grid,.category-result-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:10px !important}.category-result-grid .gw-product-image{height:220px !important;min-height:220px !important}}
+</style>
 </head>
 
 <body>
@@ -2974,7 +3013,7 @@ HOME
     <button onclick="showCategory('electronics')"><span><img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=300&q=85"></span><b>Electronics</b></button>
     <button onclick="showCategory('home')"><span><img src="https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=300&q=85"></span><b>Home &amp; Living</b></button>
     <button onclick="showCategory('beauty')"><span><img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=300&q=85"></span><b>Beauty</b></button>
-    <button onclick="showCategory('tools')"><span><img src="https://images.unsplash.com/photo-1581147036324-c1c4b8f8a9a3?auto=format&fit=crop&w=300&q=85"></span><b>Tools &amp; DIY</b></button>
+    <button onclick="showCategory('tools')"><span><img src="https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=300&q=85" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=900&q=90';"></span><b>Tools &amp; DIY</b></button>
     <button onclick="showCategory('sports')"><span><img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=300&q=85"></span><b>Sports &amp; Fitness</b></button>
     <button onclick="showCategory('automotive')"><span><img src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=300&q=85"></span><b>Automotive</b></button>
     <button onclick="showCategory('pets')"><span><img src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&w=300&q=85"></span><b>Pet Supplies</b></button>
@@ -4397,7 +4436,7 @@ function productCard(product){
     return `
       <article class="product gw-product-card" onclick="openProduct('${id.replace(/'/g,"\\'")}')">
         <div class="product-image gw-product-image">
-          <img src="${image}" alt="${name}" loading="lazy" referrerpolicy="no-referrer"
+          <img src="${image}" alt="${name}" loading="eager" decoding="async" referrerpolicy="no-referrer"
                onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85';">
           <span class="badge">${live ? 'LIVE' : 'GLOBIRA'}</span>
           <button class="gw-card-heart" onclick="event.stopPropagation();toggleProductWishlist?.('${id.replace(/'/g,"\\'")}')" aria-label="Add to wishlist">♡</button>
@@ -4436,17 +4475,22 @@ function preserveScrollRender(renderFn){
 
 function showCategory(category){
     currentCategory = category;
+
+    /* Always open the category at the TOP. Never preserve the old homepage
+       scroll position, so products are immediately visible. */
+    window.scrollTo({top:0, left:0, behavior:'auto'});
+
     document.getElementById('homePage').style.display='none';
     document.getElementById('categoryPage').classList.add('active');
 
     const products = getCategoryProducts(category);
     const d = GLOBIRA_MENU_DATA[category];
     const title = d?.title || ({
-        women:'Women', men:'Men', bags:'Bags', electronics:'Electronics',
-        home:'Home & Living', beauty:'Beauty & Personal Care', tools:'Tools & DIY',
-        sports:'Sports & Fitness', automotive:'Automotive', pets:'Pet Supplies',
-        office:'Office & School', baby:'Baby & Kids', health:'Health & Wellness',
-        more:'All Products', other:'More Products'
+        women:'Women', men:'Men', bags:'Bags', accessories:'Accessories',
+        electronics:'Electronics', home:'Home & Living', beauty:'Beauty & Personal Care',
+        tools:'Tools & DIY', sports:'Sports & Fitness', automotive:'Automotive',
+        pets:'Pet Supplies', office:'Office & School', baby:'Baby & Kids',
+        health:'Health & Wellness', more:'All Products', other:'More Products'
     }[category] || 'Collection');
 
     document.getElementById('categoryTitle').textContent = title;
@@ -4454,37 +4498,45 @@ function showCategory(category){
 
     const container = document.getElementById('categoryProducts');
 
-    preserveScrollRender(() => {
-        container.innerHTML = `
-          <div class="gw-category-toolbar">
-            <div><b>${products.length.toLocaleString()} products</b><span>Live marketplace</span></div>
-            <select onchange="sortCategoryProducts(this.value)">
-              <option value="featured">Featured</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="price-high">Price: High to Low</option>
-              <option value="name">Name</option>
-            </select>
-          </div>
-          ${d ? `<div class="category-landing-head">
-            <div class="category-landing-visual">
-              <img src="${d.hero}" alt="${escapeHtml(title)}">
-              <div><strong>${escapeHtml(title)}</strong><span>${escapeHtml(d.tag)}</span><button onclick="showSubcategory('${category}','all')">Shop All →</button></div>
-            </div>
-            <div class="category-subgroups">
-              ${(d.groups || []).slice(0,12).map(([t,items]) => `
-                <button onclick="showSubcategory('${category}','${slugify(t)}')">
-                  <strong>${escapeHtml(t)}</strong>
-                  <span>${items.slice(0,3).map(escapeHtml).join(' • ')}</span>
-                  <small>Explore →</small>
-                </button>`).join('')}
-            </div>
-          </div>` : ''}
-          <div class="products category-result-grid">
-            ${products.length ? products.slice(0,48).map(productCard).join('') : '<div class="empty-category"><h3>No matching products yet</h3><p>New live products will appear automatically.</p></div>'}
-          </div>
-          ${products.length > 48 ? `<button class="gw-load-more" onclick="loadMoreCategory('${category}')">Load more products →</button>` : ''}
-        `;
+    /* PRODUCT GRID FIRST: no large category banner/subcategory block before
+       the products. This makes the next page feel instant and product-first. */
+    container.innerHTML = `
+      <div class="gw-category-toolbar">
+        <div><b>${products.length.toLocaleString()} products</b><span>Live marketplace</span></div>
+        <select onchange="sortCategoryProducts(this.value)">
+          <option value="featured">Featured</option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="price-high">Price: High to Low</option>
+          <option value="name">Name</option>
+        </select>
+      </div>
+      <div class="products category-result-grid">
+        ${products.length ? products.slice(0,48).map(productCard).join('') : '<div class="empty-category"><h3>No matching products yet</h3><p>New live products are loading into GLOBIRA.</p></div>'}
+      </div>
+      ${products.length > 48 ? `<button class="gw-load-more" onclick="loadMoreCategory('${category}')">Load more products →</button>` : ''}
+      ${d ? `<div class="category-landing-head category-landing-after-products">
+        <div class="category-landing-visual">
+          <img src="${d.hero}" alt="${escapeHtml(title)}" loading="eager">
+          <div><strong>${escapeHtml(title)}</strong><span>${escapeHtml(d.tag)}</span><button onclick="showSubcategory('${category}','all')">Shop All →</button></div>
+        </div>
+        <div class="category-subgroups">
+          ${(d.groups || []).slice(0,12).map(([t,items]) => `
+            <button onclick="showSubcategory('${category}','${slugify(t)}')">
+              <strong>${escapeHtml(t)}</strong>
+              <span>${items.slice(0,3).map(escapeHtml).join(' • ')}</span>
+              <small>Explore →</small>
+            </button>`).join('')}
+        </div>
+      </div>` : ''}
+    `;
+
+    /* Force the first visible product images to start loading immediately. */
+    container.querySelectorAll('.category-result-grid img').forEach(img => {
+        img.loading = 'eager';
+        img.decoding = 'async';
     });
+
+    window.scrollTo({top:0, left:0, behavior:'auto'});
 }
 
 function showSubcategory(category, sub){
@@ -4809,48 +4861,8 @@ function openProduct(id, preselectedSize=null){
 
     /* PRODUCT IMAGES */
 
-    let productImages = Array.isArray(product.images)
-        ? product.images
-        : [];
-
-    // CJ can sometimes return an image list as a JSON string
-    productImages = productImages.flatMap(image => {
-
-        if(typeof image !== 'string'){
-            return [];
-        }
-
-        const trimmed = image.trim();
-
-        if(
-            trimmed.startsWith('[') &&
-            trimmed.endsWith(']')
-        ){
-            try{
-                const parsed = JSON.parse(trimmed);
-
-                if(Array.isArray(parsed)){
-                    return parsed;
-                }
-            }
-            catch(error){
-                console.warn(
-                    'Could not parse CJ image list',
-                    error
-                );
-            }
-        }
-
-        return [trimmed];
-    });
-
-
-    // Remove empty/duplicate images
-    productImages = [
-        ...new Set(
-            productImages.filter(image => image)
-        )
-    ];
+    let productImages = normalizeProductImages(product);
+    if(!productImages.length) productImages=[productFallbackImage(product)];
 
 
     /* MAIN IMAGE */
@@ -4878,27 +4890,7 @@ function openProduct(id, preselectedSize=null){
 
 
     /* SIZE / VARIANT BUTTONS */
-    const sizesContainer = document.querySelector('#productModal .sizes');
-
-    if(sizesContainer){
-        const category = String(product.category || '').toLowerCase();
-        const clothingCategory = category === 'women' || category === 'men';
-        const variants = Array.isArray(product.variants) ? product.variants.filter(Boolean) : [];
-
-        if(variants.length){
-            sizesContainer.innerHTML = variants.slice(0,24).map(variant => {
-                const variantKey = variant.variantKey || variant.variantNameEn || variant.variantSku || 'Standard';
-                return `<button class="size" data-size="${escapeHtml(variantKey)}" onclick="selectSize(this)">${escapeHtml(variantKey)}</button>`;
-            }).join('');
-        }else if(clothingCategory){
-            sizesContainer.innerHTML = ['XS','S','M','L','XL','XXL'].map(size =>
-                `<button class="size" data-size="${size}" onclick="selectSize(this)">${size}</button>`
-            ).join('');
-        }else{
-            selectedSize = 'Standard';
-            sizesContainer.innerHTML = `<button class="size selected" data-size="Standard" onclick="selectSize(this)">Standard</button>`;
-        }
-    }
+    globiraApplyProductOptions(product, preselectedSize);
 
     /* SELECT PREVIOUS SIZE */
 
@@ -6484,6 +6476,198 @@ function classifyCJProduct(product){const s={...(product||{})},c=strictCategoryF
 function getCategoryProducts(category){const products=allProducts();if(category==='women'||category==='men')return products.filter(p=>p.category===category||p.gender===category);if(['bags','shoes','accessories'].includes(category))return products.filter(p=>p.category===category);return products.filter(p=>p.category===category);}
 function showCategory(category){currentCategory=category;document.getElementById('homePage').style.display='none';document.getElementById('categoryPage').classList.add('active');const d=GLOBIRA_MENU_DATA[category],products=getCategoryProducts(category);document.getElementById('categoryTitle').textContent=d?.title||category;document.getElementById('categoryEyebrow').textContent='GLOBIRA / '+String(d?.title||category).toUpperCase();const c=document.getElementById('categoryProducts');const head=d?`<div class="category-landing-head"><div class="category-landing-visual"><img src="${d.hero}" alt="${d.title}"><div><strong>${d.title}</strong><span>${d.tag}</span><button onclick="showSubcategory('${category}','all')">Shop Now →</button></div></div><div class="category-subgroups">${(d.groups||[]).slice(0,12).map(([t,items])=>`<button onclick="showSubcategory('${category}','${slugify(t)}')"><strong>${escapeHtml(t)}</strong><span>${items.slice(0,3).map(escapeHtml).join(' • ')}</span><small>Explore →</small></button>`).join('')}</div></div>`:'';c.innerHTML=head+(products.length?`<div class="products category-result-grid">${products.map(productCard).join('')}</div>`:'<div class="empty-category"><h3>No products available yet</h3><p>Matching products will appear automatically as the live catalog grows.</p></div>');window.scrollTo({top:0,behavior:'smooth'});}
 function showSubcategory(category,sub){currentCategory=category;document.getElementById('homePage').style.display='none';document.getElementById('categoryPage').classList.add('active');const d=GLOBIRA_MENU_DATA[category],found=(d?.groups||[]).find(([t])=>slugify(t)===sub),title=found?found[0]:sub.replace(/-/g,' '),base=getCategoryProducts(category),terms=title.toLowerCase().split(/\s+|&/).filter(x=>x.length>2),products=sub==='all'?base:base.filter(p=>terms.some(x=>[p.name,p.subcategory,p.description,p.category].filter(Boolean).join(' ').toLowerCase().includes(x)));document.getElementById('categoryTitle').textContent=title.replace(/\b\w/g,c=>c.toUpperCase());document.getElementById('categoryEyebrow').textContent='GLOBIRA / '+String(d?.title||category).toUpperCase()+' / '+title.toUpperCase();document.getElementById('categoryProducts').innerHTML=products.length?`<div class="products category-result-grid">${products.map(productCard).join('')}</div>`:'<div class="empty-category"><h3>No matching products yet</h3><p>Try another variety or return to the full collection.</p></div>';window.scrollTo({top:0,behavior:'smooth'});}
+/* =========================================================
+GLOBIRA LIVE PRODUCT DISPLAY FIXES
+- Keep live CJ data untouched.
+- Normalize CJ image/variant formats before displaying.
+- Keep Men/Women products discoverable even when their family is Shoes/Bags/etc.
+========================================================= */
+function globiraParseList(value){
+    if(Array.isArray(value)) return value;
+    if(typeof value !== 'string') return [];
+    const text=value.trim();
+    if(!text) return [];
+    if((text.startsWith('[') && text.endsWith(']')) || (text.startsWith('{') && text.endsWith('}'))){
+        try{
+            const parsed=JSON.parse(text);
+            if(Array.isArray(parsed)) return parsed;
+            if(parsed && typeof parsed==='object') return [parsed];
+        }catch(e){}
+    }
+    return text.split(/\s*[|,]\s*/).filter(Boolean);
+}
+
+function normalizeProductImages(product){
+    const p=product||{};
+    let raw=[];
+    ['images','imageUrls','imageList','productImages','pictures','pics'].forEach(key=>{
+        const value=p[key];
+        if(Array.isArray(value)) raw.push(...value);
+        else if(typeof value==='string' && value.trim()) raw.push(...globiraParseList(value));
+    });
+    ['image','imageUrl','productImage','mainImage','picUrl','imgUrl','coverImage'].forEach(key=>{
+        if(p[key]) raw.push(p[key]);
+    });
+    return [...new Set(raw.map(v=>{
+        if(typeof v==='object' && v) return v.url || v.imageUrl || v.image || v.picUrl || '';
+        return String(v||'').trim();
+    }).filter(v=>/^https?:\/\//i.test(v)))];
+}
+
+function normalizeProductVariants(product){
+    const p=product||{};
+    let raw=[];
+    ['variants','variantList','variantOptions','skus','skuList','productVariants'].forEach(key=>{
+        const value=p[key];
+        if(Array.isArray(value)) raw.push(...value);
+        else if(typeof value==='string' && value.trim()) raw.push(...globiraParseList(value));
+    });
+    return raw.map(v=>{
+        if(typeof v==='string') return {variantKey:v,variantNameEn:v};
+        if(v && typeof v==='object') return v;
+        return null;
+    }).filter(Boolean).filter(v=>{
+        const text=String(v.variantKey||v.variantNameEn||v.variantName||v.variantProperty||v.variantSku||v.name||'').trim();
+        return text && text.toLowerCase()!=='standard';
+    });
+}
+
+function globiraGender(product){
+    const p=product||{};
+    const text=[p.name,p.category,p.subcategory,p.gender,p.description].filter(Boolean).join(' ').toLowerCase();
+    if(/\b(women|womens|women's|female|woman|ladies|lady|girl|girls)\b/.test(text)) return 'women';
+    if(/\b(men|mens|men's|male|man|gentlemen|gentleman's|boy|boys)\b/.test(text)) return 'men';
+    return String(p.gender||'').toLowerCase();
+}
+
+function productFallbackImage(product){
+    const cat=String(product?.category||'').toLowerCase();
+    const fallbackMap={
+        tools:'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=900&q=90',
+        electronics:'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=900&q=90',
+        home:'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=900&q=90',
+        beauty:'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=900&q=90',
+        bags:'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=90',
+        shoes:'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=90',
+        sports:'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=90',
+        automotive:'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=900&q=90',
+        pets:'https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&w=900&q=90',
+        office:'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=90',
+        baby:'https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=900&q=90',
+        men:'https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&w=900&q=90',
+        women:'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=90'
+    };
+    return fallbackMap[cat] || fallbackMap[globiraGender(product)] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85';
+}
+
+/* Final product card: always use a real CJ image when supplied. */
+function productCard(product){
+    if(!product) return '';
+    const id=String(product.id||'');
+    const name=escapeHtml(product.name||'GLOBIRA Product');
+    const images=normalizeProductImages(product);
+    const image=images[0]||productFallbackImage(product);
+    const price=formatPrice(product.price);
+    const oldPrice=Number(product.oldPrice||0)>Number(product.price||0)?formatPrice(product.oldPrice):'';
+    const live=String(product.source||'').toLowerCase()==='cjdropshipping';
+    const cat=String(product.category||globiraGender(product)||'other').replace(/^\w/,c=>c.toUpperCase());
+    const safeId=id.replace(/'/g,"\\'");
+    const safeImage=escapeHtml(image);
+    return `<article class="product gw-product-card" onclick="openProduct('${safeId}')">
+      <div class="product-image gw-product-image">
+        <img src="${safeImage}" alt="${name}" loading="eager" decoding="async" referrerpolicy="no-referrer"
+          onerror="this.onerror=null;this.src='${productFallbackImage(product)}';">
+        <span class="badge">${live?'LIVE':'GLOBIRA'}</span>
+        <button class="gw-card-heart" onclick="event.stopPropagation();toggleProductWishlist?.('${safeId}')" aria-label="Add to wishlist">♡</button>
+      </div>
+      <div class="product-info gw-product-info">
+        <div class="gw-product-category">${escapeHtml(cat)} ${live?'• Live':''}</div>
+        <h3>${name}</h3>
+        <div class="gw-product-bottom"><div class="price">${price} ${oldPrice?`<span class="old-price">${oldPrice}</span>`:''}</div><span class="gw-view">View →</span></div>
+      </div>
+    </article>`;
+}
+
+/* Preserve the actual product family and also record gender separately. */
+function classifyCJProduct(product){
+    const s={...(product||{})};
+    const detectedGender=globiraGender(s);
+    const detectedCategory=strictCategoryFromProduct(s);
+    s.category=(String(s.category||'').trim() && String(s.category).toLowerCase()!=='other') ? String(s.category).trim() : detectedCategory;
+    s.gender=detectedGender;
+    if(!s.category || String(s.category).toLowerCase()==='other') s.category=detectedGender||detectedCategory||'other';
+    return s;
+}
+
+function getCategoryProducts(category){
+    const products=allProducts();
+    const wanted=String(category||'').toLowerCase();
+    if(wanted==='more') return products;
+    if(wanted==='women'||wanted==='men'){
+        return products.filter(p=>globiraGender(p)===wanted || String(p.gender||'').toLowerCase()===wanted || String(p.category||'').toLowerCase()===wanted);
+    }
+    return products.filter(p=>String(p.category||'').toLowerCase()===wanted);
+}
+
+function showCategory(category){
+    currentCategory=category;
+    document.getElementById('homePage').style.display='none';
+    document.getElementById('categoryPage').classList.add('active');
+    const d=GLOBIRA_MENU_DATA[category];
+    const products=getCategoryProducts(category);
+    const title=d?.title||({women:'Women',men:'Men',bags:'Bags',electronics:'Electronics',home:'Home & Living',beauty:'Beauty & Personal Care',tools:'Tools & DIY',sports:'Sports & Fitness',automotive:'Automotive',pets:'Pet Supplies',office:'Office & School',baby:'Baby & Kids',health:'Health & Wellness',more:'All Products'}[category]||'Collection');
+    document.getElementById('categoryTitle').textContent=title;
+    document.getElementById('categoryEyebrow').textContent='GLOBIRA / '+title.toUpperCase();
+    const c=document.getElementById('categoryProducts');
+    const safeCat=String(category).replace(/'/g,"\\'");
+    const head=d?`<div class="category-landing-head"><div class="category-landing-visual"><img src="${escapeHtml(d.hero)}" alt="${escapeHtml(title)}" onerror="this.onerror=null;this.style.display='none';"><div><strong>${escapeHtml(title)}</strong><span>${escapeHtml(d.tag||'')}</span><button onclick="showSubcategory('${safeCat}','all')">Shop Now →</button></div></div><div class="category-subgroups">${(d.groups||[]).slice(0,12).map(([t,items])=>`<button onclick="showSubcategory('${safeCat}','${slugify(t)}')"><strong>${escapeHtml(t)}</strong><span>${items.slice(0,3).map(escapeHtml).join(' • ')}</span><small>Explore →</small></button>`).join('')}</div></div>`:'';
+    c.innerHTML=head+(products.length?`<div class="products category-result-grid">${products.slice(0,48).map(productCard).join('')}</div>${products.length>48?`<button class="gw-load-more" onclick="loadMoreCategory('${safeCat}')">Load more products →</button>`:''}`:'<div class="empty-category"><h3>No products available yet</h3><p>Live matching products will appear automatically.</p></div>');
+    window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function showSubcategory(category,sub){
+    currentCategory=category;
+    document.getElementById('homePage').style.display='none';
+    document.getElementById('categoryPage').classList.add('active');
+    const d=GLOBIRA_MENU_DATA[category];
+    const found=(d?.groups||[]).find(([t])=>slugify(t)===sub);
+    const title=found?found[0]:sub.replace(/-/g,' ');
+    const base=getCategoryProducts(category);
+    const terms=title.toLowerCase().split(/\s+|&/).filter(x=>x.length>2);
+    const products=sub==='all'?base:base.filter(p=>terms.some(term=>[p.name,p.subcategory,p.description,p.category].filter(Boolean).join(' ').toLowerCase().includes(term)));
+    document.getElementById('categoryTitle').textContent=title.replace(/\b\w/g,c=>c.toUpperCase());
+    document.getElementById('categoryEyebrow').textContent='GLOBIRA / '+String(d?.title||category).toUpperCase()+' / '+title.toUpperCase();
+    const safeCat=String(category).replace(/'/g,"\\'"), safeSub=String(sub).replace(/'/g,"\\'");
+    document.getElementById('categoryProducts').innerHTML=products.length?`<div class="products category-result-grid">${products.slice(0,48).map(productCard).join('')}</div>${products.length>48?`<button class="gw-load-more" onclick="loadMoreSubcategory('${safeCat}','${safeSub}')">Load more products →</button>`:''}`:'<div class="empty-category"><h3>No matching products yet</h3><p>Try another variety or return to the full collection.</p></div>';
+    window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* Re-render the product popup using CJ's real variant list whenever available. */
+function globiraApplyProductOptions(product, preselectedSize){
+    const sizesContainer=document.querySelector('#productModal .sizes');
+    if(!sizesContainer) return;
+    const variants=normalizeProductVariants(product);
+    const cat=String(product?.category||'').toLowerCase();
+    const gender=globiraGender(product);
+    let options=[];
+    if(variants.length){
+        options=variants.slice(0,40).map(v=>String(v.variantKey||v.variantNameEn||v.variantName||v.variantProperty||v.variantSku||'').trim()).filter(Boolean);
+    }else if(cat==='shoes' || /\b(shoe|shoes|sneaker|sandal|boot|loafer|footwear)\b/i.test(String(product?.name||''))){
+        options=['35','36','37','38','39','40','41','42','43','44','45','46'];
+    }else if(gender==='women' || gender==='men' || /\b(t-shirt|shirt|dress|jeans|trouser|pants|jacket|hoodie|sweater|blazer|shorts|clothing|apparel)\b/i.test(String(product?.name||''))){
+        options=['XS','S','M','L','XL','XXL'];
+    }else if(/\b(ring|rings)\b/i.test(String(product?.name||''))){
+        options=['6','7','8','9','10','11','12'];
+    }else if(/\b(kids|kid|child|children|baby|infant)\b/i.test([product?.name,product?.category,product?.subcategory].join(' '))){
+        options=['0-3M','3-6M','6-12M','1-2Y','2-3Y','3-4Y','5-6Y','7-8Y'];
+    }else{
+        options=['One Size'];
+    }
+    selectedSize=preselectedSize && options.includes(preselectedSize)?preselectedSize:null;
+    sizesContainer.innerHTML=options.map(v=>`<button class="size${selectedSize===v?' selected':''}" data-size="${escapeHtml(v)}" onclick="selectSize(this)">${escapeHtml(v)}</button>`).join('');
+    if(!selectedSize && options.length===1) selectedSize=options[0];
+}
+
 document.addEventListener('click',e=>{if(!e.target.closest('#globiraReferenceNav')&&!e.target.closest('.globira-mega'))closeAllMegaMenus();});
 renderFeatured();
 renderHomepageLiveSections();
