@@ -7887,14 +7887,79 @@ initializeGlobiraAccount();
     });
   }
 
+  function globiraCriterionTerms(label){
+    const s = String(label||'').toLowerCase().replace(/&/g,' and ').replace(/[–—]/g,'-').replace(/[^a-z0-9\s-]/g,' ').replace(/\s+/g,' ').trim();
+    const aliases = {
+      't-shirts':['t-shirt','t shirts','tshirt','tee','tees'],
+      'shirts':['shirt','shirts'],
+      'jeans':['jean','jeans','denim'],
+      'trousers & pants':['trouser','trousers','pant','pants'],
+      'shorts':['short','shorts'],
+      'dresses':['dress','dresses'],
+      'tops & t-shirts':['top','tops','t-shirt','t shirts','tshirt','tee','tees'],
+      'shirts & blouses':['shirt','shirts','blouse','blouses'],
+      'shoulder bags':['shoulder bag','shoulder bags'],
+      'crossbody bags':['crossbody bag','crossbody bags'],
+      'tote bags':['tote bag','tote bags'],
+      'mini bags':['mini bag','mini bags'],
+      'backpacks':['backpack','backpacks'],
+      'laptop bags':['laptop bag','laptop bags'],
+      'travel bags':['travel bag','travel bags'],
+      'headphones':['headphone','headphones'],
+      'earbuds':['earbud','earbuds'],
+      'speakers':['speaker','speakers'],
+      'smart devices':['smart device','smart devices'],
+      'chargers':['charger','chargers'],
+      'phone accessories':['phone accessory','phone accessories'],
+      'gaming gear':['gaming gear','gaming'],
+      'jackets':['jacket','jackets'],
+      'hoodies':['hoodie','hoodies'],
+      'sweaters':['sweater','sweaters'],
+      'blazers':['blazer','blazers'],
+      'winter wear':['winter wear','winter clothing'],
+    };
+    return aliases[s] || s.split(/\s+/).filter(x=>x.length>1);
+  }
+
+  function globiraCriterionMatch(product, label){
+    const text = ' ' + globiraSearchText(product).toLowerCase().replace(/[^a-z0-9]+/g,' ') + ' ';
+    const raw = String(label||'').toLowerCase().replace(/&/g,' and ').replace(/[–—]/g,'-').trim();
+    const aliases = globiraCriterionTerms(label);
+    const compact = text.replace(/\s+/g,' ');
+
+    // For compound criteria, every important concept must be represented,
+    // but common category alternatives are accepted as one family.
+    if(raw === 't-shirts' || raw === 'tops & t-shirts')
+      return /\b(t[- ]?shirt|tshirt|tee|tees|top|tops)\b/.test(compact);
+    if(raw === 'shirts & blouses')
+      return /\b(shirt|shirts|blouse|blouses)\b/.test(compact);
+    if(raw === 'trousers & pants')
+      return /\b(trouser|trousers|pant|pants)\b/.test(compact);
+    if(raw === 'smartphones & tablets')
+      return /\b(smartphone|smartphones|tablet|tablets)\b/.test(compact);
+    if(raw === 'laptops & computers')
+      return /\b(laptop|laptops|computer|computers|pc)\b/.test(compact);
+    if(raw === 'chargers & cables')
+      return /\b(charger|chargers|cable|cables)\b/.test(compact);
+    if(raw === 'bags & accessories')
+      return /\b(bag|bags|backpack|backpacks|wallet|wallets|jewell?ry|sunglasses)\b/.test(compact);
+
+    return aliases.some(term=>{
+      const t=String(term).toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+      return t && compact.includes(' '+t+' ');
+    });
+  }
+
   async function fetchLiveCategory(category, subcategory){
     const requestId = ++categoryRequest;
     const keyword = subcategory ? String(subcategory).replace(/-/g,' ') : categoryKeyword(category);
     const pages = keyword ? [1,2,3] : [1];
-    const local = getCategoryProducts(category);
+    const base = getCategoryProducts(category);
+    const local = subcategory
+      ? base.filter(p=>globiraCriterionMatch(p, subcategory.replace(/-/g,' ')))
+      : base;
     let merged = Array.from(new Map(local.map(p=>[p.id,p])).values());
 
-    /* Do not wait for CJ before painting the new page. */
     renderCategoryInstant(category, merged, 'Checking live CJ products…');
 
     try{
@@ -7903,15 +7968,14 @@ initializeGlobiraAccount();
           .then(r=>r.ok ? r.json() : null)
           .catch(()=>null)
       ));
-
       if(requestId !== categoryRequest) return;
 
-      const live = [];
+      const live=[];
       results.forEach(payload=>{
         if(payload && payload.success && Array.isArray(payload.products)){
           payload.products.map(classifyCJProduct).forEach(p=>{
-            if(categoryMatches(p, category) &&
-               (!subcategory || globiraSearchText(p).includes(subcategory.toLowerCase().replace(/-/g,' ')))){
+            if(categoryMatches(p,category) &&
+               (!subcategory || globiraCriterionMatch(p, subcategory.replace(/-/g,' ')))){
               live.push(p);
             }
           });
@@ -7919,23 +7983,26 @@ initializeGlobiraAccount();
       });
 
       const map = new Map(merged.map(p=>[p.id,p]));
-      live.forEach(p=>{ if(p && p.id) map.set(p.id,p); });
+      live.forEach(p=>{if(p && p.id) map.set(p.id,p);});
+      const finalProducts=Array.from(map.values());
 
-      const finalProducts = Array.from(map.values());
       live.forEach(p=>{
         if(p && p.id){
-          const i = cjProducts.findIndex(x=>x.id===p.id);
-          if(i>=0) cjProducts[i]=p;
-          else cjProducts.push(p);
+          const i=cjProducts.findIndex(x=>x.id===p.id);
+          if(i>=0) cjProducts[i]=p; else cjProducts.push(p);
         }
       });
 
-      renderCategoryInstant(category, finalProducts, 'Matching live products only');
+      // IMPORTANT: render the exact criterion only. Never fall back to the full category.
+      const exactFinal = subcategory
+        ? finalProducts.filter(p=>globiraCriterionMatch(p, subcategory.replace(/-/g,' ')))
+        : finalProducts;
+      renderCategoryInstant(category, exactFinal, 'Matching products only');
       if(typeof updateGWLiveStatus==='function') updateGWLiveStatus();
     }catch(error){
-      console.warn('GLOBIRA LIVE CATEGORY:', error);
-      if(requestId === categoryRequest){
-        renderCategoryInstant(category, merged, 'Live CJ connection pending…');
+      console.warn('GLOBIRA LIVE CATEGORY:',error);
+      if(requestId===categoryRequest){
+        renderCategoryInstant(category, merged, subcategory ? 'Matching products only' : 'Live CJ connection pending…');
       }
     }
   }
@@ -8321,6 +8388,58 @@ initializeGlobiraAccount();
   };
 
   window.addEventListener('resize',cleanCategoryPage,{passive:true});
+})();
+</script>
+
+
+<!-- GLOBIRA PRODUCT QUICK VIEW / CHECKOUT FIX -->
+<style id="globira-product-quickview-fix">
+  #productModal.active{display:flex !important;visibility:visible !important;opacity:1 !important;z-index:9999 !important;}
+  #productModal .product-popup{animation:globiraPopupIn .12s ease-out both;}
+  @keyframes globiraPopupIn{from{opacity:0;transform:translateY(8px) scale(.99)}to{opacity:1;transform:none}}
+</style>
+<script>
+(function(){
+  const originalOpenProduct=window.openProduct;
+  if(typeof originalOpenProduct==='function'){
+    window.openProduct=function(id,preselectedSize=null){
+      // The existing modal already contains description, gallery, variants,
+      // quantity, ADD TO CART and BUY NOW. Open it immediately, then let the
+      // existing function populate all details synchronously.
+      originalOpenProduct(id,preselectedSize);
+      const modal=document.getElementById('productModal');
+      if(modal){
+        modal.classList.add('active');
+        modal.style.zIndex='9999';
+      }
+    };
+  }
+
+  // BUY NOW should work for electronics, bags, home products, etc. without
+  // forcing a fashion size when the product has no variants.
+  const oldOpenProduct=window.openProduct;
+  if(typeof oldOpenProduct==='function'){
+    // Re-wrap only the button behavior after the existing popup is populated.
+    const wrapped=window.openProduct;
+    window.openProduct=function(id,preselectedSize=null){
+      wrapped(id,preselectedSize);
+      const product=findProduct(id);
+      const buy=document.getElementById('popupBuyButton');
+      if(!product || !buy) return;
+      buy.onclick=function(){
+        const hasVariants=Array.isArray(product.variants) && product.variants.length>0;
+        const fashionNeedsSize=['women','men'].includes(String(product.category||'').toLowerCase()) && !hasVariants;
+        if(fashionNeedsSize && !selectedSize){
+          alert('Please select a size or variant first.');
+          return;
+        }
+        if(!selectedSize) selectedSize='Standard';
+        addToCart(product.id,selectedSize,productQuantity,false);
+        closeProduct();
+        openCheckout();
+      };
+    };
+  }
 })();
 </script>
 
