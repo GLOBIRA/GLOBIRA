@@ -7511,5 +7511,571 @@ initializeGlobiraAccount();
     };
 })();
 </script>
+
+<!-- GLOBIRA FINAL CATEGORY / PRODUCT EXPERIENCE FIX -->
+<style id="globira-category-product-fix-v2">
+  /* ---------- iPhone / touch scrolling ---------- */
+  .category-page{
+    position:fixed !important;
+    inset:0 !important;
+    width:100vw !important;
+    height:100dvh !important;
+    min-height:100dvh !important;
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+    overscroll-behavior-y:contain !important;
+    touch-action:pan-y !important;
+    padding:88px clamp(14px,3vw,48px) 60px !important;
+  }
+
+  /* ---------- compact square product cards ---------- */
+  .category-page #categoryProducts{
+    width:100% !important;
+    max-width:1600px !important;
+    margin:0 auto !important;
+  }
+
+  .category-page #categoryProducts .category-result-grid{
+    display:grid !important;
+    grid-template-columns:repeat(6,minmax(0,1fr)) !important;
+    gap:18px !important;
+    width:100% !important;
+    align-items:start !important;
+  }
+
+  .category-page #categoryProducts .gw-product-card{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    overflow:hidden !important;
+    border:1px solid rgba(17,17,17,.10) !important;
+    background:#fff !important;
+    border-radius:10px !important;
+    box-shadow:none !important;
+  }
+
+  .category-page #categoryProducts .gw-product-image{
+    width:100% !important;
+    height:auto !important;
+    min-height:0 !important;
+    max-height:none !important;
+    aspect-ratio:1 / 1 !important;
+    overflow:hidden !important;
+    position:relative !important;
+    background:#f1f1ef !important;
+  }
+
+  .category-page #categoryProducts .gw-product-image .gw-card-main-image{
+    width:100% !important;
+    height:100% !important;
+    object-fit:cover !important;
+    object-position:center !important;
+    display:block !important;
+  }
+
+  .category-page #categoryProducts .gw-product-info{
+    width:100% !important;
+    min-height:0 !important;
+    padding:10px 10px 12px !important;
+    background:#fff !important;
+  }
+
+  .category-page #categoryProducts .gw-product-category{
+    font-size:9px !important;
+    line-height:1.2 !important;
+    margin-bottom:5px !important;
+    color:#777 !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+
+  .category-page #categoryProducts .gw-product-info h3{
+    font-size:13px !important;
+    line-height:1.35 !important;
+    min-height:35px !important;
+    margin:0 0 8px !important;
+    display:-webkit-box !important;
+    -webkit-line-clamp:2 !important;
+    -webkit-box-orient:vertical !important;
+    overflow:hidden !important;
+  }
+
+  .category-page #categoryProducts .gw-product-bottom{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    gap:5px !important;
+  }
+
+  .category-page #categoryProducts .gw-product-bottom .price{
+    font-size:14px !important;
+    font-weight:700 !important;
+    white-space:nowrap !important;
+  }
+
+  .category-page #categoryProducts .gw-view{
+    font-size:9px !important;
+    letter-spacing:.5px !important;
+    white-space:nowrap !important;
+  }
+
+  /* Four real product-image choices under each square image.
+     These use the images supplied by CJ; no fake angles are generated. */
+  .globira-card-gallery{
+    display:grid !important;
+    grid-template-columns:repeat(4,1fr) !important;
+    gap:4px !important;
+    padding:5px !important;
+    background:#fff !important;
+  }
+
+  .globira-card-gallery button{
+    appearance:none !important;
+    border:1px solid transparent !important;
+    padding:0 !important;
+    margin:0 !important;
+    background:#f3f3f1 !important;
+    aspect-ratio:1/1 !important;
+    overflow:hidden !important;
+    border-radius:4px !important;
+  }
+
+  .globira-card-gallery button.active{
+    border-color:#111 !important;
+  }
+
+  .globira-card-gallery img{
+    width:100% !important;
+    height:100% !important;
+    object-fit:cover !important;
+    display:block !important;
+  }
+
+  .globira-photo-count{
+    position:absolute !important;
+    right:8px !important;
+    bottom:8px !important;
+    z-index:3 !important;
+    padding:4px 7px !important;
+    border-radius:20px !important;
+    background:rgba(255,255,255,.92) !important;
+    color:#111 !important;
+    font-size:9px !important;
+    font-weight:700 !important;
+  }
+
+  @media(max-width:1250px){
+    .category-page #categoryProducts .category-result-grid{
+      grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+    }
+  }
+
+  @media(max-width:1000px){
+    .category-page #categoryProducts .category-result-grid{
+      grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+      gap:14px !important;
+    }
+  }
+
+  @media(max-width:700px){
+    .category-page{
+      padding:76px 10px 45px !important;
+    }
+    .category-page #categoryProducts .category-result-grid{
+      grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+      gap:9px !important;
+    }
+    .category-page #categoryProducts .gw-product-info{
+      padding:8px 8px 10px !important;
+    }
+    .category-page #categoryProducts .gw-product-info h3{
+      font-size:12px !important;
+      min-height:32px !important;
+    }
+    .category-page #categoryProducts .gw-product-bottom .price{
+      font-size:13px !important;
+    }
+  }
+</style>
+
+<script>
+(function(){
+  /* ---------- Product images: collect every CJ image format we can receive ---------- */
+  const oldNormalizeProductImages = window.normalizeProductImages;
+
+  function collectGlobiraImages(product){
+    const p = product || {};
+    const out = [];
+
+    function add(value){
+      if(Array.isArray(value)){
+        value.forEach(add);
+        return;
+      }
+      if(value && typeof value === 'object'){
+        add(value.url || value.imageUrl || value.image || value.picUrl ||
+            value.imgUrl || value.productImage || value.productImg ||
+            value.fileUrl || value.thumbnail || value.src);
+        return;
+      }
+      if(typeof value === 'string'){
+        const s = value.trim();
+        if(!s) return;
+        if((s[0] === '[' && s[s.length-1] === ']') ||
+           (s[0] === '{' && s[s.length-1] === '}')){
+          try { add(JSON.parse(s)); return; } catch(e){}
+        }
+        s.split(/\s*[|,]\s*/).forEach(v=>{
+          if(/^https?:\/\//i.test(v.trim())) out.push(v.trim());
+        });
+      }
+    }
+
+    [
+      'images','imageUrls','imageList','productImages','pictures','pics',
+      'productImageList','productImgList','productImagesList',
+      'detailImages','detailImageList','imageArr','imgs','imgList',
+      'skuImages','variantImages','galleryImages'
+    ].forEach(k=>add(p[k]));
+
+    [
+      'image','imageUrl','productImage','mainImage','picUrl','imgUrl',
+      'coverImage','productImg','productImageUrl'
+    ].forEach(k=>add(p[k]));
+
+    /* Some CJ responses put pictures inside SKU/variant objects. */
+    ['variants','variantList','variantOptions','skus','skuList','productVariants',
+     'productSkuList','skuInfoList'].forEach(k=>{
+      const list = p[k];
+      if(Array.isArray(list)){
+        list.forEach(v=>{
+          if(!v || typeof v!=='object') return;
+          ['images','imageUrls','imageList','productImages','pictures','pics',
+           'image','imageUrl','productImage','picUrl','imgUrl','skuImage',
+           'variantImage'].forEach(key=>add(v[key]));
+        });
+      }
+    });
+
+    return [...new Set(out)].filter(x=>/^https?:\/\//i.test(x));
+  }
+
+  window.normalizeProductImages = function(product){
+    let images = [];
+    try{
+      if(typeof oldNormalizeProductImages === 'function'){
+        images = oldNormalizeProductImages(product) || [];
+      }
+    }catch(e){}
+    images = [...images, ...collectGlobiraImages(product)];
+    return [...new Set(images)].filter(Boolean);
+  };
+
+  /* ---------- Card: square image + up to four real CJ photos ---------- */
+  window.productCard = function(product){
+    if(!product) return '';
+
+    const id = String(product.id || '');
+    const safeId = id.replace(/'/g,"\\'");
+    const name = escapeHtml(product.name || 'GLOBIRA Product');
+    const images = normalizeProductImages(product);
+    const mainImage = images[0] || productFallbackImage(product);
+    const price = formatPrice(product.price);
+    const oldPrice = Number(product.oldPrice || 0) > Number(product.price || 0)
+      ? formatPrice(product.oldPrice) : '';
+    const live = String(product.source || '').toLowerCase() === 'cjdropshipping';
+    const cat = String(product.category || globiraGender(product) || 'other')
+      .replace(/^\\w/, c => c.toUpperCase());
+    const safeMain = escapeHtml(mainImage);
+    const galleryImages = images.slice(0,4);
+
+    const gallery = galleryImages.length > 1 ? `
+      <div class="globira-card-gallery" aria-label="Product photos">
+        ${galleryImages.map((img,i)=>{
+          const safe = escapeHtml(img);
+          return `<button type="button" class="${i===0?'active':''}"
+              onclick="event.stopPropagation();globiraCardImage(this,'${safe.replace(/'/g,"\\'")}')"
+              aria-label="Product photo ${i+1}">
+              <img src="${safe}" alt="" loading="lazy" decoding="async">
+            </button>`;
+        }).join('')}
+      </div>` : '';
+
+    const count = images.length ? `<span class="globira-photo-count">${Math.min(images.length,99)} photo${images.length===1?'':'s'}</span>` : '';
+
+    return `<article class="product gw-product-card" onclick="openProduct('${safeId}')">
+      <div class="product-image gw-product-image">
+        <img class="gw-card-main-image" src="${safeMain}" alt="${name}"
+             loading="lazy" decoding="async" referrerpolicy="no-referrer"
+             onerror="this.onerror=null;this.src='${productFallbackImage(product)}';">
+        ${count}
+        <span class="badge">${live?'LIVE':'GLOBIRA'}</span>
+        <button class="gw-card-heart" onclick="event.stopPropagation();toggleProductWishlist?.('${safeId}')" aria-label="Add to wishlist">♡</button>
+      </div>
+      ${gallery}
+      <div class="product-info gw-product-info">
+        <div class="gw-product-category">${escapeHtml(cat)} ${live?'• Live':''}</div>
+        <h3>${name}</h3>
+        <div class="gw-product-bottom">
+          <div class="price">${price} ${oldPrice?`<span class="old-price">${oldPrice}</span>`:''}</div>
+          <span class="gw-view">View →</span>
+        </div>
+      </div>
+    </article>`;
+  };
+
+  window.globiraCardImage = function(button, image){
+    const card = button.closest('.gw-product-card');
+    if(!card) return;
+    const main = card.querySelector('.gw-card-main-image');
+    if(main) main.src = image;
+    card.querySelectorAll('.globira-card-gallery button').forEach(b=>b.classList.remove('active'));
+    button.classList.add('active');
+  };
+
+  /* ---------- Category terms used for live CJ filtering ---------- */
+  function categoryKeyword(category){
+    const map = {
+      women:'women', men:'men', bags:'bags', shoes:'shoes',
+      accessories:'accessories', electronics:'electronics',
+      home:'home', beauty:'beauty', tools:'tools', sports:'sports',
+      automotive:'automotive', pets:'pets', office:'office', baby:'baby',
+      health:'health', more:''
+    };
+    return map[String(category||'').toLowerCase()] ?? String(category||'');
+  }
+
+  function categoryMatches(product, category){
+    const c = String(category||'').toLowerCase();
+    if(c === 'more') return true;
+    if(c === 'women' || c === 'men'){
+      return globiraGender(product) === c ||
+        String(product.gender||'').toLowerCase() === c ||
+        String(product.category||'').toLowerCase() === c;
+    }
+    return String(product.category||'').toLowerCase() === c;
+  }
+
+  let categoryRequest = 0;
+
+  function renderCategoryInstant(category, products, stateText){
+    const c = document.getElementById('categoryProducts');
+    if(!c) return;
+
+    const safeCat = String(category).replace(/'/g,"\\'");
+    const items = Array.from(new Map((products||[]).filter(Boolean).map(p=>[p.id,p])).values());
+
+    c.innerHTML = `
+      <div class="gw-category-toolbar">
+        <div><b>${items.length.toLocaleString()} products</b><span>${stateText||'Live marketplace'}</span></div>
+      </div>
+      <div class="products category-result-grid">
+        ${items.length
+          ? items.slice(0,120).map(productCard).join('')
+          : `<div class="empty-category"><h3>Loading ${escapeHtml(String(category))}…</h3><p>Connecting to the live CJ catalog.</p></div>`}
+      </div>
+      ${items.length>120 ? `<button class="gw-load-more" onclick="loadMoreCategory('${safeCat}')">Load more products →</button>` : ''}`;
+
+    /* First row paints immediately; remaining images stay lazy. */
+    c.querySelectorAll('.gw-card-main-image').forEach((img,i)=>{
+      if(i < 12){
+        img.loading='eager';
+        img.setAttribute('fetchpriority','high');
+      }
+    });
+  }
+
+  async function fetchLiveCategory(category, subcategory){
+    const requestId = ++categoryRequest;
+    const keyword = subcategory ? String(subcategory).replace(/-/g,' ') : categoryKeyword(category);
+    const pages = keyword ? [1,2,3] : [1];
+    const local = getCategoryProducts(category);
+    let merged = Array.from(new Map(local.map(p=>[p.id,p])).values());
+
+    /* Do not wait for CJ before painting the new page. */
+    renderCategoryInstant(category, merged, 'Checking live CJ products…');
+
+    try{
+      const results = await Promise.all(pages.map(page =>
+        fetch(`/api/cj-products?page=${page}&size=100&keyword=${encodeURIComponent(keyword)}`)
+          .then(r=>r.ok ? r.json() : null)
+          .catch(()=>null)
+      ));
+
+      if(requestId !== categoryRequest) return;
+
+      const live = [];
+      results.forEach(payload=>{
+        if(payload && payload.success && Array.isArray(payload.products)){
+          payload.products.map(classifyCJProduct).forEach(p=>{
+            if(categoryMatches(p, category) &&
+               (!subcategory || globiraSearchText(p).includes(subcategory.toLowerCase().replace(/-/g,' ')))){
+              live.push(p);
+            }
+          });
+        }
+      });
+
+      const map = new Map(merged.map(p=>[p.id,p]));
+      live.forEach(p=>{ if(p && p.id) map.set(p.id,p); });
+
+      const finalProducts = Array.from(map.values());
+      live.forEach(p=>{
+        if(p && p.id){
+          const i = cjProducts.findIndex(x=>x.id===p.id);
+          if(i>=0) cjProducts[i]=p;
+          else cjProducts.push(p);
+        }
+      });
+
+      renderCategoryInstant(category, finalProducts, 'Matching live products only');
+      if(typeof updateGWLiveStatus==='function') updateGWLiveStatus();
+    }catch(error){
+      console.warn('GLOBIRA LIVE CATEGORY:', error);
+      if(requestId === categoryRequest){
+        renderCategoryInstant(category, merged, 'Live CJ connection pending…');
+      }
+    }
+  }
+
+  /* ---------- Final category page handler ---------- */
+  window.showCategory = function(category){
+    currentCategory = category;
+    const home = document.getElementById('homePage');
+    const page = document.getElementById('categoryPage');
+    const title = document.getElementById('categoryTitle');
+    const eyebrow = document.getElementById('categoryEyebrow');
+
+    if(home) home.style.display='none';
+    if(page) page.classList.add('active');
+    document.body.classList.add('no-scroll');
+
+    const d = GLOBIRA_MENU_DATA[category];
+    const name = d?.title || String(category).replace(/-/g,' ');
+    if(title) title.textContent = name;
+    if(eyebrow) eyebrow.textContent = 'GLOBIRA / ' + name.toUpperCase();
+
+    /* Paint local products immediately, then fetch CJ in parallel. */
+    renderCategoryInstant(category, getCategoryProducts(category), 'Checking live CJ products…');
+    if(page) page.scrollTop = 0;
+    window.scrollTo(0,0);
+
+    fetchLiveCategory(category, '');
+  };
+
+  window.showSubcategory = function(category, sub){
+    currentCategory = category;
+    const d = GLOBIRA_MENU_DATA[category];
+    const found = (d?.groups||[]).find(([t])=>slugify(t)===sub);
+    const name = found ? found[0] : String(sub).replace(/-/g,' ');
+    const keyword = String(name).replace(/&/g,' ').trim();
+
+    const home = document.getElementById('homePage');
+    const page = document.getElementById('categoryPage');
+    if(home) home.style.display='none';
+    if(page) page.classList.add('active');
+    document.body.classList.add('no-scroll');
+
+    document.getElementById('categoryTitle').textContent =
+      name.replace(/\b\w/g,c=>c.toUpperCase());
+    document.getElementById('categoryEyebrow').textContent =
+      'GLOBIRA / ' + String(d?.title||category).toUpperCase() + ' / ' + name.toUpperCase();
+
+    const base = getCategoryProducts(category);
+    const terms = keyword.toLowerCase().split(/\s+/).filter(x=>x.length>2);
+    const local = sub==='all' ? base :
+      base.filter(p=>terms.some(t=>globiraSearchText(p).includes(t)));
+
+    renderCategoryInstant(category, local, 'Checking live CJ products…');
+    if(page) page.scrollTop=0;
+    window.scrollTo(0,0);
+
+    if(sub === 'all'){
+      fetchLiveCategory(category, '');
+    }else{
+      fetchLiveCategory(category, slugify(name));
+    }
+  };
+
+  /* Search result page uses the same compact cards and touch-safe scrolling. */
+  const oldSearchProducts = window.searchProducts;
+  window.searchProducts = async function(){
+    const heroInput = document.getElementById('globiraHeroSearchInput');
+    const topInput = document.getElementById('globiraSearchInput');
+    const input = heroInput || topInput;
+    const rawQuery = input ? input.value.trim() : '';
+
+    if(heroInput && topInput) topInput.value = rawQuery;
+    if(!rawQuery){ showHome(); return; }
+
+    const query = normalizeGlobiraSearch(rawQuery);
+    const home = document.getElementById('homePage');
+    const page = document.getElementById('categoryPage');
+    if(home) home.style.display='none';
+    if(page) page.classList.add('active');
+    document.body.classList.add('no-scroll');
+
+    document.getElementById('categoryTitle').textContent='Search: '+rawQuery;
+    document.getElementById('categoryEyebrow').textContent='GLOBIRA / SEARCH RESULTS';
+
+    let products = allProducts().filter(p=>globiraStrictSearchMatch(p,query));
+    renderFastResults(document.getElementById('categoryProducts'),products,rawQuery,true);
+    const grid = document.querySelector('#categoryProducts .category-result-grid');
+    if(grid){
+      grid.querySelectorAll('.gw-card-main-image').forEach((img,i)=>{
+        if(i<12){ img.loading='eager'; img.setAttribute('fetchpriority','high'); }
+      });
+    }
+    if(page) page.scrollTop=0;
+    window.scrollTo(0,0);
+
+    try{
+      /* Three requests run together instead of waiting page-by-page. */
+      const responses = await Promise.all([1,2,3].map(pageNo =>
+        fetch(`/api/cj-products?page=${pageNo}&size=100&keyword=${encodeURIComponent(rawQuery)}`)
+          .then(r=>r.ok?r.json():null).catch(()=>null)
+      ));
+
+      const liveMatches=[];
+      responses.forEach(payload=>{
+        if(payload && payload.success && Array.isArray(payload.products)){
+          payload.products.map(classifyCJProduct)
+            .filter(p=>globiraStrictSearchMatch(p,query))
+            .forEach(p=>liveMatches.push(p));
+        }
+      });
+
+      const map = new Map(products.map(p=>[p.id,p]));
+      liveMatches.forEach(p=>{if(p?.id) map.set(p.id,p);});
+      products = Array.from(map.values());
+
+      liveMatches.forEach(p=>{
+        if(p?.id){
+          const i=cjProducts.findIndex(x=>x.id===p.id);
+          if(i>=0) cjProducts[i]=p; else cjProducts.push(p);
+        }
+      });
+
+      renderFastResults(document.getElementById('categoryProducts'),products,rawQuery,false);
+      document.querySelectorAll('#categoryProducts .gw-card-main-image').forEach((img,i)=>{
+        if(i<12){img.loading='eager';img.setAttribute('fetchpriority','high');}
+      });
+    }catch(error){
+      console.warn('GLOBIRA LIVE SEARCH V2:',error);
+    }
+  };
+
+  /* Keep category scrolling usable on iOS even while the background is locked. */
+  const page = document.getElementById('categoryPage');
+  if(page){
+    page.addEventListener('touchmove', function(e){
+      e.stopPropagation();
+    }, {passive:true});
+  }
+})();
+</script>
+
 </body>
 </html>
