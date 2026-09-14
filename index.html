@@ -3480,20 +3480,32 @@ PRODUCT CARD
 
 function productCard(product){
 
+    const safeProduct = product || {};
+    const productId = String(safeProduct.id || '').replace(/'/g, "\\'");
+    const productName = String(safeProduct.name || 'GLOBIRA Product');
+    const productImages = Array.isArray(safeProduct.images) ? safeProduct.images : [];
+    const image = productImages.find(Boolean) || globiraImagePool[0];
+    const price = Number(safeProduct.price) || 0;
+    const oldPrice = Number(safeProduct.oldPrice) || price;
+    const isLiveCJ = safeProduct.source === 'cjdropshipping';
+
     return `
 
-        <div class="product"
-             onclick="openProduct('${product.id}')">
+        <div class="product ${isLiveCJ ? 'cj-live-product' : ''}"
+             onclick="openProduct('${productId}')">
 
             <div class="product-image">
 
                 <img
-                    src="${product.images[0]}"
-                    alt="${product.name}"
+                    src="${image}"
+                    alt="${productName.replace(/"/g, '&quot;')}"
+                    loading="lazy"
+                    referrerpolicy="no-referrer"
+                    onerror="this.onerror=null;this.src='${globiraImagePool[0]}'"
                 >
 
                 <span class="badge">
-                    New
+                    ${isLiveCJ ? 'LIVE' : 'New'}
                 </span>
 
             </div>
@@ -3501,19 +3513,19 @@ function productCard(product){
             <div class="product-info">
 
                 <h3>
-                    ${product.name}
+                    ${productName}
                 </h3>
 
                 <p>
-                    GLOBIRA EDIT
+                    ${isLiveCJ ? 'CJ DROPSHIPPING' : 'GLOBIRA EDIT'}
                 </p>
 
                 <div class="price">
 
-                    ${formatPrice(product.price)}
+                    ${formatPrice(price)}
 
                     <span class="old-price">
-                        ${formatPrice(product.oldPrice)}
+                        ${formatPrice(oldPrice)}
                     </span>
 
                 </div>
@@ -5559,80 +5571,169 @@ async function loadCJFeaturedProduct(){
     if(catalogLoading) return;
     catalogLoading = true;
 
+    const liveSection = document.querySelector('.live-products-v2');
+    const liveGrid = document.getElementById('featuredProducts');
+
+    if(liveSection) liveSection.classList.add('cj-catalog-loading');
+    if(liveGrid && !cjProducts.length){
+        liveGrid.innerHTML = `
+            <div class="cj-live-loading" style="grid-column:1/-1">
+                <span class="cj-live-dot"></span>
+                <strong>Loading live CJ products…</strong>
+                <small>Connecting to the GLOBIRA live catalog</small>
+            </div>
+        `;
+    }
+
     try{
         cjProducts = [];
 
         /*
-         * Load more than 1,000 live CJ products while keeping the existing
-         * GLOBIRA design unchanged. CJ allows up to 100 products per request.
-         * The first page is rendered immediately; later pages are added in
-         * the background to keep the homepage usable.
+         * FIRST REQUEST — deliberately small and fast.
+         * This makes live CJ products appear quickly even if the backend
+         * is an older version that caps requests at 20 products.
          */
-        const targetProducts = 2000;
-        const pageSize = 100;
-        const maxPages = Math.ceil(targetProducts / pageSize);
+        async function requestCJPage(page, size){
+            const url = `/api/cj-products?page=${page}&size=${size}`;
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 30000);
 
-        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
-
-        async function loadCatalogPage(page){
             try{
-                console.log(`GLOBIRA: Loading live CJ catalog page ${page}/${maxPages}...`);
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' },
+                    cache: 'no-store',
+                    signal: controller.signal
+                });
 
-                const response = await fetch(
-                    `/api/cj-products?page=${page}&size=${pageSize}`
-                );
+                const text = await response.text();
+                let payload = null;
+
+                try{
+                    payload = text ? JSON.parse(text) : null;
+                }catch(parseError){
+                    throw new Error(`CJ API returned non-JSON data (${response.status})`);
+                }
 
                 if(!response.ok){
-                    throw new Error(`CJ API returned ${response.status}`);
+                    throw new Error(payload?.error || `CJ API returned ${response.status}`);
                 }
 
-                const payload = await response.json();
-
-                if(!payload.success){
-                    throw new Error(payload.error || 'CJ catalog request failed.');
+                if(!payload?.success){
+                    throw new Error(payload?.error || 'CJ catalog request failed.');
                 }
 
-                return Array.isArray(payload.products)
-                    ? payload.products.map(classifyCJProduct)
-                    : [];
-            }catch(error){
-                console.error(`GLOBIRA CJ CATALOG PAGE ERROR (${page}):`, error);
-                return [];
+                return {
+                    products: Array.isArray(payload.products) ? payload.products : [],
+                    hasMore: payload.hasMore !== false,
+                    totalPages: Number(payload.totalPages || 0),
+                    page: Number(payload.page || page)
+                };
+            }finally{
+                clearTimeout(timeout);
             }
         }
 
         function addUniqueCJProducts(products){
             const unique = new Map(cjProducts.map(product => [product.id, product]));
+
             products.forEach(product => {
-                if(product && product.id) unique.set(product.id, product);
+                if(!product) return;
+                const classified = classifyCJProduct(product);
+                if(classified.id){
+                    unique.set(classified.id, classified);
+                }
             });
+
             cjProducts = Array.from(unique.values());
         }
 
-        for(let page = 1; page <= maxPages && cjProducts.length < targetProducts; page++){
-            const products = await loadCatalogPage(page);
-            addUniqueCJProducts(products);
+        /*
+         * Page 1 is requested with 20 first so the live section can populate
+         * almost immediately. We then continue with 100-product pages.
+         */
+        let firstPage;
+        try{
+            firstPage = await requestCJPage(1, 20);
+        }catch(firstError){
+            console.error('GLOBIRA CJ FIRST PAGE ERROR:', firstError);
 
-            console.log(`GLOBIRA: ${cjProducts.length} unique live CJ products loaded.`);
+            /* Compatibility fallback for older GLOBIRA backends. */
+            try{
+                firstPage = await requestCJPage(1, 6);
+            }catch(secondError){
+                console.error('GLOBIRA CJ COMPATIBILITY ERROR:', secondError);
+                firstPage = { products: [], hasMore: false, totalPages: 0, page: 1 };
+            }
+        }
 
-            /* Refresh visible content after every successful page. */
-            renderFeatured();
-            renderCart();
-            if(currentCategory){
-                showCategory(currentCategory);
+        addUniqueCJProducts(firstPage.products);
+        renderFeatured();
+        renderCart();
+        if(currentCategory) showCategory(currentCategory);
+
+        console.log(`GLOBIRA: ${cjProducts.length} live CJ products loaded from page 1.`);
+
+        /*
+         * Continue the catalog in the background. The current backend supports
+         * page/size up to 100; older backends may simply return duplicate page 1.
+         * The duplicate check below prevents those products from being repeated.
+         */
+        const targetProducts = 2000;
+        const maxPages = firstPage.totalPages
+            ? Math.min(firstPage.totalPages, 20)
+            : 20;
+        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+        for(let page = 2; page <= maxPages && cjProducts.length < targetProducts; page++){
+            await wait(1100);
+
+            let result;
+            try{
+                result = await requestCJPage(page, 100);
+            }catch(pageError){
+                console.error(`GLOBIRA CJ CATALOG PAGE ${page} ERROR:`, pageError);
+                continue;
             }
 
-            if(page < maxPages && cjProducts.length < targetProducts){
-                await wait(1200);
+            const before = cjProducts.length;
+            addUniqueCJProducts(result.products);
+            const added = cjProducts.length - before;
+
+            if(added > 0){
+                renderFeatured();
+                renderCart();
+                if(currentCategory) showCategory(currentCategory);
             }
+
+            console.log(`GLOBIRA: page ${page} added ${added} unique products; total ${cjProducts.length}.`);
+
+            /* If the backend says there are no more pages, stop early. */
+            if(result.hasMore === false) break;
+
+            /* Protect the browser from looping forever against a backend that
+               returns the same page repeatedly. */
+            if(added === 0) break;
         }
 
         console.log(`GLOBIRA: Live CJ catalog ready with ${cjProducts.length} unique products.`);
 
     }catch(error){
         console.error('GLOBIRA CJ CATALOG LOAD:', error);
+
+        /* Keep the page usable, but make the connection problem visible in the
+           live section instead of silently pretending the static products are CJ. */
+        if(liveGrid && !cjProducts.length){
+            liveGrid.innerHTML = `
+                <div class="cj-live-error" style="grid-column:1/-1">
+                    <strong>Live CJ catalog is temporarily unavailable.</strong>
+                    <span>Please refresh the page after the GLOBIRA server/API is online.</span>
+                </div>
+            `;
+        }
     }finally{
         catalogLoading = false;
+        if(liveSection) liveSection.classList.remove('cj-catalog-loading');
     }
 }
 
@@ -5647,6 +5748,19 @@ loadCJFeaturedProduct();
 </script>
 
 <style>
+/* =========================================================
+   LIVE CJ CATALOG SAFETY / STATUS
+   ========================================================= */
+.live-products-v2 .products{min-height:220px}
+.cj-live-loading,.cj-live-error{min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:30px;border:1px dashed #d8d8d8;border-radius:18px;background:#fff}
+.cj-live-loading strong{font-size:15px;letter-spacing:.02em}
+.cj-live-loading small,.cj-live-error span{font-size:12px;color:#777}
+.cj-live-dot{width:10px;height:10px;border-radius:50%;background:#111;box-shadow:0 0 0 7px rgba(0,0,0,.06);animation:globiraCJPulse 1.2s infinite}
+.cj-live-error strong{font-size:15px}
+.cj-live-error span{display:block}
+.cj-live-product .badge{letter-spacing:.08em}
+@keyframes globiraCJPulse{0%,100%{transform:scale(.8);opacity:.45}50%{transform:scale(1);opacity:1}}
+
 .globira-login-overlay{
     position:fixed !important;
     inset:0 !important;
