@@ -8077,6 +8077,253 @@ initializeGlobiraAccount();
 })();
 </script>
 
+
+<!-- GLOBIRA V4: FULL-WIDTH CATEGORY PRODUCTS + REMOVE SHIPPING BAR -->
+<style id="globira-v4-category-fullscreen">
+  /* Hide only the requested "Free Shipping Worldwide" item. Keep the rest of header. */
+  .globira-utility-bar .utility-left span:first-child{
+    display:none !important;
+  }
+  .globira-utility-bar .utility-left span:nth-child(2){
+    display:none !important;
+  }
+
+  /* Category page itself owns the complete viewport. */
+  #categoryPage{
+    position:fixed !important;
+    inset:0 !important;
+    width:100vw !important;
+    max-width:100vw !important;
+    height:100vh !important;
+    height:100dvh !important;
+    min-height:100dvh !important;
+    margin:0 !important;
+    box-sizing:border-box !important;
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+    touch-action:pan-y !important;
+    padding:92px 20px 70px !important;
+  }
+
+  /* Remove the old category landing/hero layout from the product-results page. */
+  #categoryPage .category-landing-head,
+  #categoryPage .category-landing-visual,
+  #categoryPage .category-subgroups{
+    display:none !important;
+  }
+
+  #categoryProducts{
+    display:block !important;
+    position:relative !important;
+    width:calc(100vw - 40px) !important;
+    max-width:none !important;
+    min-width:0 !important;
+    margin:0 auto !important;
+    padding:0 !important;
+    box-sizing:border-box !important;
+  }
+
+  #categoryProducts .gw-category-toolbar{
+    width:100% !important;
+    box-sizing:border-box !important;
+    margin:0 0 18px !important;
+  }
+
+  /*
+    The previous file had several .products rules. This selector is deliberately
+    stronger and forces the category result grid to consume the whole viewport.
+  */
+  #categoryProducts .products.category-result-grid,
+  #categoryProducts .category-result-grid{
+    display:grid !important;
+    width:100% !important;
+    max-width:none !important;
+    min-width:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:16px !important;
+    align-items:start !important;
+    justify-content:stretch !important;
+    box-sizing:border-box !important;
+  }
+
+  #categoryProducts .products.category-result-grid > .product,
+  #categoryProducts .category-result-grid > .product,
+  #categoryProducts .gw-product-card{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    margin:0 !important;
+    padding:0 !important;
+    display:block !important;
+    box-sizing:border-box !important;
+  }
+
+  /* Square product photo: width and height are exactly the same. */
+  #categoryProducts .gw-product-image,
+  #categoryProducts .product-image{
+    width:100% !important;
+    height:auto !important;
+    aspect-ratio:1 / 1 !important;
+    min-height:0 !important;
+    max-height:none !important;
+    overflow:hidden !important;
+    box-sizing:border-box !important;
+  }
+
+  #categoryProducts .gw-product-image > img,
+  #categoryProducts .product-image > img,
+  #categoryProducts .gw-card-main-image{
+    width:100% !important;
+    height:100% !important;
+    min-width:100% !important;
+    min-height:100% !important;
+    max-width:none !important;
+    max-height:none !important;
+    object-fit:cover !important;
+    display:block !important;
+  }
+
+  #categoryProducts .gw-product-info,
+  #categoryProducts .product-info{
+    width:100% !important;
+    box-sizing:border-box !important;
+    padding:9px 10px 11px !important;
+  }
+
+  #categoryProducts .gw-product-info h3,
+  #categoryProducts .product-info h3{
+    font-size:13px !important;
+    line-height:1.3 !important;
+    min-height:34px !important;
+    max-height:34px !important;
+    margin:0 0 7px !important;
+    display:-webkit-box !important;
+    -webkit-line-clamp:2 !important;
+    -webkit-box-orient:vertical !important;
+    overflow:hidden !important;
+  }
+
+  #categoryProducts .gw-product-bottom .price,
+  #categoryProducts .product-info .price{
+    font-size:14px !important;
+    font-weight:700 !important;
+  }
+
+  @media(min-width:1201px){
+    #categoryProducts .products.category-result-grid,
+    #categoryProducts .category-result-grid{
+      grid-template-columns:repeat(6,minmax(0,1fr)) !important;
+    }
+  }
+
+  @media(min-width:901px) and (max-width:1200px){
+    #categoryProducts .products.category-result-grid,
+    #categoryProducts .category-result-grid{
+      grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+    }
+  }
+
+  @media(max-width:900px){
+    #categoryPage{
+      padding-left:12px !important;
+      padding-right:12px !important;
+    }
+    #categoryProducts{
+      width:calc(100vw - 24px) !important;
+    }
+    #categoryProducts .products.category-result-grid,
+    #categoryProducts .category-result-grid{
+      grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+      gap:12px !important;
+    }
+  }
+
+  @media(max-width:600px){
+    #categoryPage{
+      padding:74px 9px 50px !important;
+    }
+    #categoryProducts{
+      width:calc(100vw - 18px) !important;
+    }
+    #categoryProducts .products.category-result-grid,
+    #categoryProducts .category-result-grid{
+      grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+      gap:9px !important;
+    }
+  }
+</style>
+
+<script>
+(function(){
+  /* Remove any old landing/hero blocks whenever the category page changes. */
+  function cleanCategoryPage(){
+    const page=document.getElementById('categoryPage');
+    const container=document.getElementById('categoryProducts');
+    if(!page || !container) return;
+
+    page.querySelectorAll('.category-landing-head,.category-landing-visual,.category-subgroups')
+      .forEach(el=>el.remove());
+
+    container.style.width = window.innerWidth <= 600
+      ? 'calc(100vw - 18px)'
+      : window.innerWidth <= 900
+        ? 'calc(100vw - 24px)'
+        : 'calc(100vw - 40px)';
+
+    container.style.maxWidth='none';
+
+    const grid=container.querySelector('.category-result-grid');
+    if(grid){
+      grid.style.width='100%';
+      grid.style.maxWidth='none';
+
+      grid.querySelectorAll('.gw-product-card,.product').forEach(card=>{
+        card.style.width='100%';
+        card.style.maxWidth='none';
+        card.style.minWidth='0';
+      });
+
+      /* First visible row loads immediately. */
+      grid.querySelectorAll('.gw-card-main-image,.product-image img').forEach((img,i)=>{
+        if(i<12){
+          img.loading='eager';
+          img.setAttribute('fetchpriority','high');
+          img.decoding='async';
+        }
+      });
+    }
+  }
+
+  /* Watch only the category result area, so cleanup also survives live CJ updates. */
+  const container=document.getElementById('categoryProducts');
+  if(container){
+    new MutationObserver(()=>requestAnimationFrame(cleanCategoryPage))
+      .observe(container,{childList:true,subtree:false});
+  }
+
+  const oldShowCategory=window.showCategory;
+  window.showCategory=function(category){
+    if(typeof oldShowCategory==='function') oldShowCategory(category);
+    requestAnimationFrame(cleanCategoryPage);
+    setTimeout(cleanCategoryPage,50);
+    setTimeout(cleanCategoryPage,250);
+  };
+
+  const oldShowSubcategory=window.showSubcategory;
+  window.showSubcategory=function(category,sub){
+    if(typeof oldShowSubcategory==='function') oldShowSubcategory(category,sub);
+    requestAnimationFrame(cleanCategoryPage);
+    setTimeout(cleanCategoryPage,50);
+    setTimeout(cleanCategoryPage,250);
+  };
+
+  window.addEventListener('resize',cleanCategoryPage,{passive:true});
+})();
+</script>
+
 </body>
 </html>
 
