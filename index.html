@@ -159,6 +159,37 @@ ACCOUNT
 .globira-profile-box p{font-size:13px;color:#777;line-height:1.6;margin-bottom:22px}
 .globira-profile-input{width:100%;padding:14px;border:1px solid #ccc;margin-bottom:12px;font-family:inherit}
 .globira-profile-button{width:100%;padding:15px;background:#111;color:#fff;border:0;letter-spacing:1px}
+/* =========================
+GLOBIRA CUSTOMER ACCOUNT DASHBOARD
+========================= */
+.globira-account-overlay{position:fixed;inset:0;z-index:99990;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.62);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.globira-account-overlay.active{display:flex}
+.globira-account-box{position:relative;width:min(980px,100%);max-height:92vh;overflow:auto;background:#fff;padding:38px;box-shadow:0 30px 90px rgba(0,0,0,.28)}
+.globira-account-close{position:absolute;right:20px;top:15px;border:0;background:transparent;font-size:28px;cursor:pointer;color:#222}
+.globira-account-head{padding-right:35px;margin-bottom:25px}
+.globira-account-eyebrow{font-size:10px;letter-spacing:3px;color:#777}
+.globira-account-title{font-family:'Playfair Display',serif;font-size:40px;font-weight:500;margin:7px 0 4px}
+.globira-account-email{font-size:12px;color:#777}
+.globira-account-tabs{display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid #e5e1da;margin-bottom:22px}
+.globira-account-tab{border:0;background:transparent;padding:11px 15px;font-size:10px;letter-spacing:1px;cursor:pointer;color:#777}
+.globira-account-tab.active{color:#111;border-bottom:2px solid #111}
+.globira-account-panel{display:none}.globira-account-panel.active{display:block}
+.globira-account-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.globira-account-stat{border:1px solid #e4e0d9;padding:16px;background:#fcfbf9}
+.globira-account-stat strong{display:block;font-family:'Playfair Display',serif;font-size:22px;font-weight:500;margin-bottom:3px}
+.globira-account-stat span{font-size:9px;color:#777;letter-spacing:.7px;text-transform:uppercase}
+.globira-order-list{display:grid;gap:12px}.globira-order-card{border:1px solid #e2ded7;padding:18px;background:#fff}
+.globira-order-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}
+.globira-order-number{font-size:11px;font-weight:700;letter-spacing:1px}.globira-order-date{font-size:10px;color:#777;margin-top:4px}
+.globira-order-status{font-size:9px;padding:6px 9px;border:1px solid #d8d2ca;white-space:nowrap}
+.globira-order-items{display:grid;gap:7px;margin:10px 0}.globira-order-item{display:flex;justify-content:space-between;gap:10px;font-size:11px;padding:7px 0;border-bottom:1px solid #f0ede8}
+.globira-order-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.globira-order-meta div{background:#f8f6f2;padding:10px}.globira-order-meta small{display:block;color:#777;font-size:8px;text-transform:uppercase;margin-bottom:3px}.globira-order-meta strong{font-size:10px;font-weight:500}
+.globira-account-address{border:1px solid #e2ded7;padding:18px;line-height:1.8;font-size:12px}.globira-account-address strong{display:block;font-family:'Playfair Display',serif;font-size:19px;font-weight:500;margin-bottom:7px}
+.globira-account-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}.globira-account-action{border:1px solid #111;background:#fff;padding:11px 15px;font-size:9px;letter-spacing:1px;cursor:pointer}.globira-account-action.primary{background:#111;color:#fff}
+.globira-account-empty{text-align:center;border:1px dashed #d8d3cc;padding:35px 20px;color:#777;font-size:12px}.globira-account-empty strong{display:block;color:#111;font-family:'Playfair Display',serif;font-size:23px;font-weight:500;margin-bottom:7px}
+.globira-account-footer{margin-top:25px;padding-top:20px;border-top:1px solid #ddd;display:flex;justify-content:space-between;gap:15px;align-items:center}.globira-account-logout{border:1px solid #111;background:#111;color:#fff;padding:12px 20px;letter-spacing:1px;font-size:11px;cursor:pointer}
+@media(max-width:700px){.globira-account-box{padding:28px 18px}.globira-account-title{font-size:34px}.globira-account-summary{grid-template-columns:repeat(2,1fr)}.globira-order-meta{grid-template-columns:1fr}.globira-order-top{flex-direction:column}.globira-account-tabs{overflow-x:auto;flex-wrap:nowrap}.globira-account-tab{white-space:nowrap}}
+
 @media(max-width:900px){
     header{height:auto;min-height:82px;flex-wrap:wrap;gap:12px;padding:14px 5%;}
     .nav{order:3;width:100%;overflow-x:auto;justify-content:flex-start;gap:22px;padding-bottom:3px;}
@@ -674,7 +705,7 @@ CART
     display:flex;
     justify-content:space-between;
     font-size:18px;
-    margin-bottom:20px;
+    margin-bottom:14px;
 }
 
 .checkout-btn{
@@ -1000,7 +1031,7 @@ CHECKOUT
     font-family:'Playfair Display',serif;
     font-size:25px;
     font-weight:500;
-    margin-bottom:20px;
+    margin-bottom:14px;
 }
 
 .checkout-summary-row{
@@ -1102,7 +1133,7 @@ input,
 textarea{
     width:100%;
     padding:14px;
-    margin-bottom:18px;
+    margin-bottom:9px;
     border:1px solid #ccc;
     font-family:inherit;
     font-size:14px;
@@ -1143,7 +1174,7 @@ textarea{
 .payment-option{
     border:1px solid #ddd;
     padding:20px;
-    margin-bottom:12px;
+    margin-bottom:9px;
     cursor:pointer;
     display:flex;
     align-items:center;
@@ -1264,7 +1295,7 @@ FOOTER
 footer{
     background:#111;
     color:#fff;
-    padding:80px 5% 30px;
+    padding:42px 5% 22px;
 }
 
 .footer-highlight{
@@ -1272,8 +1303,8 @@ footer{
     justify-content:space-between;
     align-items:center;
     gap:30px;
-    padding:0 0 55px;
-    margin-bottom:55px;
+    padding:0 0 28px;
+    margin-bottom:28px;
     border-bottom:1px solid rgba(255,255,255,.15);
 }
 .footer-highlight-copy span,.footer-newsletter span{
@@ -1283,19 +1314,19 @@ footer{
 }
 .footer-highlight h2{
     font-family:'Playfair Display',serif;
-    font-size:42px;
+    font-size:34px;
     font-weight:500;
-    margin:10px 0;
+    margin:7px 0;
 }
 .footer-highlight p{
     color:#888;
     font-size:13px;
-    line-height:1.7;
+    line-height:1.55;
     max-width:560px;
 }
 .footer-highlight-btn{
     border:1px solid rgba(255,255,255,.4);
-    padding:15px 20px;
+    padding:12px 18px;
     font-size:11px;
     letter-spacing:1px;
     white-space:nowrap;
@@ -1307,7 +1338,7 @@ footer{
     justify-content:space-between;
     align-items:center;
     gap:30px;
-    padding:45px 0;
+    padding:26px 0;
     border-bottom:1px solid rgba(255,255,255,.15);
 }
 .footer-newsletter h3{
@@ -1338,14 +1369,14 @@ footer{
 .footer-top{
     display:grid;
     grid-template-columns:1.5fr 1fr 1fr 1fr;
-    gap:50px;
-    padding-bottom:55px;
+    gap:38px;
+    padding-bottom:32px;
     border-bottom:1px solid rgba(255,255,255,.15);
 }
 
 .footer-brand .logo{
     color:#fff;
-    margin-bottom:18px;
+    margin-bottom:9px;
 }
 
 .footer-brand p{
@@ -1359,14 +1390,14 @@ footer{
     font-size:11px;
     letter-spacing:2px;
     text-transform:uppercase;
-    margin-bottom:20px;
+    margin-bottom:14px;
 }
 
 .footer-column a{
     display:block;
     color:#aaa;
     font-size:13px;
-    margin-bottom:12px;
+    margin-bottom:9px;
     transition:.2s;
 }
 
@@ -1391,7 +1422,7 @@ footer{
 }
 
 .footer-bottom{
-    padding-top:25px;
+    padding-top:16px;
     display:flex;
     justify-content:space-between;
     align-items:center;
@@ -1587,7 +1618,7 @@ MOBILE
         flex-direction:column;
         align-items:flex-start;
     }
-    .footer-highlight h2{font-size:32px;}
+    .footer-highlight h2{font-size:28px;}
     .newsletter-form{width:100%;min-width:0;}
     .newsletter-form button{padding:0 14px;}
 
@@ -1792,7 +1823,7 @@ body{
 .hero .eyebrow{
     font-size:10px;
     letter-spacing:4px;
-    margin-bottom:18px;
+    margin-bottom:9px;
 }
 
 .hero h1{
@@ -2964,23 +2995,6 @@ HOME
 
   <!-- REFERENCE-STYLE HERO -->
   <section class="ref-hero-wrap">
-    <aside class="ref-category-sidebar">
-      <button onclick="showCategory('women')"><span>♧</span>Women</button>
-      <button onclick="showCategory('men')"><span>♧</span>Men</button>
-      <button onclick="showCategory('bags')"><span>▱</span>Bags</button>
-      <button onclick="showCategory('accessories')"><span>◇</span>Accessories</button>
-      <button onclick="showCategory('electronics')"><span>▣</span>Electronics</button>
-      <button onclick="showCategory('home')"><span>⌂</span>Home &amp; Living</button>
-      <button onclick="showCategory('beauty')"><span>✿</span>Beauty</button>
-      <button onclick="showCategory('tools')"><span>⌁</span>Tools &amp; DIY</button>
-      <button onclick="showCategory('sports')"><span>⚉</span>Sports &amp; Fitness</button>
-      <button onclick="showCategory('automotive')"><span>▰</span>Automotive</button>
-      <button onclick="showCategory('pets')"><span>♧</span>Pet Supplies</button>
-      <button onclick="showCategory('office')"><span>▤</span>Office &amp; School</button>
-      <button onclick="showCategory('baby')"><span>♧</span>Baby &amp; Kids</button>
-      <button onclick="showCategory('more')"><span>⊞</span>More</button>
-    </aside>
-
     <div class="ref-hero">
       <div class="ref-hero-copy">
         <span class="ref-eyebrow">GLOBAL MARKETPLACE</span>
@@ -3002,22 +3016,24 @@ HOME
     </div>
   </section>
 
-  <!-- CIRCULAR CATEGORY SHORTCUTS -->
-  <section class="ref-categories">
-    <button onclick="showCategory('women')"><span><img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=300&q=85"></span><b>Women</b></button>
-    <button onclick="showCategory('men')"><span><img src="https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&w=300&q=85"></span><b>Men</b></button>
-    <button onclick="showCategory('bags')"><span><img src="https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=300&q=85"></span><b>Bags</b></button>
-    <button onclick="showCategory('accessories')"><span><img src="https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=300&q=85"></span><b>Accessories</b></button>
-    <button onclick="showCategory('electronics')"><span><img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=300&q=85"></span><b>Electronics</b></button>
-    <button onclick="showCategory('home')"><span><img src="https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=300&q=85"></span><b>Home &amp; Living</b></button>
-    <button onclick="showCategory('beauty')"><span><img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=300&q=85"></span><b>Beauty</b></button>
-    <button onclick="showCategory('tools')"><span><img src="https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=300&q=85" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=900&q=90';"></span><b>Tools &amp; DIY</b></button>
-    <button onclick="showCategory('sports')"><span><img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=300&q=85"></span><b>Sports &amp; Fitness</b></button>
-    <button onclick="showCategory('automotive')"><span><img src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=300&q=85"></span><b>Automotive</b></button>
-    <button onclick="showCategory('pets')"><span><img src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&w=300&q=85"></span><b>Pet Supplies</b></button>
-    <button onclick="showCategory('office')"><span><img src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=300&q=85"></span><b>Office &amp; School</b></button>
-    <button onclick="showCategory('baby')"><span><img src="https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=300&q=85"></span><b>Baby &amp; Kids</b></button>
-    <button class="ref-more-circle" onclick="showCategory('more')"><span>•••</span><b>More</b></button>
+  <!-- FOUR EDITORIAL CATEGORY PANELS -->
+  <section class="ref-four-panels">
+    <article class="ref-four-panel" onclick="showCategory('women')">
+      <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1400&q=92" alt="Fashion collection">
+      <div><span>FASHION</span><h3>Style For Every Moment</h3><p>New looks, timeless pieces and everyday essentials.</p><button>Explore Fashion <b>→</b></button></div>
+    </article>
+    <article class="ref-four-panel" onclick="showCategory('home')">
+      <img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1400&q=92" alt="Home and living collection">
+      <div><span>HOME &amp; LIVING</span><h3>Make Space Feel Like Home</h3><p>Furniture, decor, kitchen and everyday home finds.</p><button>Explore Home <b>→</b></button></div>
+    </article>
+    <article class="ref-four-panel" onclick="showCategory('electronics')">
+      <img src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=1400&q=92" alt="Technology collection">
+      <div><span>TECH &amp; GADGETS</span><h3>Smart Things. Better Living.</h3><p>Modern gadgets, devices and connected essentials.</p><button>Explore Tech <b>→</b></button></div>
+    </article>
+    <article class="ref-four-panel" onclick="showCategory('electronics')">
+      <img src="https://images.unsplash.com/photo-1468495244123-6c6c332eeece?auto=format&fit=crop&w=1400&q=92" alt="Electronics collection">
+      <div><span>ELECTRONICS</span><h3>Power Your Everyday</h3><p>Audio, accessories, devices and useful electronics.</p><button>Explore Electronics <b>→</b></button></div>
+    </article>
   </section>
 
   <!-- TRUST BAR -->
@@ -3027,22 +3043,6 @@ HOME
     <div><span>◌</span><div><b>Easy Returns</b><small>30-day money back</small></div></div>
     <div><span>♧</span><div><b>24/7 Support</b><small>We're here to help</small></div></div>
     <div><span>☆</span><div><b>Trusted by Millions</b><small>Over 5M+ happy customers</small></div></div>
-  </section>
-
-  <!-- PROMOTIONAL STRIP -->
-  <section class="ref-promo-grid">
-    <article class="ref-promo ref-promo-fashion" onclick="showNewArrivals()">
-      <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1000&q=90" alt="">
-      <div><h3>New Arrivals</h3><p>Fresh styles. Just in!</p><button>Shop Now →</button></div>
-    </article>
-    <article class="ref-promo ref-promo-tech" onclick="showCategory('electronics')">
-      <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1000&q=90" alt="">
-      <div><h3>Latest Electronics</h3><p>Smart devices. Better life.</p><button>Shop Now →</button></div>
-    </article>
-    <article class="ref-promo ref-promo-home" onclick="showCategory('home')">
-      <img src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1000&q=90" alt="">
-      <div><h3>Home &amp; Living</h3><p>Make your space special.</p><button>Shop Now →</button></div>
-    </article>
   </section>
 
   <!-- LIVE PRODUCTS: SAME ID / SAME JS / SAME LIVE CJ DATA -->
@@ -6722,6 +6722,23 @@ loadCJFeaturedProduct();
 
 </script>
 
+<style id="globira-profile-enhanced-css">
+.globira-profile-overlay{position:fixed;inset:0;z-index:100001;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.68);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.globira-profile-overlay.active{display:flex}
+.globira-profile-box{width:min(620px,100%);max-height:92vh;overflow:auto;background:#fff;padding:36px;box-shadow:0 30px 90px rgba(0,0,0,.3);position:relative}
+.globira-profile-box h2{font-family:'Playfair Display',serif;font-size:34px;font-weight:500;margin:6px 0 8px}
+.globira-profile-box p{font-size:13px;color:#777;line-height:1.6;margin-bottom:22px}
+.globira-profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.globira-profile-field{display:flex;flex-direction:column;gap:6px}
+.globira-profile-field.full{grid-column:1/-1}
+.globira-profile-field label{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#666}
+.globira-profile-input{width:100%;height:48px;padding:0 13px;border:1px solid #ccc;font-family:inherit;font-size:14px;outline:none;background:#fff}
+.globira-profile-input:focus{border-color:#111}
+.globira-profile-save{width:100%;height:50px;margin-top:18px;border:0;background:#111;color:#fff;letter-spacing:1.5px;font-size:12px;cursor:pointer}
+.globira-profile-close{position:absolute;right:17px;top:14px;border:0;background:transparent;font-size:25px;cursor:pointer}
+@media(max-width:600px){.globira-profile-box{padding:30px 20px}.globira-profile-grid{grid-template-columns:1fr}.globira-profile-field.full{grid-column:auto}}
+</style>
+
 <style>
 .globira-login-overlay{
     position:fixed !important;
@@ -6823,6 +6840,96 @@ loadCJFeaturedProduct();
     </div>
 </div>
 
+
+<div id="globiraAccountOverlay" class="globira-account-overlay" aria-hidden="true">
+  <div class="globira-account-box" role="dialog" aria-modal="true" aria-labelledby="globiraAccountTitle">
+    <button type="button" class="globira-account-close" onclick="closeGlobiraAccount()" aria-label="Close">×</button>
+    <div class="globira-account-head">
+      <div class="globira-account-eyebrow">GLOBIRA / MY ACCOUNT</div>
+      <h2 id="globiraAccountTitle" class="globira-account-title">Welcome, <span id="globiraAccountName">Customer</span></h2>
+      <div id="globiraAccountEmail" class="globira-account-email"></div>
+    </div>
+    <div class="globira-account-tabs">
+      <button class="globira-account-tab active" data-account-tab="overview" onclick="switchGlobiraAccountTab('overview')">OVERVIEW</button>
+      <button class="globira-account-tab" data-account-tab="orders" onclick="switchGlobiraAccountTab('orders')">MY ORDERS</button>
+      <button class="globira-account-tab" data-account-tab="profile" onclick="switchGlobiraAccountTab('profile')">MY DETAILS</button>
+      <button class="globira-account-tab" data-account-tab="address" onclick="switchGlobiraAccountTab('address')">ADDRESS</button>
+    </div>
+    <section id="globiraAccountPanelOverview" class="globira-account-panel active">
+      <div class="globira-account-summary">
+        <div class="globira-account-stat"><strong id="globiraAccountOrderCount">0</strong><span>Orders</span></div>
+        <div class="globira-account-stat"><strong id="globiraAccountActiveCount">0</strong><span>Active</span></div>
+        <div class="globira-account-stat"><strong id="globiraAccountLastOrder">—</strong><span>Latest Order</span></div>
+        <div class="globira-account-stat"><strong>INR</strong><span>Currency</span></div>
+      </div>
+      <div id="globiraAccountLatestOrder"></div>
+      <div class="globira-account-actions">
+        <button class="globira-account-action primary" onclick="switchGlobiraAccountTab('orders')">VIEW MY ORDERS →</button>
+        <button class="globira-account-action" onclick="showGlobiraProfile()">EDIT MY DETAILS</button>
+      </div>
+    </section>
+    <section id="globiraAccountPanelOrders" class="globira-account-panel">
+      <div id="globiraAccountOrders" class="globira-order-list"></div>
+    </section>
+    <section id="globiraAccountPanelProfile" class="globira-account-panel">
+      <div class="globira-account-address" id="globiraAccountProfileDetails"></div>
+      <div class="globira-account-actions"><button class="globira-account-action primary" onclick="showGlobiraProfile()">EDIT DETAILS →</button></div>
+    </section>
+    <section id="globiraAccountPanelAddress" class="globira-account-panel">
+      <div class="globira-account-address" id="globiraAccountAddressDetails"></div>
+      <div class="globira-account-actions"><button class="globira-account-action primary" onclick="showGlobiraProfile()">UPDATE ADDRESS →</button></div>
+    </section>
+    <div class="globira-account-footer">
+      <span style="font-size:10px;color:#777">Your GLOBIRA account keeps the details needed for checkout, delivery and order tracking.</span>
+      <button type="button" class="globira-account-logout" onclick="logoutGlobira()">LOG OUT</button>
+    </div>
+  </div>
+</div>
+<div id="globiraProfileOverlay" class="globira-profile-overlay" aria-hidden="true">
+  <div class="globira-profile-box" role="dialog" aria-modal="true" aria-labelledby="globiraProfileTitle">
+    <button type="button" class="globira-profile-close" onclick="closeGlobiraProfile()" aria-label="Close">×</button>
+    <div class="globira-login-logo">GLOBIRA</div>
+    <div class="globira-login-subtitle">Complete Your Profile</div>
+    <h2 id="globiraProfileTitle">Tell us about you</h2>
+    <p>Save your details once so checkout, delivery and order tracking are faster next time.</p>
+    <div class="globira-profile-grid">
+      <div class="globira-profile-field">
+        <label for="globiraFirstName">First name *</label>
+        <input id="globiraFirstName" class="globira-profile-input" type="text" autocomplete="given-name" placeholder="First name">
+      </div>
+      <div class="globira-profile-field">
+        <label for="globiraLastName">Last name</label>
+        <input id="globiraLastName" class="globira-profile-input" type="text" autocomplete="family-name" placeholder="Last name">
+      </div>
+      <div class="globira-profile-field">
+        <label for="globiraDateOfBirth">Date of birth</label>
+        <input id="globiraDateOfBirth" class="globira-profile-input" type="date" autocomplete="bday">
+      </div>
+      <div class="globira-profile-field">
+        <label for="globiraMobile">Mobile number *</label>
+        <input id="globiraMobile" class="globira-profile-input" type="tel" inputmode="tel" autocomplete="tel" placeholder="Mobile number">
+      </div>
+      <div class="globira-profile-field full">
+        <label for="globiraAddress">Address *</label>
+        <input id="globiraAddress" class="globira-profile-input" type="text" autocomplete="street-address" placeholder="House / street / area">
+      </div>
+      <div class="globira-profile-field">
+        <label for="globiraCity">City *</label>
+        <input id="globiraCity" class="globira-profile-input" type="text" autocomplete="address-level2" placeholder="City">
+      </div>
+      <div class="globira-profile-field">
+        <label for="globiraState">State / Region *</label>
+        <input id="globiraState" class="globira-profile-input" type="text" autocomplete="address-level1" placeholder="State / Region">
+      </div>
+      <div class="globira-profile-field">
+        <label for="globiraPin">PIN / Postal code *</label>
+        <input id="globiraPin" class="globira-profile-input" type="text" inputmode="numeric" autocomplete="postal-code" placeholder="Postal code">
+      </div>
+    </div>
+    <button type="button" class="globira-profile-save" onclick="saveGlobiraProfile()">SAVE &amp; CONTINUE →</button>
+  </div>
+</div>
+
 <script>
 /* =========================================================
    GLOBIRA SUPABASE AUTHENTICATION
@@ -6841,6 +6948,7 @@ const globiraAuth = window.supabase.createClient(
 
 let globiraOtpEmail = '';
 let globiraPendingCheckout = false;
+let globiraPendingCheckoutAfterProfile = false;
 
 const globiraLoginOverlay = document.getElementById('globiraLoginOverlay');
 const globiraEmailInput = document.getElementById('globiraEmail');
@@ -6966,21 +7074,21 @@ async function verifyGlobiraOTP() {
         globiraCurrentUser = data.user;
         updateGlobiraAccountButton(globiraCurrentUser);
         const profileMeta = data.user.user_metadata || {};
-        const hasProfileName = !!(profileMeta.full_name || profileMeta.name);
+        const profileComplete = !!(profileMeta.full_name && profileMeta.mobile && profileMeta.address && profileMeta.city && profileMeta.state && profileMeta.pin);
         globiraShowMessage('globiraOtpMessage', 'Login successful. Welcome to GLOBIRA.', 'success');
 
         const resumeCheckout = globiraPendingCheckout;
         globiraPendingCheckout = false;
+        globiraPendingCheckoutAfterProfile = resumeCheckout && !profileComplete;
 
         setTimeout(() => {
             closeGlobiraLogin();
-            if (!hasProfileName) {
-                setTimeout(() => showGlobiraProfile(), 150);
+            if (!profileComplete) {
+                showGlobiraProfile();
+                return;
             }
-            if (resumeCheckout) {
-                setTimeout(() => openCheckout(), hasProfileName ? 100 : 450);
-            }
-        }, 500);
+            if (resumeCheckout) openCheckout();
+        }, 250);
     } catch (error) {
         console.error('GLOBIRA AUTH ERROR:', error);
         globiraShowMessage('globiraOtpMessage', 'Something went wrong. Please try again.', 'error');
@@ -7022,6 +7130,7 @@ function backToGlobiraEmail() {
 
 function skipGlobiraLogin() {
     globiraPendingCheckout = false;
+    globiraPendingCheckoutAfterProfile = false;
     closeGlobiraLogin();
 }
 
@@ -7094,23 +7203,35 @@ document.addEventListener('keydown', event => {
     }
 });
 
-/* Automatically show the login popup when there is no active session. */
+/* Automatically show the login popup quickly when there is no active session. */
 (async function initializeGlobiraAuth() {
+    let settled=false;
+    let sessionFound=false;
+    const quickOpen=setTimeout(()=>{
+        if(!settled && !sessionFound && !globiraLoginOverlay.classList.contains('active')) openGlobiraLogin(false);
+    },650);
     try {
         const { data, error } = await globiraAuth.auth.getSession();
+        settled=true;
+        clearTimeout(quickOpen);
         if (error) {
             console.error('GLOBIRA INITIAL AUTH CHECK:', error);
+            openGlobiraLogin(false);
             return;
         }
-
         if (data && data.session) {
+            sessionFound=true;
+            globiraCurrentUser=data.session.user;
+            updateGlobiraAccountButton(globiraCurrentUser);
             console.log('Existing GLOBIRA session found:', data.session.user.email);
             return;
         }
-
-        setTimeout(() => openGlobiraLogin(false), 1200);
+        openGlobiraLogin(false);
     } catch (error) {
+        settled=true;
+        clearTimeout(quickOpen);
         console.error('GLOBIRA INITIAL AUTH CHECK:', error);
+        openGlobiraLogin(false);
     }
 })();
 
@@ -7138,55 +7259,91 @@ function updateGlobiraAccountButton(user){
     }
 }
 
+function globiraReadOrderHistory(){
+    const list=JSON.parse(localStorage.getItem('globiraOrderHistory')||'[]');
+    const latest=JSON.parse(localStorage.getItem('globiraLastOrder')||'null');
+    const merged=Array.isArray(list)?list.slice():[];
+    if(latest && !merged.some(o=>(o.orderID||o.orderNumber)===(latest.orderID||latest.orderNumber))) merged.unshift(latest);
+    return merged;
+}
+
+function globiraOrderStatus(order){
+    return String(order?.status||order?.paymentStatus||'ORDER RECEIVED').replace(/_/g,' ');
+}
+
+function globiraRenderOrderCard(order){
+    if(!order) return '';
+    const number=order.orderNumber||order.orderID||'GLOBIRA ORDER';
+    const items=Array.isArray(order.items)?order.items:[];
+    const date=order.createdAt||order.date;
+    const payment=order.paymentStatus||order.payment||'PENDING';
+    const tracking=order.trackingNumber||order.tracking||'Not assigned yet';
+    const supplier=order.cjStatus||'Not sent yet';
+    const address=order.shippingAddress||order.customer||{};
+    return `<article class="globira-order-card">
+      <div class="globira-order-top"><div><div class="globira-order-number">${escapeHtml(String(number))}</div><div class="globira-order-date">${date?new Date(date).toLocaleString():''}</div></div><span class="globira-order-status">${escapeHtml(globiraOrderStatus(order))}</span></div>
+      <div class="globira-order-items">${items.length?items.map(item=>`<div class="globira-order-item"><span>${escapeHtml(item.name||'Product')} × ${Number(item.quantity||1)}${item.size?` · ${escapeHtml(item.size)}`:''}</span><strong>${formatPrice(Number(item.price||0)*Number(item.quantity||1))}</strong></div>`).join(''):'<div class="globira-order-item"><span>Order details saved</span><strong>${formatPrice(order.total||0)}</strong></div>'}</div>
+      <div class="globira-order-meta">
+        <div><small>Total</small><strong>${formatPrice(order.total||0)}</strong></div>
+        <div><small>Payment</small><strong>${escapeHtml(String(payment).replace(/_/g,' '))}</strong></div>
+        <div><small>Tracking</small><strong>${escapeHtml(String(tracking))}</strong></div>
+        <div><small>GLOBIRA status</small><strong>${escapeHtml(globiraOrderStatus(order))}</strong></div>
+        <div><small>CJ / Supplier</small><strong>${escapeHtml(String(supplier).replace(/_/g,' '))}</strong></div>
+        <div><small>Delivery</small><strong>${escapeHtml(String(order.deliveryStatus||'Pending').replace(/_/g,' '))}</strong></div>
+      </div>
+      <div style="margin-top:12px;font-size:10px;color:#777">${escapeHtml([address.address,address.city,address.state,address.pin].filter(Boolean).join(', ')||'Delivery address will appear with the order.')}</div>
+    </article>`;
+}
+
+function switchGlobiraAccountTab(tab){
+    document.querySelectorAll('.globira-account-tab').forEach(b=>b.classList.toggle('active',b.dataset.accountTab===tab));
+    document.querySelectorAll('.globira-account-panel').forEach(p=>p.classList.remove('active'));
+    const panel=document.getElementById('globiraAccountPanel'+tab.charAt(0).toUpperCase()+tab.slice(1));
+    if(panel) panel.classList.add('active');
+    if(tab==='orders') renderGlobiraOrders();
+}
+
+function renderGlobiraAccount(){
+    if(!globiraCurrentUser) return;
+    const meta=globiraCurrentUser.user_metadata||{};
+    const orders=globiraReadOrderHistory();
+    const active=orders.filter(o=>!['DELIVERED','CANCELLED','COMPLETED'].includes(String(o.status||'').toUpperCase())).length;
+    const latest=orders[0];
+    document.getElementById('globiraAccountOrderCount').textContent=orders.length;
+    document.getElementById('globiraAccountActiveCount').textContent=active;
+    document.getElementById('globiraAccountLastOrder').textContent=latest?(latest.orderNumber||latest.orderID||'—'):'—';
+    document.getElementById('globiraAccountLatestOrder').innerHTML=latest?globiraRenderOrderCard(latest):'<div class="globira-account-empty"><strong>No orders yet</strong>Your GLOBIRA orders will appear here after you place an order.</div>';
+    document.getElementById('globiraAccountProfileDetails').innerHTML=`<strong>Personal details</strong><div><b>Name:</b> ${escapeHtml(meta.full_name||'Not added')}</div><div><b>Email:</b> ${escapeHtml(globiraCurrentUser.email||'')}</div><div><b>Mobile:</b> ${escapeHtml(meta.mobile||'Not added')}</div><div><b>Date of birth:</b> ${escapeHtml(meta.date_of_birth||'Not added')}</div>`;
+    document.getElementById('globiraAccountAddressDetails').innerHTML=`<strong>Delivery address</strong><div>${escapeHtml(meta.address||'Not added')}</div><div>${escapeHtml([meta.city,meta.state,meta.pin].filter(Boolean).join(', '))}</div>`;
+}
+
+function renderGlobiraOrders(){
+    const orders=globiraReadOrderHistory();
+    const box=document.getElementById('globiraAccountOrders');
+    if(!box) return;
+    box.innerHTML=orders.length?orders.map(globiraRenderOrderCard).join(''):'<div class="globira-account-empty"><strong>No orders yet</strong>Once you place a GLOBIRA order, its order number, items, payment, status, shipping and tracking information will be shown here.</div>';
+}
+
 function openGlobiraAccount(){
-    if(!globiraCurrentUser){
-        openGlobiraLogin(false);
-        return;
-    }
-    document.getElementById('globiraAccountName').textContent=globiraGetDisplayName(globiraCurrentUser);
-    document.getElementById('globiraAccountEmail').textContent=globiraCurrentUser.email || '';
+    if(!globiraCurrentUser){openGlobiraLogin(false);return;}
+    const name=globiraGetDisplayName(globiraCurrentUser);
+    document.getElementById('globiraAccountName').textContent=name;
+    document.getElementById('globiraAccountEmail').textContent=globiraCurrentUser.email||'';
+    renderGlobiraAccount();
+    switchGlobiraAccountTab('overview');
     document.getElementById('globiraAccountOverlay').classList.add('active');
+    document.getElementById('globiraAccountOverlay').setAttribute('aria-hidden','false');
+    document.body.classList.add('no-scroll');
 }
 
 function closeGlobiraAccount(){
-    document.getElementById('globiraAccountOverlay').classList.remove('active');
+    const el=document.getElementById('globiraAccountOverlay');
+    if(el) el.classList.remove('active');
+    if(el) el.setAttribute('aria-hidden','true');
+    if(!globiraLoginOverlay.classList.contains('active') && !document.getElementById('globiraProfileOverlay').classList.contains('active')) document.body.classList.remove('no-scroll');
 }
 
-function handleGlobiraAccountClick(){
-    if(globiraCurrentUser) openGlobiraAccount();
-    else openGlobiraLogin(false);
-}
-
-function showGlobiraProfile(){
-    if(!globiraCurrentUser) return;
-    const meta=globiraCurrentUser.user_metadata||{};
-    const parts=(meta.full_name||'').split(' ');
-    document.getElementById('globiraFirstName').value=parts.shift()||'';
-    document.getElementById('globiraLastName').value=parts.join(' ');
-    document.getElementById('globiraProfileOverlay').classList.add('active');
-}
-
-async function saveGlobiraProfile(){
-    if(!globiraCurrentUser) return;
-    const first=document.getElementById('globiraFirstName').value.trim();
-    const last=document.getElementById('globiraLastName').value.trim();
-    if(!first){alert('Please enter your first name.');return;}
-    const fullName=(first+' '+last).trim();
-    const {data,error}=await globiraAuth.auth.updateUser({data:{full_name:fullName}});
-    if(error){alert(error.message||'Unable to save your profile.');return;}
-    globiraCurrentUser=data.user;
-    updateGlobiraAccountButton(globiraCurrentUser);
-    document.getElementById('globiraProfileOverlay').classList.remove('active');
-    document.getElementById('globiraAccountName').textContent=fullName;
-    document.getElementById('globiraAccountEmail').textContent=globiraCurrentUser.email||'';
-    showToast('Profile saved successfully.');
-}
-
-function showGlobiraOrders(){
-    const order=JSON.parse(localStorage.getItem('globiraLastOrder')||'null');
-    if(!order){alert('No GLOBIRA orders found yet.');return;}
-    alert('Latest Order\n\n'+order.orderID+'\n'+new Date(order.date).toLocaleDateString()+'\n\nTotal: '+formatPrice(order.total)+'\nPayment: '+order.payment);
-}
+function handleGlobiraAccountClick(){if(globiraCurrentUser) openGlobiraAccount();else openGlobiraLogin(false);}
 
 async function logoutGlobira(){
     await globiraAuth.auth.signOut();
@@ -8442,6 +8599,77 @@ initializeGlobiraAccount();
   }
 })();
 </script>
+
+
+<style id="globira-four-category-panels">
+/* STEP 1: remove the duplicate sidebar/circle navigation from the homepage.
+   Keep the navigation itself in the header unchanged. */
+.ref-hero-wrap{
+  width:calc(100% - 52px) !important;
+  grid-template-columns:1fr !important;
+  min-height:360px !important;
+  border-bottom:0 !important;
+}
+.ref-hero{
+  width:100% !important;
+  height:360px !important;
+  border-radius:0 0 8px 8px !important;
+}
+.ref-category-sidebar,.ref-categories{display:none !important;}
+
+/* Four large editorial images now occupy the space previously used by
+   the duplicate category navigation. */
+.ref-four-panels{
+  width:calc(100% - 52px);
+  margin:18px auto 22px;
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+}
+.ref-four-panel{
+  position:relative;
+  height:245px;
+  overflow:hidden;
+  border-radius:8px;
+  background:#eee;
+  cursor:pointer;
+}
+.ref-four-panel img{
+  width:100%;height:100%;object-fit:cover;display:block;
+  transition:transform .55s ease,filter .35s ease;
+}
+.ref-four-panel:after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(0,0,0,.02) 25%,rgba(0,0,0,.66) 100%);
+}
+.ref-four-panel:hover img{transform:scale(1.045);filter:saturate(1.04);}
+.ref-four-panel>div{
+  position:absolute;z-index:2;left:18px;right:15px;bottom:17px;color:#fff;
+}
+.ref-four-panel span{
+  display:block;font-size:8px;letter-spacing:2px;font-weight:700;margin-bottom:6px;
+}
+.ref-four-panel h3{
+  font-family:'Playfair Display',serif;font-size:22px;line-height:1.05;font-weight:500;margin:0 0 6px;
+}
+.ref-four-panel p{font-size:9px;line-height:1.35;margin:0 0 11px;max-width:230px;color:rgba(255,255,255,.9);}
+.ref-four-panel button{
+  border:1px solid rgba(255,255,255,.75);background:rgba(255,255,255,.94);color:#111820;
+  border-radius:4px;padding:8px 11px;font-size:8px;cursor:pointer;
+}
+.ref-four-panel button b{font-size:12px;margin-left:4px;}
+
+@media(max-width:1000px){
+  .ref-four-panels{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .ref-four-panel{height:230px;}
+}
+@media(max-width:600px){
+  .ref-hero-wrap{width:100% !important;}
+  .ref-hero{height:390px !important;border-radius:0 !important;}
+  .ref-four-panels{width:94%;grid-template-columns:1fr;gap:10px;margin-top:14px;}
+  .ref-four-panel{height:220px;}
+}
+</style>
 
 </body>
 </html>
