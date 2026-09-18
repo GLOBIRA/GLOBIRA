@@ -3500,7 +3500,7 @@ CHECKOUT
                         </label>
 
                         <input id="customerPin"
-                               maxlength="6"
+                               maxlength="8"
                                placeholder="6 digit PIN code">
 
 
@@ -6980,7 +6980,7 @@ loadCJFeaturedProduct();
             <div class="globira-login-title">Verify your email</div>
             <div class="globira-login-description">We've sent an 8-digit verification code to:</div>
             <div id="globiraOtpEmail" class="globira-login-email-display"></div>
-            <input type="text" id="globiraOtp" class="globira-login-input globira-otp-input" placeholder="000000" inputmode="numeric" autocomplete="one-time-code" maxlength="6">
+            <input type="text" id="globiraOtp" class="globira-login-input globira-otp-input" placeholder="00000000" inputmode="numeric" autocomplete="one-time-code" maxlength="8">
             <button type="button" id="globiraVerifyOtpButton" class="globira-login-button" onclick="verifyGlobiraOTP()">VERIFY &amp; CONTINUE →</button>
             <div id="globiraOtpMessage" class="globira-login-message"></div>
             <button type="button" class="globira-login-resend" onclick="resendGlobiraOTP()">RESEND CODE</button>
@@ -7088,7 +7088,7 @@ const GLOBIRA_SUPABASE_URL = 'https://acezgvwbflbdircuvkut.supabase.co';
 
 /* PASTE YOUR SUPABASE PUBLISHABLE/ANON KEY BELOW.
    NEVER use the service_role key in this HTML file. */
-const GLOBIRA_SUPABASE_ANON_KEY = 'sb_publishable_lA1LRqER_7Uqlmrz7xr5MA_Rd4EVWYg';
+const GLOBIRA_SUPABASE_ANON_KEY = 'PASTE_YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY_HERE';
 
 const globiraAuth = window.supabase.createClient(
     GLOBIRA_SUPABASE_URL,
@@ -7192,8 +7192,8 @@ async function verifyGlobiraOTP() {
     const token = globiraOtpInput.value.trim();
     globiraShowMessage('globiraOtpMessage', '', '');
 
-   if (!/^\d{6}$/.test(token)) {
-    globiraShowMessage('globiraOtpMessage', 'Please enter the 6-digit verification code.', 'error');  
+   if (!/^\d{8}$/.test(token)) {
+    globiraShowMessage('globiraOtpMessage', 'Please enter the 8-digit verification code.', 'error');  
         globiraOtpInput.focus();
         return;
     }
