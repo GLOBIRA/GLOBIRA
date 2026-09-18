@@ -6980,7 +6980,7 @@ loadCJFeaturedProduct();
             <div class="globira-login-title">Verify your email</div>
             <div class="globira-login-description">We've sent an 8-digit verification code to:</div>
             <div id="globiraOtpEmail" class="globira-login-email-display"></div>
-            <input type="text" id="globiraOtp" class="globira-login-input globira-otp-input" placeholder="00000000" inputmode="numeric" autocomplete="one-time-code" maxlength="8">
+            <input type="text" id="globiraOtp" class="globira-login-input globira-otp-input" placeholder="000000" inputmode="numeric" autocomplete="one-time-code" maxlength="6">
             <button type="button" id="globiraVerifyOtpButton" class="globira-login-button" onclick="verifyGlobiraOTP()">VERIFY &amp; CONTINUE →</button>
             <div id="globiraOtpMessage" class="globira-login-message"></div>
             <button type="button" class="globira-login-resend" onclick="resendGlobiraOTP()">RESEND CODE</button>
@@ -7141,31 +7141,21 @@ function globiraShowOtpStep() {
     document.getElementById('globiraEmailStep').classList.remove('active');
     document.getElementById('globiraOtpStep').classList.add('active');
     document.getElementById('globiraOtpEmail').textContent = globiraOtpEmail;
-
     setTimeout(() => globiraOtpInput.focus(), 150);
 }
 
 async function sendGlobiraOTP() {
     const email = globiraEmailInput.value.trim().toLowerCase();
-
     globiraClearMessages();
 
     if (!email) {
-        globiraShowMessage(
-            'globiraEmailMessage',
-            'Please enter your email address.',
-            'error'
-        );
+        globiraShowMessage('globiraEmailMessage', 'Please enter your email address.', 'error');
         globiraEmailInput.focus();
         return;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        globiraShowMessage(
-            'globiraEmailMessage',
-            'Please enter a valid email address.',
-            'error'
-        );
+        globiraShowMessage('globiraEmailMessage', 'Please enter a valid email address.', 'error');
         globiraEmailInput.focus();
         return;
     }
@@ -7176,42 +7166,22 @@ async function sendGlobiraOTP() {
 
     try {
         const { error } = await globiraAuth.auth.signInWithOtp({
-            email: email,
-            options: {
-                shouldCreateUser: true
-            }
+            email,
+            options: { shouldCreateUser: true }
         });
 
         if (error) {
             console.error('GLOBIRA OTP ERROR:', error);
-
-            globiraShowMessage(
-                'globiraEmailMessage',
-                error.message || 'Unable to send verification code.',
-                'error'
-            );
+            globiraShowMessage('globiraEmailMessage', error.message || 'Unable to send verification code.', 'error');
             return;
         }
 
         globiraOtpEmail = email;
-
         globiraShowOtpStep();
-
-        globiraShowMessage(
-            'globiraOtpMessage',
-            'Verification code sent successfully.',
-            'success'
-        );
-
+        globiraShowMessage('globiraOtpMessage', 'Verification code sent successfully.', 'success');
     } catch (error) {
         console.error('GLOBIRA AUTH ERROR:', error);
-
-        globiraShowMessage(
-            'globiraEmailMessage',
-            'Something went wrong. Please try again.',
-            'error'
-        );
-
+        globiraShowMessage('globiraEmailMessage', 'Unable to connect to Supabase. Check your Supabase URL/key and open the site through http://localhost:3000 or your Vercel URL.', 'error');
     } finally {
         button.disabled = false;
         button.textContent = 'CONTINUE →';
@@ -7220,100 +7190,59 @@ async function sendGlobiraOTP() {
 
 async function verifyGlobiraOTP() {
     const token = globiraOtpInput.value.trim();
-
     globiraShowMessage('globiraOtpMessage', '', '');
 
-    if (!/^\d{8}$/.test(token)) {
-        globiraShowMessage(
-            'globiraOtpMessage',
-            'Please enter the 8-digit verification code.',
-            'error'
-        );
-
+   if (!/^\d{6}$/.test(token)) {
+    globiraShowMessage('globiraOtpMessage', 'Please enter the 6-digit verification code.', 'error');  
         globiraOtpInput.focus();
         return;
     }
 
     const button = document.getElementById('globiraVerifyOtpButton');
-
     button.disabled = true;
     button.textContent = 'VERIFYING...';
 
     try {
         const { data, error } = await globiraAuth.auth.verifyOtp({
             email: globiraOtpEmail,
-            token: token,
+            token,
             type: 'email'
         });
 
         if (error) {
             console.error('GLOBIRA VERIFY ERROR:', error);
-
-            globiraShowMessage(
-                'globiraOtpMessage',
-                error.message || 'Invalid or expired verification code.',
-                'error'
-            );
+            globiraShowMessage('globiraOtpMessage', error.message || 'Invalid or expired verification code.', 'error');
             return;
         }
 
         if (!data || !data.session) {
-            globiraShowMessage(
-                'globiraOtpMessage',
-                'Login could not be completed. Please try again.',
-                'error'
-            );
+            globiraShowMessage('globiraOtpMessage', 'Login could not be completed. Please try again.', 'error');
             return;
         }
 
         console.log('GLOBIRA USER LOGGED IN:', data.user);
-
         globiraCurrentUser = data.user;
-
         updateGlobiraAccountButton(globiraCurrentUser);
-
         const profileMeta = data.user.user_metadata || {};
-
         const profileComplete = globiraIsProfileComplete(data.user);
-
         globiraProfileRequired = !profileComplete;
-
-        globiraShowMessage(
-            'globiraOtpMessage',
-            'Login successful. Welcome to GLOBIRA.',
-            'success'
-        );
+        globiraShowMessage('globiraOtpMessage', 'Login successful. Welcome to GLOBIRA.', 'success');
 
         const resumeCheckout = globiraPendingCheckout;
-
         globiraPendingCheckout = false;
-
-        globiraPendingCheckoutAfterProfile =
-            resumeCheckout && !profileComplete;
+        globiraPendingCheckoutAfterProfile = resumeCheckout && !profileComplete;
 
         setTimeout(() => {
             closeGlobiraLogin();
-
             if (!profileComplete) {
                 showGlobiraProfile(true);
                 return;
             }
-
-            if (resumeCheckout) {
-                openCheckout();
-            }
-
+            if (resumeCheckout) openCheckout();
         }, 250);
-
     } catch (error) {
         console.error('GLOBIRA AUTH ERROR:', error);
-
-        globiraShowMessage(
-            'globiraOtpMessage',
-            'Something went wrong. Please try again.',
-            'error'
-        );
-
+        globiraShowMessage('globiraOtpMessage', 'Something went wrong. Please try again.', 'error');
     } finally {
         button.disabled = false;
         button.textContent = 'VERIFY & CONTINUE →';
@@ -7322,58 +7251,31 @@ async function verifyGlobiraOTP() {
 
 async function resendGlobiraOTP() {
     if (!globiraOtpEmail) return;
-
-    globiraShowMessage(
-        'globiraOtpMessage',
-        'Sending a new code...',
-        ''
-    );
+    globiraShowMessage('globiraOtpMessage', 'Sending a new code...', '');
 
     try {
         const { error } = await globiraAuth.auth.signInWithOtp({
             email: globiraOtpEmail,
-            options: {
-                shouldCreateUser: true
-            }
+            options: { shouldCreateUser: true }
         });
 
         if (error) {
-            console.error('GLOBIRA RESEND OTP ERROR:', error);
-
-            globiraShowMessage(
-                'globiraOtpMessage',
-                error.message || 'Unable to resend code.',
-                'error'
-            );
+            globiraShowMessage('globiraOtpMessage', error.message || 'Unable to resend code.', 'error');
             return;
         }
 
         globiraOtpInput.value = '';
-
-        globiraShowMessage(
-            'globiraOtpMessage',
-            'A new verification code has been sent.',
-            'success'
-        );
-
+        globiraShowMessage('globiraOtpMessage', 'A new verification code has been sent.', 'success');
     } catch (error) {
-        console.error('GLOBIRA RESEND ERROR:', error);
-
-        globiraShowMessage(
-            'globiraOtpMessage',
-            'Unable to resend the code. Please try again.',
-            'error'
-        );
+        console.error(error);
+        globiraShowMessage('globiraOtpMessage', 'Unable to resend the code. Please try again.', 'error');
     }
 }
 
 function backToGlobiraEmail() {
     globiraOtpInput.value = '';
-
     globiraClearMessages();
-
     globiraShowEmailStep();
-
     setTimeout(() => globiraEmailInput.focus(), 100);
 }
 
