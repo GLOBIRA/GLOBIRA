@@ -2959,7 +2959,79 @@
     @media(max-width:850px){.category-page .category-result-grid,.category-result-grid{grid-template-columns:repeat(3,minmax(0,1fr)) !important}.category-result-grid .gw-product-image{height:230px !important;min-height:230px !important}}
     @media(max-width:560px){.category-page .category-result-grid,.category-result-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:10px !important}.category-result-grid .gw-product-image{height:220px !important;min-height:220px !important}}
     </style>
-    </head>
+    
+<style id="globira-final-product-popup-gallery">
+/* FINAL GLOBIRA PRODUCT POPUP — keeps the existing design, only improves sizing/gallery */
+#productModal{padding:18px!important}
+#productModal .product-popup{
+    width:min(980px,96vw)!important;
+    max-height:88vh!important;
+    overflow:hidden!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+}
+#productModal .popup-gallery{
+    min-width:0!important;
+    display:flex!important;
+    flex-direction:column!important;
+    overflow:hidden!important;
+    background:#f3f1ed!important;
+}
+#productModal .main-photo{
+    width:100%!important;
+    height:410px!important;
+    object-fit:contain!important;
+    background:#f3f1ed!important;
+    padding:10px!important;
+    box-sizing:border-box!important;
+}
+#productModal .thumbnails{
+    display:flex!important;
+    flex-wrap:nowrap!important;
+    gap:9px!important;
+    width:100%!important;
+    min-height:96px!important;
+    padding:9px 12px 12px!important;
+    box-sizing:border-box!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    background:#fff!important;
+    flex-shrink:0!important;
+}
+#productModal .thumbnails img{
+    width:68px!important;
+    height:78px!important;
+    min-width:68px!important;
+    object-fit:cover!important;
+    cursor:pointer!important;
+    border:1px solid #ddd!important;
+    border-radius:3px!important;
+    background:#f3f1ed!important;
+    opacity:.72!important;
+}
+#productModal .thumbnails img:hover,
+#productModal .thumbnails img.active{
+    opacity:1!important;
+    border-color:#111!important;
+}
+#productModal .popup-info{
+    min-width:0!important;
+    max-height:88vh!important;
+    overflow-y:auto!important;
+    box-sizing:border-box!important;
+}
+@media(max-width:800px){
+    #productModal .product-popup{
+        width:min(96vw,620px)!important;
+        max-height:92vh!important;
+        grid-template-columns:1fr!important;
+        overflow-y:auto!important;
+    }
+    #productModal .main-photo{height:320px!important}
+    #productModal .popup-info{max-height:none!important}
+}
+</style>
+
+</head>
 
     <body>
 
@@ -9006,7 +9078,621 @@
     }
     </style>
 
-    </body>
+    
+<script id="globira-final-color-gallery-cart">
+(function(){
+    let finalSelectedColor = null;
+    let finalSelectedVariant = null;
+    let finalCJVariants = [];
+    let finalProduct = null;
+
+    function text(v){
+        return String(v == null ? '' : v).trim();
+    }
+
+    function escapeAttr(v){
+        return text(v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function recursiveImages(value,out,seen){
+        if(value == null) return;
+
+        if(typeof value === 'string'){
+            const s=value.trim();
+            if(!s) return;
+
+            /* Catch JSON arrays/objects returned as strings. */
+            if((s[0]==='[' && s[s.length-1]===']') || (s[0]==='{' && s[s.length-1]==='}')){
+                try{
+                    recursiveImages(JSON.parse(s),out,seen);
+                    return;
+                }catch(e){}
+            }
+
+            const matches=s.match(/https?:\/\/[^\s"'<>]+/gi) || [];
+            matches.forEach(u=>out.push(u.replace(/[),.;]+$/,'')));
+            return;
+        }
+
+        if(Array.isArray(value)){
+            value.forEach(v=>recursiveImages(v,out,seen));
+            return;
+        }
+
+        if(typeof value==='object'){
+            if(seen.has(value)) return;
+            seen.add(value);
+
+            Object.keys(value).forEach(k=>{
+                const v=value[k];
+                const key=k.toLowerCase();
+
+                if(
+                    key.includes('image') ||
+                    key.includes('img') ||
+                    key.includes('pic') ||
+                    key.includes('photo') ||
+                    key.includes('picture') ||
+                    key.includes('gallery') ||
+                    key.includes('thumbnail') ||
+                    key==='url' ||
+                    key==='src'
+                ){
+                    recursiveImages(v,out,seen);
+                }
+            });
+        }
+    }
+
+    function allImages(product){
+        const out=[];
+        const seen=new Set();
+
+        if(typeof normalizeProductImages==='function'){
+            try{ recursiveImages(normalizeProductImages(product)||[],out,seen); }catch(e){}
+        }
+
+        recursiveImages(product,out,seen);
+
+        return [...new Set(out.filter(u=>/^https?:\/\//i.test(u)))];
+    }
+
+    function cjId(product){
+        for(const x of [
+            product && product.cjProductId,
+            product && product.pid,
+            product && product.productId,
+            product && product.id
+        ]){
+            let v=text(x).replace(/^cj-/i,'');
+            if(/^\d+$/.test(v)) return v;
+        }
+        return '';
+    }
+
+    async function getCJDetail(id){
+        const urls=[
+            '/api/cj-product/'+encodeURIComponent(id),
+            '/api/cj-product?id='+encodeURIComponent(id),
+            '/api/cj-product?pid='+encodeURIComponent(id),
+            '/api/cj-product?productId='+encodeURIComponent(id)
+        ];
+
+        for(const url of urls){
+            try{
+                const r=await fetch(url,{cache:'no-store'});
+                if(!r.ok) continue;
+                const d=await r.json();
+                if(d && d.product) return d.product;
+                if(d && d.data && d.data.product) return d.data.product;
+                if(d && d.data && typeof d.data==='object') return d.data;
+            }catch(e){}
+        }
+        return null;
+    }
+
+    function variantObjects(product){
+        let raw=[];
+        if(typeof normalizeProductVariants==='function'){
+            try{ raw=normalizeProductVariants(product)||[]; }catch(e){}
+        }
+        if(!raw.length){
+            ['variants','variantList','variantOptions','skus','skuList','productVariants'].forEach(k=>{
+                const v=product && product[k];
+                if(Array.isArray(v)) raw.push(...v);
+            });
+        }
+        return raw;
+    }
+
+    function variantText(v){
+        if(typeof v==='string') return v;
+        if(!v) return '';
+        return [
+            v.variantKey,v.variantNameEn,v.variantName,v.variantProperty,
+            v.name,v.properties,v.property,v.sku,v.skuCode
+        ].filter(Boolean).map(text).join(' | ');
+    }
+
+    function variantColor(v){
+        if(!v) return '';
+
+        if(typeof v==='object'){
+            for(const x of [
+                v.color,v.colour,v.colorName,v.colourName,
+                v.colorNameEn,v.colourNameEn,v.optionColor
+            ]){
+                const s=text(x);
+                if(s && s.toLowerCase()!=='standard') return s;
+            }
+        }
+
+        const t=variantText(v);
+        const m=t.match(/(?:^|[|;,])\s*(?:color|colour)\s*[:=\-]\s*([^|;,\/]+)/i);
+        if(m) return text(m[1]);
+
+        const colors=[
+            'black','white','red','blue','green','yellow','orange','pink','purple',
+            'violet','brown','beige','cream','grey','gray','gold','silver','navy',
+            'maroon','burgundy','wine','khaki','olive','teal','cyan','turquoise',
+            'coral','tan','nude','transparent','clear','multicolor','multi color','multicolour'
+        ];
+        const low=t.toLowerCase();
+        const found=colors.find(c=>new RegExp('(^|[^a-z])'+c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'([^a-z]|$)','i').test(low));
+        return found ? found.replace(/\b\w/g,m=>m.toUpperCase()) : '';
+    }
+
+    function variantSize(v){
+        if(!v || typeof v==='string') return '';
+        for(const x of [v.size,v.sizeName,v.sizeNameEn,v.optionSize,v.propertySize]){
+            const s=text(x);
+            if(s) return s;
+        }
+        const t=variantText(v);
+        const m=t.match(/(?:^|[|;,])\s*size\s*[:=\-]\s*([^|;,\/]+)/i);
+        return m ? text(m[1]) : '';
+    }
+
+    function variantSKU(v){
+        if(!v || typeof v==='string') return '';
+        return text(v.variantSku || v.sku || v.skuCode || v.variantId || v.id || v.vid || '');
+    }
+
+    function variantImage(v){
+        if(!v || typeof v!=='object') return '';
+        for(const x of [
+            v.image,v.imageUrl,v.picUrl,v.imgUrl,v.variantImage,
+            v.skuImage,v.skuImageUrl,v.productImage,v.productImageUrl
+        ]){
+            const s=text(x);
+            if(/^https?:\/\//i.test(s)) return s;
+        }
+        return '';
+    }
+
+    function uniqueColors(variants){
+        const result=[],seen=new Set();
+        variants.forEach(v=>{
+            const c=variantColor(v);
+            if(!c) return;
+            const k=c.toLowerCase();
+            if(seen.has(k)) return;
+            seen.add(k);
+            result.push(c);
+        });
+        return result;
+    }
+
+    function colorDot(c){
+        const map={
+            black:'#111',white:'#fff',red:'#b3261e',blue:'#2455a4',green:'#4d7352',
+            yellow:'#dfbf2e',orange:'#d87928',pink:'#e4a0b6',purple:'#79519b',
+            brown:'#795548',beige:'#d8c3a5',cream:'#eee2c6',grey:'#999',
+            gray:'#999',gold:'#c9a227',silver:'#c6c6c6',navy:'#1d2d4f',
+            maroon:'#6b1f2b',burgundy:'#6d2638',wine:'#722f37',khaki:'#b6a16b',
+            olive:'#78864b',teal:'#2f8585',turquoise:'#40b8ad',coral:'#e9897d',
+            tan:'#c49a6c',nude:'#dfc0aa'
+        };
+        return map[c.toLowerCase()] || '#ddd';
+    }
+
+    function renderGallery(images,name){
+        const main=document.getElementById('mainProductImage');
+        const box=document.getElementById('productThumbnails');
+        if(!main || !box || !images.length) return;
+
+        main.src=images[0];
+        main.alt=name || 'GLOBIRA Product';
+
+        box.innerHTML=images.map((u,i)=>{
+            const safe=u.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+            return `<img src="${escapeAttr(u)}"
+                class="${i===0?'active':''}"
+                alt="${escapeAttr(name||'GLOBIRA Product')} ${i+1}"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                onclick="globiraFinalChangeImage('${safe}',this)">`;
+        }).join('');
+    }
+
+    window.globiraFinalChangeImage=function(url,thumb){
+        const main=document.getElementById('mainProductImage');
+        if(main) main.src=url;
+        document.querySelectorAll('#productModal .thumbnails img').forEach(x=>x.classList.remove('active'));
+        if(thumb) thumb.classList.add('active');
+    };
+
+    /* Make the existing changeMainImage work with our active-thumbnail state too. */
+    const oldChange=window.changeMainImage;
+    window.changeMainImage=function(url){
+        if(typeof oldChange==='function') oldChange(url);
+        else{
+            const main=document.getElementById('mainProductImage');
+            if(main) main.src=url;
+        }
+    };
+
+    function renderColors(product){
+        const title=document.querySelector('#productModal .size-title');
+        if(!title) return;
+
+        let section=document.getElementById('globiraFinalColorSection');
+        const variants=variantObjects(product);
+        finalCJVariants=variants;
+
+        const colors=uniqueColors(variants);
+
+        if(!colors.length){
+            if(section) section.remove();
+            finalSelectedColor=null;
+            finalSelectedVariant=null;
+            return;
+        }
+
+        if(!section){
+            section=document.createElement('div');
+            section.id='globiraFinalColorSection';
+            section.innerHTML=`
+                <div class="color-title">SELECT COLOR</div>
+                <div class="color-options" id="globiraFinalColorOptions"></div>
+                <div class="selection-note" id="globiraFinalColorNote">Please select a color to continue.</div>
+            `;
+            title.parentNode.insertBefore(section,title);
+        }
+
+        const options=document.getElementById('globiraFinalColorOptions');
+        options.innerHTML=colors.map(c=>{
+            const safe=c.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+            return `<button type="button" class="color-option"
+                data-color="${escapeAttr(c)}"
+                onclick="globiraFinalSelectColor('${safe}')">
+                <span class="color-dot" style="background:${colorDot(c)}"></span>${escapeAttr(c)}
+            </button>`;
+        }).join('');
+    }
+
+    function resolveVariant(){
+        if(!finalSelectedColor) return null;
+
+        const selectedSize=text(window.selectedSize||'');
+        const sizeMatch=selectedSize.match(/Size:\s*([^/]+)/i);
+        const size=sizeMatch ? text(sizeMatch[1]) : selectedSize;
+
+        let candidates=finalCJVariants.filter(v=>
+            variantColor(v).toLowerCase()===finalSelectedColor.toLowerCase()
+        );
+
+        if(size && size!=='Standard' && size!=='One Size'){
+            const exact=candidates.find(v=>variantSize(v).toLowerCase()===size.toLowerCase());
+            if(exact) return exact;
+        }
+
+        return candidates[0] || null;
+    }
+
+    window.globiraFinalSelectColor=function(color){
+        finalSelectedColor=color;
+        finalSelectedVariant=resolveVariant();
+
+        document.querySelectorAll('#globiraFinalColorOptions .color-option').forEach(b=>{
+            b.classList.toggle('selected',String(b.dataset.color||'').toLowerCase()===color.toLowerCase());
+        });
+
+        const note=document.getElementById('globiraFinalColorNote');
+        if(note) note.textContent='Selected color: '+color;
+
+        /* Show the supplier's image for the selected color when CJ provides one. */
+        const matching=finalCJVariants.filter(v=>variantColor(v).toLowerCase()===color.toLowerCase());
+        const img=matching.map(variantImage).find(Boolean);
+        if(img) window.globiraFinalChangeImage(img);
+
+        /* If variants contain sizes, show only sizes available for this color. */
+        const sizes=document.querySelector('#productModal .sizes');
+        if(sizes && matching.length){
+            const available=[...new Set(matching.map(variantSize).filter(Boolean))];
+
+            if(available.length){
+                const old=text(window.selectedSize||'').replace(/^.*Size:\s*/i,'');
+                sizes.innerHTML=available.map(s=>`
+                    <button class="size" data-size="${escapeAttr(s)}"
+                        onclick="selectSize(this)">${escapeAttr(s)}</button>
+                `).join('');
+
+                window.selectedSize='';
+                const wanted=available.find(s=>s.toLowerCase()===old.toLowerCase());
+                if(wanted){
+                    const btn=[...sizes.querySelectorAll('.size')].find(b=>b.dataset.size===wanted);
+                    if(btn) selectSize(btn);
+                }
+            }
+        }
+
+        finalSelectedVariant=resolveVariant();
+    };
+
+    function finalVariantValue(){
+        const color=finalSelectedColor;
+        const size=text(window.selectedSize||'');
+
+        if(color && size && size!=='Standard' && size!=='One Size'){
+            return 'Color: '+color+' / Size: '+size;
+        }
+        if(color) return 'Color: '+color;
+        return size || 'Standard';
+    }
+
+    function productHasColors(){
+        return finalCJVariants.some(v=>!!variantColor(v));
+    }
+
+    function selectedCartVariant(){
+        const v=resolveVariant();
+        return v || finalSelectedVariant || null;
+    }
+
+    function addSelectedToCart(shouldOpenCart){
+        if(!finalProduct) return;
+
+        if(productHasColors() && !finalSelectedColor){
+            alert('Please select a color first.');
+            return;
+        }
+
+        const value=finalVariantValue();
+        const variant=selectedCartVariant();
+
+        /* Save the exact supplier variant identity, not just the visible color name. */
+        const originalAdd=window.addToCart;
+        if(typeof originalAdd==='function'){
+            originalAdd(
+                finalProduct.id,
+                value,
+                productQuantity,
+                shouldOpenCart,
+                variant
+            );
+        }
+    }
+
+    /* Replace cart insertion so selected color/variant stays attached to the item. */
+    const oldAddToCart=window.addToCart;
+    if(typeof oldAddToCart==='function'){
+        window.addToCart=function(id,size,quantity=1,shouldOpenCart=true,variant=null){
+            const product=typeof findProduct==='function'?findProduct(id):null;
+            if(!product) return;
+
+            const chosen=variant || (
+                finalProduct && finalProduct.id===id ? selectedCartVariant() : null
+            );
+
+            const color=chosen ? variantColor(chosen) : (
+                typeof size==='string' && /Color:\s*/i.test(size)
+                    ? size.match(/Color:\s*([^/]+)/i)?.[1]?.trim() || ''
+                    : ''
+            );
+
+            const sku=chosen ? variantSKU(chosen) : '';
+            const variantKey=chosen ? variantText(chosen) : '';
+
+            const identity=sku
+                ? 'sku:'+sku
+                : 'variant:'+(variantKey||size);
+
+            const existing=cart.find(item=>
+                item.id===id &&
+                item.variantIdentity===identity
+            );
+
+            if(existing){
+                existing.quantity+=quantity;
+            }else{
+                cart.push({
+                    id:id,
+                    size:size || 'Standard',
+                    color:color || '',
+                    variantSku:sku,
+                    variantKey:variantKey,
+                    variantIdentity:identity,
+                    variantImage:chosen ? variantImage(chosen) : '',
+                    quantity:quantity
+                });
+            }
+
+            saveCart();
+            showToast(product.name+' added to your cart');
+            if(shouldOpenCart) openCart();
+        };
+    }
+
+    /* Keep the exact selected variant visible in the cart and order flow. */
+    const oldRenderCart=window.renderCart;
+    if(typeof oldRenderCart==='function'){
+        window.renderCart=function(){
+            oldRenderCart();
+
+            document.querySelectorAll('#cartItems .cart-item').forEach((el,index)=>{
+                const item=cart[index];
+                if(!item) return;
+
+                const label=el.querySelector('.cart-size');
+                if(label && item.color){
+                    label.textContent='COLOR: '+item.color+
+                        (item.size && !/^Color:/i.test(item.size) ? ' • '+item.size.replace(/^.*Size:\s*/i,'') : '');
+                }
+
+                if(item.variantImage){
+                    const img=el.querySelector('img');
+                    if(img) img.src=item.variantImage;
+                }
+            });
+        };
+    }
+
+    /* Add exact color/SKU information to the order saved at payment/place-order stage. */
+    const oldPlace=window.placeOrder;
+    if(typeof oldPlace==='function'){
+        /* Do not replace the checkout flow; the cart itself now carries the exact variant. */
+    }
+
+    function wireButtons(){
+        const add=document.getElementById('popupAddButton');
+        const buy=document.getElementById('popupBuyButton');
+        if(!add || !buy || !finalProduct) return;
+
+        add.onclick=function(){
+            if(productHasColors() && !finalSelectedColor){
+                alert('Please select a color first.');
+                return;
+            }
+
+            const hasSize=document.querySelectorAll('#productModal .size').length>0;
+            if(productHasColors() && hasSize &&
+               !text(window.selectedSize) &&
+               !finalCJVariants.some(v=>!variantColor(v))){
+                alert('Please select a size first.');
+                return;
+            }
+
+            addSelectedToCart(true);
+            closeProduct();
+        };
+
+        buy.onclick=function(){
+            if(productHasColors() && !finalSelectedColor){
+                alert('Please select a color first.');
+                return;
+            }
+
+            const hasSize=document.querySelectorAll('#productModal .size').length>0;
+            if(productHasColors() && hasSize &&
+               !text(window.selectedSize) &&
+               finalCJVariants.some(v=>variantSize(v))){
+                alert('Please select a size first.');
+                return;
+            }
+
+            addSelectedToCart(false);
+            closeProduct();
+            openCheckout();
+        };
+    }
+
+    const previousOpen=window.openProduct;
+    if(typeof previousOpen!=='function') return;
+
+    window.openProduct=function(id,preselectedSize=null){
+        finalSelectedColor=null;
+        finalSelectedVariant=null;
+        finalCJVariants=[];
+        finalProduct=typeof findProduct==='function'?findProduct(id):null;
+
+        previousOpen(id,preselectedSize);
+
+        if(!finalProduct) return;
+
+        /* Immediately show every image already in the live product. */
+        let images=allImages(finalProduct);
+        if(images.length) renderGallery(images,finalProduct.name);
+
+        /* Immediately show color choices already in the live product. */
+        renderColors(finalProduct);
+
+        /* Then request the complete CJ supplier record. */
+        if(String(finalProduct.source||'').toLowerCase()==='cjdropshipping'){
+            const cid=cjId(finalProduct);
+
+            if(cid){
+                getCJDetail(cid).then(detail=>{
+                    if(!detail) return;
+
+                    const merged=Object.assign({},finalProduct);
+
+                    /* Keep all CJ arrays so no supplier image/variant field is lost. */
+                    Object.keys(detail).forEach(k=>{
+                        if(detail[k]!==undefined && detail[k]!==null) merged[k]=detail[k];
+                    });
+
+                    finalProduct=merged;
+
+                    const moreImages=allImages(merged);
+                    if(moreImages.length) renderGallery(moreImages,merged.name||finalProduct.name);
+
+                    renderColors(merged);
+                    wireButtons();
+                });
+            }
+        }
+
+        wireButtons();
+    };
+
+    /* Make cart survive page refresh with the new fields. */
+    try{
+        if(typeof cart!=='undefined' && Array.isArray(cart)){
+            cart.forEach(item=>{
+                if(!item.variantIdentity){
+                    item.variantIdentity='variant:'+(item.variantKey||item.size||'Standard');
+                }
+            });
+        }
+    }catch(e){}
+
+    /* Patch the order creation just before it serializes the cart. */
+    const orderScript=document.currentScript;
+})();
+</script>
+
+
+<script id="globira-final-order-variant-patch">
+(function(){
+    function enrichLastOrder(){
+        try{
+            const raw=localStorage.getItem('globiraLastOrder');
+            if(!raw || typeof cart==='undefined') return;
+            const order=JSON.parse(raw);
+            if(!order || !Array.isArray(order.items)) return;
+
+            order.items=order.items.map((saved,i)=>{
+                const c=cart[i];
+                if(!c) return saved;
+                return Object.assign(saved,{
+                    color:c.color||'',
+                    variantSku:c.variantSku||'',
+                    variantKey:c.variantKey||'',
+                    variantImage:c.variantImage||''
+                });
+            });
+
+            localStorage.setItem('globiraLastOrder',JSON.stringify(order));
+        }catch(e){}
+    }
+
+    /* Checkout/place-order code already writes globiraLastOrder. */
+    setInterval(enrichLastOrder,1000);
+})();
+</script>
+
+</body>
     </html>
 
     <style id="globira-v3-final-layout">
