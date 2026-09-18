@@ -3031,6 +3031,33 @@
 }
 </style>
 
+
+<style id="globira-final-color-variant-style">
+#globiraFinalColorSection{margin:0 0 22px}
+#globiraFinalColorSection .color-title{
+    letter-spacing:2px;font-size:13px;margin-bottom:12px
+}
+#globiraFinalColorSection .color-options{
+    display:flex;flex-wrap:wrap;gap:9px
+}
+#globiraFinalColorSection .color-option{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:9px 13px;background:#fff;border:1px solid #d7d2ca;
+    cursor:pointer;font:inherit
+}
+#globiraFinalColorSection .color-option.selected{
+    border-color:#111;box-shadow:inset 0 0 0 1px #111
+}
+#globiraFinalColorSection .color-dot{
+    width:14px;height:14px;border-radius:50%;background:#ddd;
+    border:1px solid rgba(0,0,0,.2);display:inline-block
+}
+#globiraFinalColorSection .selection-note{
+    margin-top:8px;font-size:12px;letter-spacing:.4px;color:#777
+}
+#cartItems .cart-size{letter-spacing:.8px}
+</style>
+
 </head>
 
     <body>
@@ -9085,151 +9112,39 @@
     let finalSelectedVariant = null;
     let finalCJVariants = [];
     let finalProduct = null;
+    let finalOriginalOpenProduct = null;
+    let finalOriginalAddToCart = null;
 
-    function text(v){
-        return String(v == null ? '' : v).trim();
-    }
+    function txt(v){ return String(v == null ? '' : v).trim(); }
 
-    function escapeAttr(v){
-        return text(v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
-
-    function recursiveImages(value,out,seen){
-        if(value == null) return;
-
-        if(typeof value === 'string'){
-            const s=value.trim();
-            if(!s) return;
-
-            /* Catch JSON arrays/objects returned as strings. */
-            if((s[0]==='[' && s[s.length-1]===']') || (s[0]==='{' && s[s.length-1]==='}')){
-                try{
-                    recursiveImages(JSON.parse(s),out,seen);
-                    return;
-                }catch(e){}
-            }
-
-            const matches=s.match(/https?:\/\/[^\s"'<>]+/gi) || [];
-            matches.forEach(u=>out.push(u.replace(/[),.;]+$/,'')));
-            return;
-        }
-
-        if(Array.isArray(value)){
-            value.forEach(v=>recursiveImages(v,out,seen));
-            return;
-        }
-
-        if(typeof value==='object'){
-            if(seen.has(value)) return;
-            seen.add(value);
-
-            Object.keys(value).forEach(k=>{
-                const v=value[k];
-                const key=k.toLowerCase();
-
-                if(
-                    key.includes('image') ||
-                    key.includes('img') ||
-                    key.includes('pic') ||
-                    key.includes('photo') ||
-                    key.includes('picture') ||
-                    key.includes('gallery') ||
-                    key.includes('thumbnail') ||
-                    key==='url' ||
-                    key==='src'
-                ){
-                    recursiveImages(v,out,seen);
-                }
-            });
-        }
-    }
-
-    function allImages(product){
-        const out=[];
-        const seen=new Set();
-
-        if(typeof normalizeProductImages==='function'){
-            try{ recursiveImages(normalizeProductImages(product)||[],out,seen); }catch(e){}
-        }
-
-        recursiveImages(product,out,seen);
-
-        return [...new Set(out.filter(u=>/^https?:\/\//i.test(u)))];
-    }
-
-    function cjId(product){
-        for(const x of [
-            product && product.cjProductId,
-            product && product.pid,
-            product && product.productId,
-            product && product.id
-        ]){
-            let v=text(x).replace(/^cj-/i,'');
-            if(/^\d+$/.test(v)) return v;
-        }
-        return '';
-    }
-
-    async function getCJDetail(id){
-        const urls=[
-            '/api/cj-product/'+encodeURIComponent(id),
-            '/api/cj-product?id='+encodeURIComponent(id),
-            '/api/cj-product?pid='+encodeURIComponent(id),
-            '/api/cj-product?productId='+encodeURIComponent(id)
-        ];
-
-        for(const url of urls){
-            try{
-                const r=await fetch(url,{cache:'no-store'});
-                if(!r.ok) continue;
-                const d=await r.json();
-                if(d && d.product) return d.product;
-                if(d && d.data && d.data.product) return d.data.product;
-                if(d && d.data && typeof d.data==='object') return d.data;
-            }catch(e){}
-        }
-        return null;
-    }
-
-    function variantObjects(product){
-        let raw=[];
-        if(typeof normalizeProductVariants==='function'){
-            try{ raw=normalizeProductVariants(product)||[]; }catch(e){}
-        }
-        if(!raw.length){
-            ['variants','variantList','variantOptions','skus','skuList','productVariants'].forEach(k=>{
-                const v=product && product[k];
-                if(Array.isArray(v)) raw.push(...v);
-            });
-        }
-        return raw;
+    function esc(v){
+        return txt(v).replace(/&/g,'&amp;').replace(/"/g,'&quot;')
+            .replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
     function variantText(v){
-        if(typeof v==='string') return v;
+        if(typeof v === 'string') return v;
         if(!v) return '';
         return [
             v.variantKey,v.variantNameEn,v.variantName,v.variantProperty,
             v.name,v.properties,v.property,v.sku,v.skuCode
-        ].filter(Boolean).map(text).join(' | ');
+        ].filter(Boolean).map(txt).join(' | ');
     }
 
     function variantColor(v){
         if(!v) return '';
-
-        if(typeof v==='object'){
+        if(typeof v === 'object'){
             for(const x of [
                 v.color,v.colour,v.colorName,v.colourName,
                 v.colorNameEn,v.colourNameEn,v.optionColor
             ]){
-                const s=text(x);
+                const s=txt(x);
                 if(s && s.toLowerCase()!=='standard') return s;
             }
         }
-
         const t=variantText(v);
         const m=t.match(/(?:^|[|;,])\s*(?:color|colour)\s*[:=\-]\s*([^|;,\/]+)/i);
-        if(m) return text(m[1]);
+        if(m) return txt(m[1]);
 
         const colors=[
             'black','white','red','blue','green','yellow','orange','pink','purple',
@@ -9238,24 +9153,26 @@
             'coral','tan','nude','transparent','clear','multicolor','multi color','multicolour'
         ];
         const low=t.toLowerCase();
-        const found=colors.find(c=>new RegExp('(^|[^a-z])'+c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'([^a-z]|$)','i').test(low));
-        return found ? found.replace(/\b\w/g,m=>m.toUpperCase()) : '';
+        for(const c of colors){
+            const re=new RegExp('(^|[^a-z])'+c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'([^a-z]|$)','i');
+            if(re.test(low)) return c.replace(/\b\w/g,m=>m.toUpperCase());
+        }
+        return '';
     }
 
     function variantSize(v){
         if(!v || typeof v==='string') return '';
         for(const x of [v.size,v.sizeName,v.sizeNameEn,v.optionSize,v.propertySize]){
-            const s=text(x);
-            if(s) return s;
+            const s=txt(x); if(s) return s;
         }
         const t=variantText(v);
         const m=t.match(/(?:^|[|;,])\s*size\s*[:=\-]\s*([^|;,\/]+)/i);
-        return m ? text(m[1]) : '';
+        return m ? txt(m[1]) : '';
     }
 
     function variantSKU(v){
         if(!v || typeof v==='string') return '';
-        return text(v.variantSku || v.sku || v.skuCode || v.variantId || v.id || v.vid || '');
+        return txt(v.variantSku || v.sku || v.skuCode || v.variantId || v.id || v.vid || '');
     }
 
     function variantImage(v){
@@ -9264,83 +9181,70 @@
             v.image,v.imageUrl,v.picUrl,v.imgUrl,v.variantImage,
             v.skuImage,v.skuImageUrl,v.productImage,v.productImageUrl
         ]){
-            const s=text(x);
+            const s=txt(x);
             if(/^https?:\/\//i.test(s)) return s;
         }
         return '';
     }
 
-    function uniqueColors(variants){
-        const result=[],seen=new Set();
-        variants.forEach(v=>{
+    function getVariants(product){
+        let arr=[];
+        if(typeof normalizeProductVariants==='function'){
+            try{ arr=normalizeProductVariants(product)||[]; }catch(e){}
+        }
+        if(!arr.length){
+            for(const k of ['variants','variantList','variantOptions','skus','skuList','productVariants']){
+                if(Array.isArray(product && product[k])) arr.push(...product[k]);
+            }
+        }
+        return arr;
+    }
+
+    function colorsOf(arr){
+        const out=[],seen=new Set();
+        arr.forEach(v=>{
             const c=variantColor(v);
             if(!c) return;
             const k=c.toLowerCase();
-            if(seen.has(k)) return;
-            seen.add(k);
-            result.push(c);
+            if(!seen.has(k)){seen.add(k);out.push(c);}
         });
-        return result;
+        return out;
     }
 
-    function colorDot(c){
-        const map={
-            black:'#111',white:'#fff',red:'#b3261e',blue:'#2455a4',green:'#4d7352',
-            yellow:'#dfbf2e',orange:'#d87928',pink:'#e4a0b6',purple:'#79519b',
-            brown:'#795548',beige:'#d8c3a5',cream:'#eee2c6',grey:'#999',
-            gray:'#999',gold:'#c9a227',silver:'#c6c6c6',navy:'#1d2d4f',
-            maroon:'#6b1f2b',burgundy:'#6d2638',wine:'#722f37',khaki:'#b6a16b',
-            olive:'#78864b',teal:'#2f8585',turquoise:'#40b8ad',coral:'#e9897d',
-            tan:'#c49a6c',nude:'#dfc0aa'
-        };
-        return map[c.toLowerCase()] || '#ddd';
+    function sizesForColor(color){
+        if(!color) return [];
+        const out=[],seen=new Set();
+        finalCJVariants.forEach(v=>{
+            if(variantColor(v).toLowerCase() !== color.toLowerCase()) return;
+            const s=variantSize(v);
+            if(s && !seen.has(s.toLowerCase())){seen.add(s.toLowerCase());out.push(s);}
+        });
+        return out;
     }
 
-    function renderGallery(images,name){
-        const main=document.getElementById('mainProductImage');
-        const box=document.getElementById('productThumbnails');
-        if(!main || !box || !images.length) return;
+    function resolveExactVariant(){
+        if(!finalSelectedColor) return null;
 
-        main.src=images[0];
-        main.alt=name || 'GLOBIRA Product';
+        const wantedSize=txt(window.selectedSize||'').replace(/^.*Size:\s*/i,'').trim();
+        const matches=finalCJVariants.filter(v =>
+            variantColor(v).toLowerCase()===finalSelectedColor.toLowerCase()
+        );
 
-        box.innerHTML=images.map((u,i)=>{
-            const safe=u.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-            return `<img src="${escapeAttr(u)}"
-                class="${i===0?'active':''}"
-                alt="${escapeAttr(name||'GLOBIRA Product')} ${i+1}"
-                loading="lazy"
-                referrerpolicy="no-referrer"
-                onclick="globiraFinalChangeImage('${safe}',this)">`;
-        }).join('');
-    }
-
-    window.globiraFinalChangeImage=function(url,thumb){
-        const main=document.getElementById('mainProductImage');
-        if(main) main.src=url;
-        document.querySelectorAll('#productModal .thumbnails img').forEach(x=>x.classList.remove('active'));
-        if(thumb) thumb.classList.add('active');
-    };
-
-    /* Make the existing changeMainImage work with our active-thumbnail state too. */
-    const oldChange=window.changeMainImage;
-    window.changeMainImage=function(url){
-        if(typeof oldChange==='function') oldChange(url);
-        else{
-            const main=document.getElementById('mainProductImage');
-            if(main) main.src=url;
+        if(wantedSize){
+            const exact=matches.find(v =>
+                variantSize(v).toLowerCase()===wantedSize.toLowerCase()
+            );
+            if(exact) return exact;
         }
-    };
+        return matches[0] || null;
+    }
 
-    function renderColors(product){
+    function renderColors(){
         const title=document.querySelector('#productModal .size-title');
         if(!title) return;
 
         let section=document.getElementById('globiraFinalColorSection');
-        const variants=variantObjects(product);
-        finalCJVariants=variants;
-
-        const colors=uniqueColors(variants);
+        const colors=colorsOf(finalCJVariants);
 
         if(!colors.length){
             if(section) section.remove();
@@ -9361,334 +9265,725 @@
         }
 
         const options=document.getElementById('globiraFinalColorOptions');
-        options.innerHTML=colors.map(c=>{
-            const safe=c.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-            return `<button type="button" class="color-option"
-                data-color="${escapeAttr(c)}"
-                onclick="globiraFinalSelectColor('${safe}')">
-                <span class="color-dot" style="background:${colorDot(c)}"></span>${escapeAttr(c)}
-            </button>`;
-        }).join('');
+        options.innerHTML=colors.map(c=>`
+            <button type="button" class="color-option"
+                data-color="${esc(c)}"
+                onclick="globiraFinalSelectColor(${JSON.stringify(c)})">
+                <span class="color-dot"></span>${esc(c)}
+            </button>
+        `).join('');
+
+        if(finalSelectedColor){
+            const btn=[...options.querySelectorAll('.color-option')]
+                .find(b=>txt(b.dataset.color).toLowerCase()===finalSelectedColor.toLowerCase());
+            if(btn) btn.classList.add('selected');
+            const note=document.getElementById('globiraFinalColorNote');
+            if(note) note.textContent='Selected color: '+finalSelectedColor;
+        }
     }
 
-    function resolveVariant(){
-        if(!finalSelectedColor) return null;
+    function refreshSizesForSelectedColor(){
+        const sizes=sizesForColor(finalSelectedColor);
+        const box=document.querySelector('#productModal .sizes');
+        if(!box || !sizes.length) return;
 
-        const selectedSize=text(window.selectedSize||'');
-        const sizeMatch=selectedSize.match(/Size:\s*([^/]+)/i);
-        const size=sizeMatch ? text(sizeMatch[1]) : selectedSize;
+        const current=txt(window.selectedSize||'').replace(/^.*Size:\s*/i,'').trim();
+        box.innerHTML=sizes.map(s=>`
+            <button class="size" data-size="${esc(s)}"
+                onclick="selectSize(this)">${esc(s)}</button>
+        `).join('');
 
-        let candidates=finalCJVariants.filter(v=>
-            variantColor(v).toLowerCase()===finalSelectedColor.toLowerCase()
-        );
-
-        if(size && size!=='Standard' && size!=='One Size'){
-            const exact=candidates.find(v=>variantSize(v).toLowerCase()===size.toLowerCase());
-            if(exact) return exact;
+        window.selectedSize='';
+        if(current){
+            const b=[...box.querySelectorAll('.size')]
+                .find(x=>txt(x.dataset.size).toLowerCase()===current.toLowerCase());
+            if(b && typeof selectSize==='function') selectSize(b);
         }
-
-        return candidates[0] || null;
     }
 
     window.globiraFinalSelectColor=function(color){
-        finalSelectedColor=color;
-        finalSelectedVariant=resolveVariant();
+        finalSelectedColor=txt(color);
+        finalSelectedVariant=resolveExactVariant();
 
         document.querySelectorAll('#globiraFinalColorOptions .color-option').forEach(b=>{
-            b.classList.toggle('selected',String(b.dataset.color||'').toLowerCase()===color.toLowerCase());
+            b.classList.toggle('selected',
+                txt(b.dataset.color).toLowerCase()===finalSelectedColor.toLowerCase());
         });
 
         const note=document.getElementById('globiraFinalColorNote');
-        if(note) note.textContent='Selected color: '+color;
+        if(note) note.textContent='Selected color: '+finalSelectedColor;
 
-        /* Show the supplier's image for the selected color when CJ provides one. */
-        const matching=finalCJVariants.filter(v=>variantColor(v).toLowerCase()===color.toLowerCase());
-        const img=matching.map(variantImage).find(Boolean);
-        if(img) window.globiraFinalChangeImage(img);
+        refreshSizesForSelectedColor();
 
-        /* If variants contain sizes, show only sizes available for this color. */
-        const sizes=document.querySelector('#productModal .sizes');
-        if(sizes && matching.length){
-            const available=[...new Set(matching.map(variantSize).filter(Boolean))];
+        finalSelectedVariant=resolveExactVariant();
 
-            if(available.length){
-                const old=text(window.selectedSize||'').replace(/^.*Size:\s*/i,'');
-                sizes.innerHTML=available.map(s=>`
-                    <button class="size" data-size="${escapeAttr(s)}"
-                        onclick="selectSize(this)">${escapeAttr(s)}</button>
-                `).join('');
+        /* If CJ supplied a color-specific image, show it immediately. */
+        const img=finalCJVariants
+            .filter(v=>variantColor(v).toLowerCase()===finalSelectedColor.toLowerCase())
+            .map(variantImage).find(Boolean);
 
-                window.selectedSize='';
-                const wanted=available.find(s=>s.toLowerCase()===old.toLowerCase());
-                if(wanted){
-                    const btn=[...sizes.querySelectorAll('.size')].find(b=>b.dataset.size===wanted);
-                    if(btn) selectSize(btn);
-                }
-            }
-        }
-
-        finalSelectedVariant=resolveVariant();
+        if(img && typeof globiraFinalChangeImage==='function')
+            globiraFinalChangeImage(img);
     };
 
-    function finalVariantValue(){
-        const color=finalSelectedColor;
-        const size=text(window.selectedSize||'');
+    window.globiraFinalChangeImage=function(url,thumb){
+        const main=document.getElementById('mainProductImage');
+        if(main) main.src=url;
+        document.querySelectorAll('#productModal .thumbnails img')
+            .forEach(x=>x.classList.remove('active'));
+        if(thumb) thumb.classList.add('active');
+    };
 
-        if(color && size && size!=='Standard' && size!=='One Size'){
-            return 'Color: '+color+' / Size: '+size;
-        }
-        if(color) return 'Color: '+color;
-        return size || 'Standard';
+    function selectedVariantData(){
+        const v=resolveExactVariant() || finalSelectedVariant;
+        return {
+            color: finalSelectedColor || '',
+            size: txt(window.selectedSize||'').replace(/^.*Size:\s*/i,'').trim(),
+            sku: variantSKU(v),
+            key: variantText(v),
+            image: variantImage(v)
+        };
     }
 
-    function productHasColors(){
-        return finalCJVariants.some(v=>!!variantColor(v));
+    function productHasColor(){
+        return colorsOf(finalCJVariants).length > 0;
     }
 
-    function selectedCartVariant(){
-        const v=resolveVariant();
-        return v || finalSelectedVariant || null;
+    function selectedVariantLabel(){
+        const d=selectedVariantData();
+        const parts=[];
+        if(d.color) parts.push('Color: '+d.color);
+        if(d.size && d.size.toLowerCase()!=='standard' && d.size.toLowerCase()!=='one size')
+            parts.push('Size: '+d.size);
+        return parts.join(' / ') || 'Standard';
     }
 
-    function addSelectedToCart(shouldOpenCart){
-        if(!finalProduct) return;
-
-        if(productHasColors() && !finalSelectedColor){
+    function requireValidSelection(){
+        if(productHasColor() && !finalSelectedColor){
             alert('Please select a color first.');
-            return;
+            return false;
         }
 
-        const value=finalVariantValue();
-        const variant=selectedCartVariant();
-
-        /* Save the exact supplier variant identity, not just the visible color name. */
-        const originalAdd=window.addToCart;
-        if(typeof originalAdd==='function'){
-            originalAdd(
-                finalProduct.id,
-                value,
-                productQuantity,
-                shouldOpenCart,
-                variant
-            );
+        const sizes=sizesForColor(finalSelectedColor);
+        if(finalSelectedColor && sizes.length && !selectedVariantData().size){
+            alert('Please select a size first.');
+            return false;
         }
+
+        return true;
     }
 
-    /* Replace cart insertion so selected color/variant stays attached to the item. */
-    const oldAddToCart=window.addToCart;
-    if(typeof oldAddToCart==='function'){
-        window.addToCart=function(id,size,quantity=1,shouldOpenCart=true,variant=null){
-            const product=typeof findProduct==='function'?findProduct(id):null;
-            if(!product) return;
+    function makeIdentity(productId, data, fallback){
+        if(data.sku) return 'cjsku:'+data.sku;
+        return 'product:'+productId+'|color:'+(data.color||'')+'|size:'+(data.size||'');
+    }
 
-            const chosen=variant || (
-                finalProduct && finalProduct.id===id ? selectedCartVariant() : null
-            );
+    /*
+      One exact cart record = product + selected color + selected size + CJ SKU.
+      This prevents a Red item from silently becoming a Black/Standard item later.
+    */
+    function addExactToCart(productId, quantity, openCart){
+        if(!requireValidSelection()) return false;
 
-            const color=chosen ? variantColor(chosen) : (
-                typeof size==='string' && /Color:\s*/i.test(size)
-                    ? size.match(/Color:\s*([^/]+)/i)?.[1]?.trim() || ''
-                    : ''
-            );
+        const product=typeof findProduct==='function' ? findProduct(productId) : finalProduct;
+        if(!product) return false;
 
-            const sku=chosen ? variantSKU(chosen) : '';
-            const variantKey=chosen ? variantText(chosen) : '';
+        const d=selectedVariantData();
+        const identity=makeIdentity(productId,d,'Standard');
 
-            const identity=sku
-                ? 'sku:'+sku
-                : 'variant:'+(variantKey||size);
+        if(typeof cart==='undefined' || !Array.isArray(cart)) return false;
 
-            const existing=cart.find(item=>
-                item.id===id &&
-                item.variantIdentity===identity
-            );
+        const existing=cart.find(item=>item.variantIdentity===identity);
+        if(existing){
+            existing.quantity=(Number(existing.quantity)||0)+(Number(quantity)||1);
+            existing.color=d.color;
+            existing.size=selectedVariantLabel();
+            existing.variantSku=d.sku;
+            existing.variantKey=d.key;
+            existing.variantImage=d.image;
+        }else{
+            cart.push({
+                id:productId,
+                size:selectedVariantLabel(),
+                color:d.color,
+                variantSku:d.sku,
+                variantKey:d.key,
+                variantImage:d.image,
+                variantIdentity:identity,
+                quantity:Number(quantity)||1
+            });
+        }
 
-            if(existing){
-                existing.quantity+=quantity;
-            }else{
-                cart.push({
-                    id:id,
-                    size:size || 'Standard',
-                    color:color || '',
-                    variantSku:sku,
-                    variantKey:variantKey,
-                    variantIdentity:identity,
-                    variantImage:chosen ? variantImage(chosen) : '',
-                    quantity:quantity
-                });
+        if(typeof saveCart==='function') saveCart();
+        if(typeof showToast==='function') showToast(product.name+' added to your cart');
+        if(openCart && typeof openCart==='function') openCart();
+        return true;
+    }
+
+    function patchCartDisplay(){
+        if(typeof cart==='undefined' || !Array.isArray(cart)) return;
+
+        document.querySelectorAll('#cartItems .cart-item').forEach((el,index)=>{
+            const item=cart[index];
+            if(!item) return;
+
+            const label=el.querySelector('.cart-size');
+            if(label){
+                if(item.color){
+                    const size=txt(item.size||'').replace(/^Color:\s*[^/]+\/?\s*/i,'').trim();
+                    label.textContent='COLOR: '+item.color+
+                        (size && size.toLowerCase()!=='standard' ? ' • SIZE: '+size : '');
+                }else{
+                    label.textContent=txt(item.size||'Standard');
+                }
             }
 
-            saveCart();
-            showToast(product.name+' added to your cart');
-            if(shouldOpenCart) openCart();
-        };
+            if(item.variantImage){
+                const img=el.querySelector('img');
+                if(img) img.src=item.variantImage;
+            }
+        });
     }
 
-    /* Keep the exact selected variant visible in the cart and order flow. */
-    const oldRenderCart=window.renderCart;
-    if(typeof oldRenderCart==='function'){
-        window.renderCart=function(){
-            oldRenderCart();
+    function patchCartRendering(){
+        if(typeof window.renderCart!=='function' || window.renderCart.__globiraColorPatched) return;
 
-            document.querySelectorAll('#cartItems .cart-item').forEach((el,index)=>{
-                const item=cart[index];
-                if(!item) return;
+        const original=window.renderCart;
+        function patched(){
+            original.apply(this,arguments);
+            patchCartDisplay();
+        }
+        patched.__globiraColorPatched=true;
+        window.renderCart=patched;
+    }
 
-                const label=el.querySelector('.cart-size');
-                if(label && item.color){
-                    label.textContent='COLOR: '+item.color+
-                        (item.size && !/^Color:/i.test(item.size) ? ' • '+item.size.replace(/^.*Size:\s*/i,'') : '');
+    function patchCartOpenProduct(){
+        /* Re-open the exact variant when a cart item/product is clicked. */
+        document.addEventListener('click',function(e){
+            const card=e.target.closest('#cartItems .cart-item');
+            if(!card || typeof cart==='undefined') return;
+
+            const all=[...document.querySelectorAll('#cartItems .cart-item')];
+            const index=all.indexOf(card);
+            const item=cart[index];
+            if(!item) return;
+
+            /* Some cart implementations put the product id on the card. */
+            const id=item.id;
+            if(!id || typeof window.openProduct!=='function') return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            window.openProduct(id);
+
+            setTimeout(()=>{
+                if(item.color){
+                    window.globiraFinalSelectColor(item.color);
+
+                    const wanted=txt(item.size||'')
+                        .replace(/^Color:\s*[^/]+\/?\s*/i,'')
+                        .replace(/^Size:\s*/i,'')
+                        .trim();
+
+                    if(wanted && wanted.toLowerCase()!=='standard'){
+                        const b=[...document.querySelectorAll('#productModal .size')]
+                            .find(x=>txt(x.dataset.size).toLowerCase()===wanted.toLowerCase());
+                        if(b && typeof selectSize==='function') selectSize(b);
+                    }
                 }
-
-                if(item.variantImage){
-                    const img=el.querySelector('img');
-                    if(img) img.src=item.variantImage;
-                }
-            });
-        };
+            },120);
+        },true);
     }
 
-    /* Add exact color/SKU information to the order saved at payment/place-order stage. */
-    const oldPlace=window.placeOrder;
-    if(typeof oldPlace==='function'){
-        /* Do not replace the checkout flow; the cart itself now carries the exact variant. */
+    function saveExactSelectionToCheckoutStorage(){
+        try{
+            if(typeof cart==='undefined' || !Array.isArray(cart)) return;
+            localStorage.setItem('globiraExactCartVariants',JSON.stringify(
+                cart.map(i=>({
+                    id:i.id,
+                    color:i.color||'',
+                    size:i.size||'Standard',
+                    variantSku:i.variantSku||'',
+                    variantKey:i.variantKey||'',
+                    variantIdentity:i.variantIdentity||'',
+                    variantImage:i.variantImage||'',
+                    quantity:i.quantity||1
+                }))
+            ));
+        }catch(e){}
     }
 
-    function wireButtons(){
+    function hookSaveCart(){
+        if(typeof window.saveCart!=='function' || window.saveCart.__globiraVariantPatched) return;
+        const original=window.saveCart;
+        function patched(){
+            const result=original.apply(this,arguments);
+            saveExactSelectionToCheckoutStorage();
+            patchCartDisplay();
+            return result;
+        }
+        patched.__globiraVariantPatched=true;
+        window.saveCart=patched;
+    }
+
+    async function fetchDetail(id){
+        const urls=[
+            '/api/cj-product/'+encodeURIComponent(id),
+            '/api/cj-product?id='+encodeURIComponent(id),
+            '/api/cj-product?pid='+encodeURIComponent(id),
+            '/api/cj-product?productId='+encodeURIComponent(id)
+        ];
+
+        for(const u of urls){
+            try{
+                const r=await fetch(u,{cache:'no-store'});
+                if(!r.ok) continue;
+                const d=await r.json();
+                if(d?.product) return d.product;
+                if(d?.data?.product) return d.data.product;
+                if(d?.data && typeof d.data==='object') return d.data;
+            }catch(e){}
+        }
+        return null;
+    }
+
+    function cjId(p){
+        for(const x of [p?.cjProductId,p?.pid,p?.productId,p?.id]){
+            const v=txt(x).replace(/^cj-/i,'');
+            if(/^\d+$/.test(v)) return v;
+        }
+        return '';
+    }
+
+    function mergeDetail(detail){
+        if(!detail) return;
+        finalProduct=Object.assign({},finalProduct,detail);
+        finalCJVariants=getVariants(finalProduct);
+        renderColors();
+
+        /* Restore the color already selected in cart if applicable. */
+        if(finalSelectedColor){
+            window.globiraFinalSelectColor(finalSelectedColor);
+        }
+    }
+
+    function wirePopupButtons(){
         const add=document.getElementById('popupAddButton');
         const buy=document.getElementById('popupBuyButton');
-        if(!add || !buy || !finalProduct) return;
 
-        add.onclick=function(){
-            if(productHasColors() && !finalSelectedColor){
-                alert('Please select a color first.');
-                return;
-            }
-
-            const hasSize=document.querySelectorAll('#productModal .size').length>0;
-            if(productHasColors() && hasSize &&
-               !text(window.selectedSize) &&
-               !finalCJVariants.some(v=>!variantColor(v))){
-                alert('Please select a size first.');
-                return;
-            }
-
-            addSelectedToCart(true);
-            closeProduct();
+        if(add) add.onclick=function(){
+            if(!requireValidSelection()) return;
+            if(addExactToCart(finalProduct.id,Number(window.productQuantity)||1,true) &&
+               typeof closeProduct==='function') closeProduct();
         };
 
-        buy.onclick=function(){
-            if(productHasColors() && !finalSelectedColor){
-                alert('Please select a color first.');
-                return;
+        if(buy) buy.onclick=function(){
+            if(!requireValidSelection()) return;
+            if(addExactToCart(finalProduct.id,Number(window.productQuantity)||1,false)){
+                if(typeof closeProduct==='function') closeProduct();
+                if(typeof openCheckout==='function') openCheckout();
             }
-
-            const hasSize=document.querySelectorAll('#productModal .size').length>0;
-            if(productHasColors() && hasSize &&
-               !text(window.selectedSize) &&
-               finalCJVariants.some(v=>variantSize(v))){
-                alert('Please select a size first.');
-                return;
-            }
-
-            addSelectedToCart(false);
-            closeProduct();
-            openCheckout();
         };
     }
 
-    const previousOpen=window.openProduct;
-    if(typeof previousOpen!=='function') return;
+    function install(){
+        patchCartRendering();
+        hookSaveCart();
+        patchCartOpenProduct();
 
-    window.openProduct=function(id,preselectedSize=null){
-        finalSelectedColor=null;
-        finalSelectedVariant=null;
-        finalCJVariants=[];
-        finalProduct=typeof findProduct==='function'?findProduct(id):null;
+        if(typeof window.openProduct==='function' && !window.openProduct.__globiraFinalVariantPatched){
+            finalOriginalOpenProduct=window.openProduct;
 
-        previousOpen(id,preselectedSize);
+            window.openProduct=function(id,preselectedSize=null,preselectedColor=null){
+                /* If this product is in the cart, recover its exact saved variant. */
+                let saved=null;
+                try{
+                    if(typeof cart!=='undefined' && Array.isArray(cart)){
+                        saved=cart.find(i=>String(i.id)===String(id) &&
+                            i.variantIdentity &&
+                            i.color);
+                    }
+                }catch(e){}
 
-        if(!finalProduct) return;
+                finalSelectedColor=preselectedColor || saved?.color || null;
+                finalSelectedVariant=null;
+                finalCJVariants=[];
+                finalProduct=typeof findProduct==='function' ? findProduct(id) : null;
 
-        /* Immediately show every image already in the live product. */
-        let images=allImages(finalProduct);
-        if(images.length) renderGallery(images,finalProduct.name);
+                finalOriginalOpenProduct.apply(this,arguments);
 
-        /* Immediately show color choices already in the live product. */
-        renderColors(finalProduct);
+                if(!finalProduct) return;
 
-        /* Then request the complete CJ supplier record. */
-        if(String(finalProduct.source||'').toLowerCase()==='cjdropshipping'){
-            const cid=cjId(finalProduct);
+                finalCJVariants=getVariants(finalProduct);
+                renderColors();
 
-            if(cid){
-                getCJDetail(cid).then(detail=>{
-                    if(!detail) return;
-
-                    const merged=Object.assign({},finalProduct);
-
-                    /* Keep all CJ arrays so no supplier image/variant field is lost. */
-                    Object.keys(detail).forEach(k=>{
-                        if(detail[k]!==undefined && detail[k]!==null) merged[k]=detail[k];
-                    });
-
-                    finalProduct=merged;
-
-                    const moreImages=allImages(merged);
-                    if(moreImages.length) renderGallery(moreImages,merged.name||finalProduct.name);
-
-                    renderColors(merged);
-                    wireButtons();
-                });
-            }
-        }
-
-        wireButtons();
-    };
-
-    /* Make cart survive page refresh with the new fields. */
-    try{
-        if(typeof cart!=='undefined' && Array.isArray(cart)){
-            cart.forEach(item=>{
-                if(!item.variantIdentity){
-                    item.variantIdentity='variant:'+(item.variantKey||item.size||'Standard');
+                if(finalSelectedColor){
+                    setTimeout(()=>window.globiraFinalSelectColor(finalSelectedColor),80);
                 }
-            });
-        }
-    }catch(e){}
 
-    /* Patch the order creation just before it serializes the cart. */
-    const orderScript=document.currentScript;
+                wirePopupButtons();
+
+                const id2=cjId(finalProduct);
+                if(String(finalProduct.source||'').toLowerCase()==='cjdropshipping' && id2){
+                    fetchDetail(id2).then(detail=>{
+                        if(detail){
+                            mergeDetail(detail);
+                            wirePopupButtons();
+                        }
+                    });
+                }
+            };
+
+            window.openProduct.__globiraFinalVariantPatched=true;
+        }
+    }
+
+    const timer=setInterval(()=>{
+        install();
+        if(typeof window.openProduct==='function' &&
+           typeof window.saveCart==='function' &&
+           typeof window.renderCart==='function') clearInterval(timer);
+    },250);
+
+    document.addEventListener('DOMContentLoaded',()=>{
+        install();
+        setTimeout(patchCartDisplay,300);
+    });
 })();
 </script>
 
 
-<script id="globira-final-order-variant-patch">
+
+
+
+<script id="globira-exact-color-cart-flow-final">
 (function(){
-    function enrichLastOrder(){
-        try{
-            const raw=localStorage.getItem('globiraLastOrder');
-            if(!raw || typeof cart==='undefined') return;
-            const order=JSON.parse(raw);
-            if(!order || !Array.isArray(order.items)) return;
+    /*
+      FINAL COLOR FLOW FIX
+      The cart stores the exact customer choice:
+      product + color + size.
+      Nothing is inferred from "Standard" later.
+    */
 
-            order.items=order.items.map((saved,i)=>{
-                const c=cart[i];
-                if(!c) return saved;
-                return Object.assign(saved,{
-                    color:c.color||'',
-                    variantSku:c.variantSku||'',
-                    variantKey:c.variantKey||'',
-                    variantImage:c.variantImage||''
+    function clean(v){
+        return String(v == null ? '' : v).trim();
+    }
+
+    function parseSavedVariant(item){
+        const raw=clean(item && item.size);
+
+        let color=clean(item && item.color);
+        let size='';
+
+        const colorMatch=raw.match(/(?:^|\/)\s*Color\s*:\s*([^/]+?)(?=\s*\/|$)/i);
+        const sizeMatch=raw.match(/(?:^|\/)\s*Size\s*:\s*([^/]+?)(?=\s*\/|$)/i);
+
+        if(!color && colorMatch) color=clean(colorMatch[1]);
+        if(sizeMatch) size=clean(sizeMatch[1]);
+
+        if(!size && raw && !/^Color\s*:/i.test(raw) && !/^Standard$/i.test(raw)){
+            size=raw.replace(/^Size\s*:\s*/i,'').trim();
+        }
+
+        return {color,size};
+    }
+
+    function exactVariantText(color,size){
+        if(color && size) return 'Color: '+color+' / Size: '+size;
+        if(color) return 'Color: '+color;
+        return size || 'Standard';
+    }
+
+    function currentPopupColor(){
+        const selected=document.querySelector('#globiraColorOptions .color-option.selected');
+        if(selected) return clean(selected.dataset.color);
+
+        const note=document.getElementById('globiraColorNote');
+        const m=note && clean(note.textContent).match(/Selected color:\s*(.+)$/i);
+        return m ? clean(m[1]) : '';
+    }
+
+    function currentPopupSize(){
+        const selected=document.querySelector('#productModal .size.selected');
+        return selected ? clean(selected.dataset.size) : '';
+    }
+
+    function hasColorOptions(){
+        return !!document.querySelector('#globiraColorOptions .color-option');
+    }
+
+    /* Replace addToCart with a variant-safe version. */
+    const originalAddToCart=window.addToCart;
+
+    if(typeof originalAddToCart==='function'){
+        window.addToCart=function(id,size,quantity=1,shouldOpenCart=true){
+            const product=typeof findProduct==='function' ? findProduct(id) : null;
+            if(!product) return;
+
+            let color=currentPopupColor();
+
+            /* If caller already passed "Color: Blue / Size: M", preserve it. */
+            const passed=clean(size);
+            const passedColor=passed.match(/Color\s*:\s*([^/]+)/i);
+            const passedSize=passed.match(/Size\s*:\s*(.+)$/i);
+
+            if(passedColor) color=clean(passedColor[1]);
+
+            let finalSize=passedSize ? clean(passedSize[1]) : passed;
+
+            /* Prefer the actually selected size button when one exists. */
+            const popupSize=currentPopupSize();
+            if(popupSize) finalSize=popupSize;
+
+            /* If this product has color choices, a color is mandatory. */
+            if(hasColorOptions() && !color){
+                alert('Please select a color first.');
+                return;
+            }
+
+            const exactSize=exactVariantText(color,finalSize);
+
+            if(!Array.isArray(cart)) return;
+
+            /*
+              IMPORTANT:
+              Two colors of the same product are two different cart items.
+              Blue cannot merge into Red, and vice versa.
+            */
+            const existing=cart.find(item =>
+                String(item.id)===String(id) &&
+                clean(item.size).toLowerCase()===exactSize.toLowerCase()
+            );
+
+            if(existing){
+                existing.quantity=(Number(existing.quantity)||0)+(Number(quantity)||1);
+                existing.color=color;
+                existing.variantSize=finalSize;
+            }else{
+                cart.push({
+                    id:id,
+                    size:exactSize,
+                    color:color,
+                    variantSize:finalSize,
+                    quantity:Number(quantity)||1
                 });
-            });
+            }
 
-            localStorage.setItem('globiraLastOrder',JSON.stringify(order));
+            localStorage.setItem('globiraCart',JSON.stringify(cart));
+
+            if(typeof renderCart==='function') renderCart();
+
+            if(typeof showToast==='function'){
+                showToast(product.name+' added to your cart');
+            }
+
+            if(shouldOpenCart && typeof openCart==='function'){
+                openCart();
+            }
+        };
+    }
+
+    /*
+      Cart renderer:
+      explicitly displays the chosen color and size.
+      It also sends the exact saved variant back into openProduct.
+    */
+    const originalRenderCart=window.renderCart;
+
+    if(typeof originalRenderCart==='function'){
+        window.renderCart=function(){
+            originalRenderCart.apply(this,arguments);
+
+            if(!Array.isArray(cart)) return;
+
+            const items=document.querySelectorAll('#cartItems .cart-item');
+
+            items.forEach((el,index)=>{
+                const item=cart[index];
+                if(!item) return;
+
+                const parsed=parseSavedVariant(item);
+                const label=el.querySelector('.cart-size');
+
+                if(label){
+                    let text='';
+                    if(parsed.color) text+='COLOR: '+parsed.color;
+                    if(parsed.size && parsed.size.toLowerCase()!=='standard'){
+                        if(text) text+='  •  ';
+                        text+='SIZE: '+parsed.size;
+                    }
+                    label.textContent=text || 'VARIANT: STANDARD';
+                }
+
+                /*
+                  Store the exact variant on the cart row so every click
+                  can recover the same selection.
+                */
+                el.dataset.productId=item.id;
+                el.dataset.variantColor=parsed.color;
+                el.dataset.variantSize=parsed.size;
+
+                const img=el.querySelector('img');
+                if(img && item.variantImage){
+                    img.src=item.variantImage;
+                }
+            });
+        };
+    }
+
+    /*
+      Re-open the exact color/size when the customer clicks a cart product.
+    */
+    const currentOpenProduct=window.openProduct;
+
+    if(typeof currentOpenProduct==='function'){
+        window.openProduct=function(id,preselectedSize=null){
+            let saved=null;
+
+            if(Array.isArray(cart)){
+                saved=cart.find(item =>
+                    String(item.id)===String(id) &&
+                    (
+                        clean(item.color) ||
+                        /Color\s*:/i.test(clean(item.size))
+                    )
+                );
+            }
+
+            const raw=saved ? clean(saved.size) : clean(preselectedSize);
+            const parsed=parseSavedVariant(saved || {size:raw});
+
+            /* Pass only the real size to the existing popup first. */
+            currentOpenProduct.call(this,id,parsed.size || null);
+
+            /*
+              The existing popup renders first. Then restore the exact color.
+            */
+            setTimeout(function(){
+                if(parsed.color && typeof window.globiraSelectColor==='function'){
+                    window.globiraSelectColor(parsed.color);
+                }
+
+                if(parsed.size){
+                    const sizeButton=[...document.querySelectorAll('#productModal .size')]
+                        .find(btn =>
+                            clean(btn.dataset.size).toLowerCase()===parsed.size.toLowerCase()
+                        );
+
+                    if(sizeButton && typeof window.selectSize==='function'){
+                        window.selectSize(sizeButton);
+                    }
+                }
+
+                /*
+                  Keep selectedSize as the exact customer variant so the next
+                  Add to Cart / Buy Now cannot lose the color.
+                */
+                if(parsed.color){
+                    window.selectedSize=exactVariantText(
+                        parsed.color,
+                        parsed.size
+                    );
+                }
+
+                /* Re-wire buttons after restoring the saved selection. */
+                setTimeout(function(){
+                    if(typeof window.globiraSelectColor==='function' && parsed.color){
+                        window.globiraSelectColor(parsed.color);
+                    }
+                    if(parsed.size){
+                        const b=[...document.querySelectorAll('#productModal .size')]
+                            .find(btn =>
+                                clean(btn.dataset.size).toLowerCase()===parsed.size.toLowerCase()
+                            );
+                        if(b && typeof window.selectSize==='function'){
+                            window.selectSize(b);
+                        }
+                    }
+                    if(parsed.color){
+                        window.selectedSize=exactVariantText(parsed.color,parsed.size);
+                    }
+                },80);
+            },100);
+        };
+    }
+
+    /*
+      Existing cart rows use inline openProduct(id,item.size).
+      Capture those clicks too, so the exact color is restored even when
+      the row's original inline handler is present.
+    */
+    document.addEventListener('click',function(e){
+        const row=e.target.closest('#cartItems .cart-item');
+        if(!row || !Array.isArray(cart)) return;
+
+        const rows=[...document.querySelectorAll('#cartItems .cart-item')];
+        const index=rows.indexOf(row);
+        const item=cart[index];
+        if(!item) return;
+
+        if(e.target.closest('img') || e.target.closest('h4')){
+            e.preventDefault();
+            e.stopImmediatePropagation();
+
+            const parsed=parseSavedVariant(item);
+            window.openProduct(item.id,exactVariantText(parsed.color,parsed.size));
+        }
+    },true);
+
+    /*
+      Persist an explicit, clean variant snapshot for checkout/order code.
+    */
+    function persistExactVariants(){
+        try{
+            if(!Array.isArray(cart)) return;
+
+            localStorage.setItem(
+                'globiraExactCartVariants',
+                JSON.stringify(
+                    cart.map(item=>{
+                        const p=parseSavedVariant(item);
+                        return {
+                            id:item.id,
+                            color:p.color,
+                            size:p.size || 'Standard',
+                            variant:item.size || exactVariantText(p.color,p.size),
+                            quantity:Number(item.quantity)||1
+                        };
+                    })
+                )
+            );
         }catch(e){}
     }
 
-    /* Checkout/place-order code already writes globiraLastOrder. */
-    setInterval(enrichLastOrder,1000);
+    const oldSave=window.saveCart;
+    if(typeof oldSave==='function'){
+        window.saveCart=function(){
+            localStorage.setItem('globiraCart',JSON.stringify(cart));
+            persistExactVariants();
+            window.renderCart();
+        };
+    }
+
+    setTimeout(function(){
+        if(Array.isArray(cart)){
+            /*
+              Convert any previously saved "Color: X / Size: Y" entries into
+              explicit color fields without changing the customer's selection.
+            */
+            cart.forEach(item=>{
+                const p=parseSavedVariant(item);
+                if(p.color) item.color=p.color;
+                if(p.size) item.variantSize=p.size;
+            });
+
+            localStorage.setItem('globiraCart',JSON.stringify(cart));
+            persistExactVariants();
+            if(typeof window.renderCart==='function') window.renderCart();
+        }
+    },350);
+
 })();
 </script>
 
