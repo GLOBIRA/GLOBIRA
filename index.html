@@ -2959,7 +2959,93 @@
     @media(max-width:850px){.category-page .category-result-grid,.category-result-grid{grid-template-columns:repeat(3,minmax(0,1fr)) !important}.category-result-grid .gw-product-image{height:230px !important;min-height:230px !important}}
     @media(max-width:560px){.category-page .category-result-grid,.category-result-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:10px !important}.category-result-grid .gw-product-image{height:220px !important;min-height:220px !important}}
     </style>
-    </head>
+    
+<style id="globira-popup-gallery-final">
+/* Keep GLOBIRA design; only make the product popup compact and gallery-friendly. */
+#productModal{
+    padding:18px !important;
+}
+
+#productModal .product-popup{
+    width:min(980px,96vw) !important;
+    max-height:88vh !important;
+    overflow:hidden !important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+}
+
+#productModal .popup-gallery{
+    min-width:0 !important;
+    background:#f3f1ed !important;
+    display:flex !important;
+    flex-direction:column !important;
+    overflow:hidden !important;
+}
+
+#productModal .main-photo{
+    width:100% !important;
+    height:430px !important;
+    object-fit:contain !important;
+    background:#f3f1ed !important;
+    display:block !important;
+}
+
+#productModal .thumbnails{
+    display:flex !important;
+    gap:9px !important;
+    padding:10px 12px 12px !important;
+    background:#fff !important;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+    flex:0 0 auto !important;
+    min-height:96px !important;
+    box-sizing:border-box !important;
+}
+
+#productModal .thumbnails img{
+    width:70px !important;
+    height:78px !important;
+    min-width:70px !important;
+    object-fit:cover !important;
+    cursor:pointer !important;
+    opacity:.72 !important;
+    border:1px solid #ddd !important;
+    border-radius:3px !important;
+    background:#f3f1ed !important;
+}
+
+#productModal .thumbnails img:hover{
+    opacity:1 !important;
+    border-color:#111 !important;
+}
+
+#productModal .popup-info{
+    min-width:0 !important;
+    max-height:88vh !important;
+    overflow-y:auto !important;
+    padding:32px !important;
+    box-sizing:border-box !important;
+}
+
+@media(max-width:800px){
+    #productModal .product-popup{
+        width:min(96vw,620px) !important;
+        max-height:92vh !important;
+        grid-template-columns:1fr !important;
+        overflow-y:auto !important;
+    }
+
+    #productModal .main-photo{
+        height:330px !important;
+    }
+
+    #productModal .popup-info{
+        max-height:none !important;
+        padding:24px !important;
+    }
+}
+</style>
+
+</head>
 
     <body>
 
@@ -9006,7 +9092,196 @@
     }
     </style>
 
-    </body>
+    
+<script id="globira-cj-popup-gallery-final">
+(function(){
+    const previousOpenProduct = window.openProduct;
+    if(typeof previousOpenProduct !== 'function') return;
+
+    function cjId(product){
+        if(!product) return '';
+        const values = [
+            product.cjProductId,
+            product.pid,
+            product.productId,
+            product.id
+        ];
+
+        for(const value of values){
+            if(value === undefined || value === null) continue;
+            let v = String(value).trim();
+            if(!v) continue;
+            if(/^cj-/i.test(v)) v = v.replace(/^cj-/i,'');
+            if(/^\d+$/.test(v)) return v;
+        }
+        return '';
+    }
+
+    function collect(value, output, seen){
+        if(value === null || value === undefined) return;
+
+        if(typeof value === 'string'){
+            const v = value.trim();
+            if(!v) return;
+
+            if((v[0] === '[' && v[v.length-1] === ']') ||
+               (v[0] === '{' && v[v.length-1] === '}')){
+                try{
+                    collect(JSON.parse(v), output, seen);
+                    return;
+                }catch(e){}
+            }
+
+            v.split(/\s*[|,]\s*/).forEach(part=>{
+                const p = part.trim();
+                if(/^https?:\/\//i.test(p)) output.push(p);
+            });
+            return;
+        }
+
+        if(Array.isArray(value)){
+            value.forEach(item=>collect(item, output, seen));
+            return;
+        }
+
+        if(typeof value === 'object'){
+            if(seen.has(value)) return;
+            seen.add(value);
+
+            const preferred = [
+                'url','imageUrl','image','picUrl','imgUrl','productImage',
+                'productImg','fileUrl','thumbnail','src','bigImage',
+                'productImageUrl','skuImage','variantImage'
+            ];
+
+            preferred.forEach(key=>{
+                if(value[key]) collect(value[key], output, seen);
+            });
+
+            Object.keys(value).forEach(key=>{
+                const lower = key.toLowerCase();
+                if(
+                    lower.includes('image') ||
+                    lower.includes('picture') ||
+                    lower.includes('pic') ||
+                    lower.includes('photo') ||
+                    lower.includes('img') ||
+                    lower.includes('gallery')
+                ){
+                    collect(value[key], output, seen);
+                }
+            });
+        }
+    }
+
+    function productImages(product){
+        const output = [];
+        const seen = new Set();
+
+        if(typeof normalizeProductImages === 'function'){
+            try{
+                const existing = normalizeProductImages(product) || [];
+                existing.forEach(x=>collect(x, output, seen));
+            }catch(e){}
+        }
+
+        collect(product, output, seen);
+
+        return [...new Set(
+            output.filter(x=>/^https?:\/\//i.test(x))
+        )];
+    }
+
+    function renderImages(images, name){
+        const main = document.getElementById('mainProductImage');
+        const thumbs = document.getElementById('productThumbnails');
+        if(!main || !thumbs || !images.length) return;
+
+        main.src = images[0];
+        main.alt = name || 'GLOBIRA Product';
+
+        thumbs.innerHTML = images.map((url,index)=>{
+            const safeUrl = url
+                .replace(/\\/g,'\\\\')
+                .replace(/'/g,"\\'");
+            const safeAlt = String(name || 'GLOBIRA Product')
+                .replace(/"/g,'&quot;');
+
+            return `
+                <img
+                    src="${url.replace(/"/g,'&quot;')}"
+                    alt="${safeAlt} ${index + 1}"
+                    loading="lazy"
+                    onclick="changeMainImage('${safeUrl}')"
+                >
+            `;
+        }).join('');
+    }
+
+    async function getCJDetail(id){
+        const urls = [
+            '/api/cj-product/' + encodeURIComponent(id),
+            '/api/cj-product?id=' + encodeURIComponent(id),
+            '/api/cj-product?pid=' + encodeURIComponent(id),
+            '/api/cj-product?productId=' + encodeURIComponent(id)
+        ];
+
+        for(const url of urls){
+            try{
+                const response = await fetch(url, {cache:'no-store'});
+                if(!response.ok) continue;
+
+                const data = await response.json();
+
+                if(data && data.product) return data.product;
+                if(data && data.data && data.data.product) return data.data.product;
+                if(data && data.data && typeof data.data === 'object') return data.data;
+            }catch(e){}
+        }
+
+        return null;
+    }
+
+    window.openProduct = function(id, preselectedSize=null){
+        /* Existing GLOBIRA popup opens immediately. */
+        previousOpenProduct(id, preselectedSize);
+
+        const product = typeof findProduct === 'function'
+            ? findProduct(id)
+            : null;
+
+        if(!product) return;
+
+        /* Show every image already present in the live CJ catalog response. */
+        const initialImages = productImages(product);
+        if(initialImages.length){
+            renderImages(initialImages, product.name);
+        }
+
+        /* For CJ products, fetch the detailed supplier record for extra images. */
+        if(String(product.source || '').toLowerCase() !== 'cjdropshipping') return;
+
+        const idForCJ = cjId(product);
+        if(!idForCJ) return;
+
+        getCJDetail(idForCJ).then(detail=>{
+            if(!detail) return;
+
+            const detailImages = productImages(detail);
+            const allImages = [...new Set([
+                ...initialImages,
+                ...detailImages
+            ])];
+
+            if(allImages.length){
+                renderImages(allImages, product.name || detail.name);
+            }
+        });
+    };
+})();
+</script>
+
+</body>
     </html>
 
     <style id="globira-v3-final-layout">
