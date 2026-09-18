@@ -2959,93 +2959,7 @@
     @media(max-width:850px){.category-page .category-result-grid,.category-result-grid{grid-template-columns:repeat(3,minmax(0,1fr)) !important}.category-result-grid .gw-product-image{height:230px !important;min-height:230px !important}}
     @media(max-width:560px){.category-page .category-result-grid,.category-result-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:10px !important}.category-result-grid .gw-product-image{height:220px !important;min-height:220px !important}}
     </style>
-    
-<style id="globira-popup-gallery-final">
-/* Keep GLOBIRA design; only make the product popup compact and gallery-friendly. */
-#productModal{
-    padding:18px !important;
-}
-
-#productModal .product-popup{
-    width:min(980px,96vw) !important;
-    max-height:88vh !important;
-    overflow:hidden !important;
-    grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
-}
-
-#productModal .popup-gallery{
-    min-width:0 !important;
-    background:#f3f1ed !important;
-    display:flex !important;
-    flex-direction:column !important;
-    overflow:hidden !important;
-}
-
-#productModal .main-photo{
-    width:100% !important;
-    height:430px !important;
-    object-fit:contain !important;
-    background:#f3f1ed !important;
-    display:block !important;
-}
-
-#productModal .thumbnails{
-    display:flex !important;
-    gap:9px !important;
-    padding:10px 12px 12px !important;
-    background:#fff !important;
-    overflow-x:auto !important;
-    overflow-y:hidden !important;
-    flex:0 0 auto !important;
-    min-height:96px !important;
-    box-sizing:border-box !important;
-}
-
-#productModal .thumbnails img{
-    width:70px !important;
-    height:78px !important;
-    min-width:70px !important;
-    object-fit:cover !important;
-    cursor:pointer !important;
-    opacity:.72 !important;
-    border:1px solid #ddd !important;
-    border-radius:3px !important;
-    background:#f3f1ed !important;
-}
-
-#productModal .thumbnails img:hover{
-    opacity:1 !important;
-    border-color:#111 !important;
-}
-
-#productModal .popup-info{
-    min-width:0 !important;
-    max-height:88vh !important;
-    overflow-y:auto !important;
-    padding:32px !important;
-    box-sizing:border-box !important;
-}
-
-@media(max-width:800px){
-    #productModal .product-popup{
-        width:min(96vw,620px) !important;
-        max-height:92vh !important;
-        grid-template-columns:1fr !important;
-        overflow-y:auto !important;
-    }
-
-    #productModal .main-photo{
-        height:330px !important;
-    }
-
-    #productModal .popup-info{
-        max-height:none !important;
-        padding:24px !important;
-    }
-}
-</style>
-
-</head>
+    </head>
 
     <body>
 
@@ -9092,196 +9006,7 @@
     }
     </style>
 
-    
-<script id="globira-cj-popup-gallery-final">
-(function(){
-    const previousOpenProduct = window.openProduct;
-    if(typeof previousOpenProduct !== 'function') return;
-
-    function cjId(product){
-        if(!product) return '';
-        const values = [
-            product.cjProductId,
-            product.pid,
-            product.productId,
-            product.id
-        ];
-
-        for(const value of values){
-            if(value === undefined || value === null) continue;
-            let v = String(value).trim();
-            if(!v) continue;
-            if(/^cj-/i.test(v)) v = v.replace(/^cj-/i,'');
-            if(/^\d+$/.test(v)) return v;
-        }
-        return '';
-    }
-
-    function collect(value, output, seen){
-        if(value === null || value === undefined) return;
-
-        if(typeof value === 'string'){
-            const v = value.trim();
-            if(!v) return;
-
-            if((v[0] === '[' && v[v.length-1] === ']') ||
-               (v[0] === '{' && v[v.length-1] === '}')){
-                try{
-                    collect(JSON.parse(v), output, seen);
-                    return;
-                }catch(e){}
-            }
-
-            v.split(/\s*[|,]\s*/).forEach(part=>{
-                const p = part.trim();
-                if(/^https?:\/\//i.test(p)) output.push(p);
-            });
-            return;
-        }
-
-        if(Array.isArray(value)){
-            value.forEach(item=>collect(item, output, seen));
-            return;
-        }
-
-        if(typeof value === 'object'){
-            if(seen.has(value)) return;
-            seen.add(value);
-
-            const preferred = [
-                'url','imageUrl','image','picUrl','imgUrl','productImage',
-                'productImg','fileUrl','thumbnail','src','bigImage',
-                'productImageUrl','skuImage','variantImage'
-            ];
-
-            preferred.forEach(key=>{
-                if(value[key]) collect(value[key], output, seen);
-            });
-
-            Object.keys(value).forEach(key=>{
-                const lower = key.toLowerCase();
-                if(
-                    lower.includes('image') ||
-                    lower.includes('picture') ||
-                    lower.includes('pic') ||
-                    lower.includes('photo') ||
-                    lower.includes('img') ||
-                    lower.includes('gallery')
-                ){
-                    collect(value[key], output, seen);
-                }
-            });
-        }
-    }
-
-    function productImages(product){
-        const output = [];
-        const seen = new Set();
-
-        if(typeof normalizeProductImages === 'function'){
-            try{
-                const existing = normalizeProductImages(product) || [];
-                existing.forEach(x=>collect(x, output, seen));
-            }catch(e){}
-        }
-
-        collect(product, output, seen);
-
-        return [...new Set(
-            output.filter(x=>/^https?:\/\//i.test(x))
-        )];
-    }
-
-    function renderImages(images, name){
-        const main = document.getElementById('mainProductImage');
-        const thumbs = document.getElementById('productThumbnails');
-        if(!main || !thumbs || !images.length) return;
-
-        main.src = images[0];
-        main.alt = name || 'GLOBIRA Product';
-
-        thumbs.innerHTML = images.map((url,index)=>{
-            const safeUrl = url
-                .replace(/\\/g,'\\\\')
-                .replace(/'/g,"\\'");
-            const safeAlt = String(name || 'GLOBIRA Product')
-                .replace(/"/g,'&quot;');
-
-            return `
-                <img
-                    src="${url.replace(/"/g,'&quot;')}"
-                    alt="${safeAlt} ${index + 1}"
-                    loading="lazy"
-                    onclick="changeMainImage('${safeUrl}')"
-                >
-            `;
-        }).join('');
-    }
-
-    async function getCJDetail(id){
-        const urls = [
-            '/api/cj-product/' + encodeURIComponent(id),
-            '/api/cj-product?id=' + encodeURIComponent(id),
-            '/api/cj-product?pid=' + encodeURIComponent(id),
-            '/api/cj-product?productId=' + encodeURIComponent(id)
-        ];
-
-        for(const url of urls){
-            try{
-                const response = await fetch(url, {cache:'no-store'});
-                if(!response.ok) continue;
-
-                const data = await response.json();
-
-                if(data && data.product) return data.product;
-                if(data && data.data && data.data.product) return data.data.product;
-                if(data && data.data && typeof data.data === 'object') return data.data;
-            }catch(e){}
-        }
-
-        return null;
-    }
-
-    window.openProduct = function(id, preselectedSize=null){
-        /* Existing GLOBIRA popup opens immediately. */
-        previousOpenProduct(id, preselectedSize);
-
-        const product = typeof findProduct === 'function'
-            ? findProduct(id)
-            : null;
-
-        if(!product) return;
-
-        /* Show every image already present in the live CJ catalog response. */
-        const initialImages = productImages(product);
-        if(initialImages.length){
-            renderImages(initialImages, product.name);
-        }
-
-        /* For CJ products, fetch the detailed supplier record for extra images. */
-        if(String(product.source || '').toLowerCase() !== 'cjdropshipping') return;
-
-        const idForCJ = cjId(product);
-        if(!idForCJ) return;
-
-        getCJDetail(idForCJ).then(detail=>{
-            if(!detail) return;
-
-            const detailImages = productImages(detail);
-            const allImages = [...new Set([
-                ...initialImages,
-                ...detailImages
-            ])];
-
-            if(allImages.length){
-                renderImages(allImages, product.name || detail.name);
-            }
-        });
-    };
-})();
-</script>
-
-</body>
+    </body>
     </html>
 
     <style id="globira-v3-final-layout">
@@ -9333,3 +9058,449 @@
     window.searchProducts=function(){const r=oldSearch?oldSearch.apply(this,arguments):null;requestAnimationFrame(nativeScroll);return r;};
     })();
     </script>
+
+<style id="globira-color-selection-final">
+/* GLOBIRA: real CJ color selection. Existing design remains unchanged. */
+#productModal .color-title{
+    margin-top:28px;
+    margin-bottom:13px;
+    font-size:12px;
+    letter-spacing:2px;
+    color:#3d3028;
+}
+#productModal .color-options{
+    display:flex;
+    flex-wrap:wrap;
+    gap:9px;
+    margin-bottom:4px;
+}
+#productModal .color-option{
+    min-width:74px;
+    min-height:42px;
+    padding:8px 13px;
+    border:1px solid #d8d0c8;
+    background:#fff;
+    color:#222;
+    font-family:inherit;
+    font-size:12px;
+    cursor:pointer;
+    transition:.15s ease;
+}
+#productModal .color-option:hover{
+    border-color:#222;
+}
+#productModal .color-option.selected{
+    border:2px solid #222;
+    padding:7px 12px;
+    background:#f7f4ee;
+    font-weight:600;
+}
+#productModal .color-option .color-dot{
+    display:inline-block;
+    width:14px;
+    height:14px;
+    border-radius:50%;
+    margin-right:7px;
+    vertical-align:-2px;
+    border:1px solid rgba(0,0,0,.18);
+}
+#productModal .selection-note{
+    margin:8px 0 0;
+    font-size:11px;
+    color:#777;
+}
+</style>
+
+
+<script id="globira-real-cj-color-selection">
+(function(){
+    let globiraSelectedColor = null;
+    let globiraColorVariants = [];
+    let globiraCurrentProductForColor = null;
+
+    const COLOR_WORDS = [
+        'black','white','red','blue','green','yellow','orange','pink','purple',
+        'violet','brown','beige','cream','grey','gray','gold','silver','navy',
+        'maroon','burgundy','wine','khaki','olive','teal','cyan','turquoise',
+        'sky blue','light blue','dark blue','light green','dark green',
+        'light pink','hot pink','rose','coral','coffee','apricot','camel',
+        'tan','nude','transparent','clear','multicolor','multi color','multicolour'
+    ];
+
+    function cleanText(v){
+        return String(v == null ? '' : v).trim();
+    }
+
+    function getVariantText(v){
+        if(!v) return '';
+        if(typeof v === 'string') return v;
+        return [
+            v.variantKey,
+            v.variantNameEn,
+            v.variantName,
+            v.variantProperty,
+            v.name,
+            v.properties,
+            v.property
+        ].filter(Boolean).map(cleanText).join(' | ');
+    }
+
+    function variantList(product){
+        if(typeof normalizeProductVariants === 'function'){
+            try{
+                return normalizeProductVariants(product) || [];
+            }catch(e){}
+        }
+
+        const raw=[];
+        ['variants','variantList','variantOptions','skus','skuList','productVariants'].forEach(k=>{
+            const v=product && product[k];
+            if(Array.isArray(v)) raw.push(...v);
+        });
+        return raw;
+    }
+
+    function extractColor(v){
+        if(!v) return '';
+
+        if(typeof v === 'object'){
+            const direct = [
+                v.color, v.colour, v.colorName, v.colourName,
+                v.colorNameEn, v.colourNameEn, v.optionColor,
+                v.propertyColor
+            ];
+
+            for(const value of direct){
+                const text=cleanText(value);
+                if(text && text.toLowerCase() !== 'standard') return text;
+            }
+
+            const nested=[v.properties,v.property,v.variantProperty,v.options];
+            for(const value of nested){
+                if(Array.isArray(value)){
+                    for(const item of value){
+                        if(item && typeof item === 'object'){
+                            const key=cleanText(item.name || item.key || item.propertyName || item.propertyKey).toLowerCase();
+                            const val=cleanText(item.value || item.propertyValue || item.option);
+                            if(/colou?r|颜色/i.test(key) && val) return val;
+                        }
+                    }
+                }
+            }
+        }
+
+        const text=getVariantText(v);
+
+        /* Labeled CJ formats: Color: Red / Colour=Black / Color - Blue */
+        const labeled=text.match(/(?:^|[|;,])\s*(?:color|colour)\s*[:=\-]\s*([^|;,\/]+)/i);
+        if(labeled && cleanText(labeled[1])) return cleanText(labeled[1]);
+
+        /* Some supplier variants are written like "Red / M". */
+        const lower=text.toLowerCase();
+        const found=COLOR_WORDS.find(c=>new RegExp('(^|[^a-z])'+c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'([^a-z]|$)','i').test(lower));
+        return found ? found.replace(/\b\w/g,m=>m.toUpperCase()) : '';
+    }
+
+    function extractColorVariants(product){
+        const list=variantList(product);
+        const result=[];
+        const seen=new Set();
+
+        list.forEach(v=>{
+            const color=extractColor(v);
+            if(!color) return;
+            const key=color.toLowerCase();
+            if(seen.has(key)) return;
+            seen.add(key);
+            result.push({color, variant:v});
+        });
+
+        return result;
+    }
+
+    function colorDot(color){
+        const c=color.toLowerCase();
+        const map={
+            black:'#111111', white:'#ffffff', red:'#b3261e', blue:'#2455a4',
+            green:'#4d7352', yellow:'#e1bf31', orange:'#d87928', pink:'#e8a6b8',
+            purple:'#79519b', violet:'#7250a0', brown:'#795548', beige:'#d8c3a5',
+            cream:'#eee2c6', grey:'#999999', gray:'#999999', gold:'#c9a227',
+            silver:'#c6c6c6', navy:'#1d2d4f', maroon:'#6b1f2b',
+            burgundy:'#6d2638', wine:'#722f37', khaki:'#b6a16b',
+            olive:'#78864b', teal:'#2f8585', cyan:'#5cc7cf',
+            turquoise:'#40b8ad', coral:'#e9897d', tan:'#c49a6c',
+            nude:'#dfc0aa', transparent:'linear-gradient(135deg,#fff 45%,#bbb 46%,#fff 55%)',
+            clear:'linear-gradient(135deg,#fff 45%,#bbb 46%,#fff 55%)',
+            multicolor:'linear-gradient(135deg,#e66 0 25%,#6ad 25% 50%,#7c7 50% 75%,#e7c 75%)',
+            'multi color':'linear-gradient(135deg,#e66 0 25%,#6ad 25% 50%,#7c7 50% 75%,#e7c 75%)',
+            multicolour:'linear-gradient(135deg,#e66 0 25%,#6ad 25% 50%,#7c7 50% 75%,#e7c 75%)'
+        };
+        return map[c] || '#ddd';
+    }
+
+    function getVariantImage(v){
+        if(!v || typeof v !== 'object') return '';
+        const values=[
+            v.image,v.imageUrl,v.picUrl,v.imgUrl,v.variantImage,
+            v.skuImage,v.skuImageUrl,v.productImage,v.productImageUrl
+        ];
+        for(const x of values){
+            const s=cleanText(x);
+            if(/^https?:\/\//i.test(s)) return s;
+        }
+        return '';
+    }
+
+    function getVariantSize(v){
+        if(!v || typeof v !== 'object') return '';
+        const direct=[
+            v.size,v.sizeName,v.sizeNameEn,v.optionSize,v.propertySize
+        ];
+        for(const x of direct){
+            const s=cleanText(x);
+            if(s) return s;
+        }
+        const text=getVariantText(v);
+        const m=text.match(/(?:^|[|;,])\s*size\s*[:=\-]\s*([^|;,\/]+)/i);
+        return m ? cleanText(m[1]) : '';
+    }
+
+    function renderColorSection(product, variants){
+        const info=document.querySelector('#productModal .popup-info');
+        const sizeTitle=document.querySelector('#productModal .size-title');
+        if(!info || !sizeTitle) return;
+
+        let section=document.getElementById('globiraColorSection');
+
+        if(!variants.length){
+            if(section) section.remove();
+            globiraSelectedColor=null;
+            globiraColorVariants=[];
+            return;
+        }
+
+        globiraColorVariants=variants;
+        globiraCurrentProductForColor=product;
+
+        if(!section){
+            section=document.createElement('div');
+            section.id='globiraColorSection';
+            section.innerHTML=`
+                <div class="color-title">SELECT COLOR</div>
+                <div class="color-options" id="globiraColorOptions"></div>
+                <div class="selection-note" id="globiraColorNote">Please select a color to continue.</div>
+            `;
+            sizeTitle.parentNode.insertBefore(section,sizeTitle);
+        }
+
+        const options=document.getElementById('globiraColorOptions');
+        const note=document.getElementById('globiraColorNote');
+        if(!options) return;
+
+        options.innerHTML=variants.map((item,index)=>{
+            const color=item.color;
+            const safe=String(color).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+            return `
+                <button type="button"
+                    class="color-option${globiraSelectedColor && globiraSelectedColor.toLowerCase()===color.toLowerCase()?' selected':''}"
+                    data-color="${escapeHtml(color)}"
+                    onclick="globiraSelectColor('${safe}')">
+                    <span class="color-dot" style="background:${colorDot(color)}"></span>${escapeHtml(color)}
+                </button>
+            `;
+        }).join('');
+
+        if(globiraSelectedColor){
+            note.textContent='Selected color: '+globiraSelectedColor;
+        }
+    }
+
+    window.globiraSelectColor=function(color){
+        globiraSelectedColor=color;
+
+        document.querySelectorAll('#globiraColorOptions .color-option').forEach(btn=>{
+            btn.classList.toggle(
+                'selected',
+                String(btn.dataset.color||'').toLowerCase()===String(color||'').toLowerCase()
+            );
+        });
+
+        const note=document.getElementById('globiraColorNote');
+        if(note) note.textContent='Selected color: '+color;
+
+        /* If CJ supplied an image for this color, show that image immediately. */
+        const match=globiraColorVariants.find(x=>x.color.toLowerCase()===color.toLowerCase());
+        const image=getVariantImage(match && match.variant);
+        if(image && typeof changeMainImage==='function'){
+            changeMainImage(image);
+        }
+
+        /* Keep the selected color in the value that goes to the existing cart/order flow. */
+        const sizeButtons=document.querySelectorAll('#productModal .size.selected');
+        const currentSize=sizeButtons.length ? sizeButtons[0].dataset.size : '';
+        window.selectedSize = currentSize
+            ? 'Color: '+color+' / Size: '+currentSize
+            : 'Color: '+color;
+    };
+
+    function selectedSizeValue(){
+        const btn=document.querySelector('#productModal .size.selected');
+        return btn ? String(btn.dataset.size||'') : '';
+    }
+
+    function colorRequired(){
+        return globiraColorVariants.length > 0;
+    }
+
+    function finalVariantValue(){
+        const size=selectedSizeValue();
+        if(globiraSelectedColor && size) return 'Color: '+globiraSelectedColor+' / Size: '+size;
+        if(globiraSelectedColor) return 'Color: '+globiraSelectedColor;
+        return size || '';
+    }
+
+    async function fetchCJDetail(id){
+        const urls=[
+            '/api/cj-product/'+encodeURIComponent(id),
+            '/api/cj-product?id='+encodeURIComponent(id),
+            '/api/cj-product?pid='+encodeURIComponent(id),
+            '/api/cj-product?productId='+encodeURIComponent(id)
+        ];
+
+        for(const url of urls){
+            try{
+                const r=await fetch(url,{cache:'no-store'});
+                if(!r.ok) continue;
+                const d=await r.json();
+                if(d && d.product) return d.product;
+                if(d && d.data && d.data.product) return d.data.product;
+                if(d && d.data && typeof d.data==='object') return d.data;
+            }catch(e){}
+        }
+        return null;
+    }
+
+    function cjProductId(product){
+        for(const value of [
+            product && product.cjProductId,
+            product && product.pid,
+            product && product.productId,
+            product && product.id
+        ]){
+            if(value===undefined || value===null) continue;
+            let v=String(value).trim().replace(/^cj-/i,'');
+            if(/^\d+$/.test(v)) return v;
+        }
+        return '';
+    }
+
+    function applyColors(product){
+        const variants=extractColorVariants(product);
+        globiraSelectedColor=null;
+        renderColorSection(product,variants);
+    }
+
+    const previousOpen=window.openProduct;
+    if(typeof previousOpen!=='function') return;
+
+    window.openProduct=function(id,preselectedSize=null){
+        globiraSelectedColor=null;
+        globiraColorVariants=[];
+        globiraCurrentProductForColor=null;
+
+        previousOpen(id,preselectedSize);
+
+        const product=typeof findProduct==='function'?findProduct(id):null;
+        if(!product) return;
+
+        /* Show colors immediately if they are already in the live product. */
+        applyColors(product);
+
+        /* Then fetch the full CJ record so color choices from the supplier are not missed. */
+        if(String(product.source||'').toLowerCase()==='cjdropshipping'){
+            const cid=cjProductId(product);
+            if(cid){
+                fetchCJDetail(cid).then(detail=>{
+                    if(!detail) return;
+                    const combined=Object.assign({},product);
+
+                    /* Preserve arrays from the detailed CJ response. */
+                    ['variants','variantList','variantOptions','skus','skuList','productVariants'].forEach(k=>{
+                        if(Array.isArray(detail[k]) && detail[k].length) combined[k]=detail[k];
+                    });
+
+                    applyColors(combined);
+                });
+            }
+        }
+    };
+
+    /* Re-apply the color-aware cart rules after the existing popup handlers. */
+    function installCartRules(){
+        const add=document.getElementById('popupAddButton');
+        const buy=document.getElementById('popupBuyButton');
+        if(!add || !buy) return;
+
+        add.onclick=function(){
+            if(colorRequired() && !globiraSelectedColor){
+                alert('Please select a color first.');
+                return;
+            }
+
+            const size=selectedSizeValue();
+            const hasSizeButtons=document.querySelectorAll('#productModal .size').length>0;
+
+            if(hasSizeButtons && !size && globiraColorVariants.length){
+                alert('Please select a size first.');
+                return;
+            }
+
+            const value=finalVariantValue() || 'Standard';
+            window.selectedSize=value;
+
+            if(typeof addToCart==='function'){
+                addToCart(currentProduct.id,value,productQuantity);
+                if(typeof closeProduct==='function') closeProduct();
+            }
+        };
+
+        buy.onclick=function(){
+            if(colorRequired() && !globiraSelectedColor){
+                alert('Please select a color first.');
+                return;
+            }
+
+            const size=selectedSizeValue();
+            const hasSizeButtons=document.querySelectorAll('#productModal .size').length>0;
+
+            if(hasSizeButtons && !size && globiraColorVariants.length){
+                alert('Please select a size first.');
+                return;
+            }
+
+            const value=finalVariantValue() || 'Standard';
+            window.selectedSize=value;
+
+            if(typeof addToCart==='function'){
+                addToCart(currentProduct.id,value,productQuantity,false);
+                if(typeof closeProduct==='function') closeProduct();
+                if(typeof openCheckout==='function') openCheckout();
+            }
+        };
+    }
+
+    document.addEventListener('click',function(e){
+        if(e.target.closest('#productModal .size')){
+            setTimeout(()=>{
+                if(globiraSelectedColor){
+                    window.selectedSize=finalVariantValue();
+                }
+            },0);
+        }
+    });
+
+    /* Existing openProduct finishes before this script runs; install when buttons exist. */
+    setTimeout(installCartRules,50);
+    setTimeout(installCartRules,300);
+})();
+</script>
