@@ -9987,6 +9987,109 @@
 })();
 </script>
 
+
+<style id="globira-buy-now-flow-fix">
+#popupBuyButton{position:relative;z-index:20;pointer-events:auto!important;cursor:pointer!important;}
+</style>
+<script id="globira-buy-now-flow-fix-script">
+(function(){
+    function clean(v){return String(v==null?'':v).trim();}
+
+    function getSelectedColor(){
+        const b=document.querySelector('#globiraColorOptions .color-option.selected');
+        if(b) return clean(b.dataset.color);
+        const n=document.getElementById('globiraColorNote');
+        const m=n && clean(n.textContent).match(/Selected color:\s*(.+)$/i);
+        return m?clean(m[1]):'';
+    }
+
+    function getSelectedSize(){
+        const b=document.querySelector('#productModal .size.selected');
+        return b?clean(b.dataset.size):'';
+    }
+
+    function makeVariant(color,size){
+        if(color && size) return 'Color: '+color+' / Size: '+size;
+        if(color) return 'Color: '+color;
+        return size || 'Standard';
+    }
+
+    function bindBuyNow(){
+        const buy=document.getElementById('popupBuyButton');
+        if(!buy || !window.currentProduct && !currentProduct) return;
+
+        const product=window.currentProduct || currentProduct;
+        if(!product) return;
+
+        buy.type='button';
+        buy.onclick=null;
+        buy.removeAttribute('onclick');
+
+        buy.addEventListener('click',function(e){
+            e.preventDefault();
+            e.stopPropagation();
+
+            const color=getSelectedColor();
+            const size=getSelectedSize();
+            const hasColorOptions=!!document.querySelector('#globiraColorOptions .color-option');
+            const hasVariantOptions=Array.isArray(product.variants) && product.variants.length>0;
+            const fashion=['women','men'].includes(String(product.category||'').toLowerCase());
+
+            if(hasColorOptions && !color){
+                alert('Please select a color first.');
+                return;
+            }
+
+            if((fashion || hasVariantOptions) && !color && !size){
+                alert('Please select a size or variant first.');
+                return;
+            }
+
+            const exactVariant=makeVariant(color,size);
+            const qty=Math.max(1,Number(window.productQuantity || productQuantity || 1));
+
+            /*
+             * Use the SAME exact variant path as Add to Cart.
+             * This prevents Buy Now from falling back to Standard.
+             */
+            if(typeof window.addToCart==='function'){
+                window.addToCart(product.id,exactVariant,qty,false);
+            }else{
+                addToCart(product.id,exactVariant,qty,false);
+            }
+
+            closeProduct();
+
+            /* Go directly into the same address/payment checkout flow. */
+            setTimeout(function(){
+                if(typeof window.openCheckout==='function') window.openCheckout();
+                else openCheckout();
+            },0);
+        },{once:true});
+    }
+
+    /* Every time a product opens, bind after the existing popup code has run. */
+    const originalOpen=window.openProduct;
+    if(typeof originalOpen==='function'){
+        window.openProduct=function(id,preselectedSize=null){
+            originalOpen.call(this,id,preselectedSize);
+            requestAnimationFrame(bindBuyNow);
+            setTimeout(bindBuyNow,30);
+            setTimeout(bindBuyNow,120);
+        };
+    }
+
+    /* Also protect against later scripts replacing the button handler. */
+    document.addEventListener('click',function(e){
+        const buy=e.target.closest('#popupBuyButton');
+        if(!buy) return;
+        if(buy.dataset.globiraBound==='1') return;
+        buy.dataset.globiraBound='1';
+        bindBuyNow();
+    },true);
+})();
+</script>
+
 </body>
     </html>
 
