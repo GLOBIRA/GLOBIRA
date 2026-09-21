@@ -3068,7 +3068,7 @@
 
     <div class="globira-utility-bar">
     <div class="utility-left"><span>◉ Free Shipping Worldwide</span><span>│</span><span>▣ Easy Returns</span><span>│</span><span>♡ Secure Payments</span></div>
-    <div class="utility-right"><span>◉ INR ▾</span><span>│</span><span>Track Order</span><span>│</span><span>Help</span></div>
+    <div class="utility-right"><button type="button" class="globira-currency-trigger" id="globiraCurrencyTrigger" onclick="openCurrencyPicker()" aria-haspopup="dialog" aria-expanded="false">◉ <span id="globiraCurrencyLabel">INR</span> ▾</button><span>│</span><span>Track Order</span><span>│</span><span>Help</span></div>
     </div>
     <header class="globira-main-header">
     <div class="logo-wrap">
@@ -4456,8 +4456,7 @@
     STATE
     ========================================================= */
 
-    let cart =
-        JSON.parse(localStorage.getItem('globiraCart')) || [];
+    let cart = [];
 
     let currentProduct = null;
 
@@ -6871,7 +6870,7 @@
             <img src="${safeImage}" alt="${name}" loading="lazy" referrerpolicy="no-referrer"
             onerror="this.onerror=null;this.src='${productFallbackImage(product)}';">
             <span class="badge">${live?'LIVE':'GLOBIRA'}</span>
-            <button class="gw-card-heart" onclick="event.stopPropagation();toggleProductWishlist?.('${safeId}')" aria-label="Add to wishlist">♡</button>
+            <button class="gw-card-heart" data-wishlist-product="${safeId}" onclick="event.stopPropagation();toggleProductWishlist?.('${safeId}')" aria-label="Add to wishlist">${typeof isProductWishlisted === 'function' && isProductWishlisted(id) ? '♥' : '♡'}</button>
         </div>
         <div class="product-info gw-product-info">
             <div class="gw-product-category">${escapeHtml(cat)} ${live?'• Live':''}</div>
@@ -7108,7 +7107,7 @@
             <div class="globira-account-stat"><strong id="globiraAccountOrderCount">0</strong><span>Orders</span></div>
             <div class="globira-account-stat"><strong id="globiraAccountActiveCount">0</strong><span>Active</span></div>
             <div class="globira-account-stat"><strong id="globiraAccountLastOrder">—</strong><span>Latest Order</span></div>
-            <div class="globira-account-stat"><strong>INR</strong><span>Currency</span></div>
+            <div class="globira-account-stat"><strong id="globiraAccountCurrency">INR</strong><span>Currency</span></div>
         </div>
         <div id="globiraAccountLatestOrder"></div>
         <div class="globira-account-actions">
@@ -9987,106 +9986,149 @@
 })();
 </script>
 
-
-<style id="globira-buy-now-flow-fix">
-#popupBuyButton{position:relative;z-index:20;pointer-events:auto!important;cursor:pointer!important;}
-</style>
-<script id="globira-buy-now-flow-fix-script">
+<script id="globira-final-user-isolation">
 (function(){
-    function clean(v){return String(v==null?'':v).trim();}
+    'use strict';
 
-    function getSelectedColor(){
-        const b=document.querySelector('#globiraColorOptions .color-option.selected');
-        if(b) return clean(b.dataset.color);
-        const n=document.getElementById('globiraColorNote');
-        const m=n && clean(n.textContent).match(/Selected color:\s*(.+)$/i);
-        return m?clean(m[1]):'';
+    /* =========================================================
+       GLOBIRA FINAL ACCOUNT ISOLATION
+       Every protected piece of customer data is stored by the
+       authenticated Supabase user ID.
+       ========================================================= */
+
+    const PROTECTED_KEYS = new Set([
+        'globiraCart',
+        'globiraExactCartVariants',
+        'globiraLastOrder',
+        'globiraOrderHistory'
+    ]);
+
+    const rawGetItem = Storage.prototype.getItem;
+    const rawSetItem = Storage.prototype.setItem;
+    const rawRemoveItem = Storage.prototype.removeItem;
+
+    function activeUserId(){
+        try{
+            if(typeof globiraCurrentUser !== 'undefined' && globiraCurrentUser && globiraCurrentUser.id){
+                return String(globiraCurrentUser.id);
+            }
+        }catch(e){}
+        return null;
     }
 
-    function getSelectedSize(){
-        const b=document.querySelector('#productModal .size.selected');
-        return b?clean(b.dataset.size):'';
+    function scopedKey(key){
+        if(!PROTECTED_KEYS.has(key)) return key;
+        const uid = activeUserId();
+        if(!uid) return null;
+        return 'globira:user:' + uid + ':' + key;
     }
 
-    function makeVariant(color,size){
-        if(color && size) return 'Color: '+color+' / Size: '+size;
-        if(color) return 'Color: '+color;
-        return size || 'Standard';
+    Storage.prototype.getItem = function(key){
+        if(PROTECTED_KEYS.has(key)){
+            const scoped = scopedKey(key);
+            if(!scoped) return null;
+            return rawGetItem.call(this, scoped);
+        }
+        return rawGetItem.call(this, key);
+    };
+
+    Storage.prototype.setItem = function(key,value){
+        if(PROTECTED_KEYS.has(key)){
+            const scoped = scopedKey(key);
+            if(!scoped) return;
+            rawSetItem.call(this, scoped, value);
+            return;
+        }
+        rawSetItem.call(this, key, value);
+    };
+
+    Storage.prototype.removeItem = function(key){
+        if(PROTECTED_KEYS.has(key)){
+            const scoped = scopedKey(key);
+            if(!scoped) return;
+            rawRemoveItem.call(this, scoped);
+            return;
+        }
+        rawRemoveItem.call(this, key);
+    };
+
+    function removeLegacySharedData(){
+        PROTECTED_KEYS.forEach(function(key){
+            try{ rawRemoveItem.call(localStorage,key); }catch(e){}
+        });
     }
 
-    function bindBuyNow(){
-        const buy=document.getElementById('popupBuyButton');
-        if(!buy || !window.currentProduct && !currentProduct) return;
-
-        const product=window.currentProduct || currentProduct;
-        if(!product) return;
-
-        buy.type='button';
-        buy.onclick=null;
-        buy.removeAttribute('onclick');
-
-        buy.addEventListener('click',function(e){
-            e.preventDefault();
-            e.stopPropagation();
-
-            const color=getSelectedColor();
-            const size=getSelectedSize();
-            const hasColorOptions=!!document.querySelector('#globiraColorOptions .color-option');
-            const hasVariantOptions=Array.isArray(product.variants) && product.variants.length>0;
-            const fashion=['women','men'].includes(String(product.category||'').toLowerCase());
-
-            if(hasColorOptions && !color){
-                alert('Please select a color first.');
+    function readUserCart(){
+        try{
+            const uid = activeUserId();
+            if(!uid){
+                cart = [];
                 return;
             }
 
-            if((fashion || hasVariantOptions) && !color && !size){
-                alert('Please select a size or variant first.');
-                return;
-            }
+            const saved = rawGetItem.call(
+                localStorage,
+                'globira:user:' + uid + ':globiraCart'
+            );
 
-            const exactVariant=makeVariant(color,size);
-            const qty=Math.max(1,Number(window.productQuantity || productQuantity || 1));
-
-            /*
-             * Use the SAME exact variant path as Add to Cart.
-             * This prevents Buy Now from falling back to Standard.
-             */
-            if(typeof window.addToCart==='function'){
-                window.addToCart(product.id,exactVariant,qty,false);
-            }else{
-                addToCart(product.id,exactVariant,qty,false);
-            }
-
-            closeProduct();
-
-            /* Go directly into the same address/payment checkout flow. */
-            setTimeout(function(){
-                if(typeof window.openCheckout==='function') window.openCheckout();
-                else openCheckout();
-            },0);
-        },{once:true});
+            const parsed = saved ? JSON.parse(saved) : [];
+            cart = Array.isArray(parsed) ? parsed : [];
+        }catch(e){
+            cart = [];
+        }
     }
 
-    /* Every time a product opens, bind after the existing popup code has run. */
-    const originalOpen=window.openProduct;
-    if(typeof originalOpen==='function'){
-        window.openProduct=function(id,preselectedSize=null){
-            originalOpen.call(this,id,preselectedSize);
-            requestAnimationFrame(bindBuyNow);
-            setTimeout(bindBuyNow,30);
-            setTimeout(bindBuyNow,120);
-        };
+    function refreshUserView(){
+        try{
+            if(typeof renderCart === 'function') renderCart();
+        }catch(e){}
+
+        try{
+            if(typeof renderGlobiraAccount === 'function') renderGlobiraAccount();
+        }catch(e){}
     }
 
-    /* Also protect against later scripts replacing the button handler. */
-    document.addEventListener('click',function(e){
-        const buy=e.target.closest('#popupBuyButton');
-        if(!buy) return;
-        if(buy.dataset.globiraBound==='1') return;
-        buy.dataset.globiraBound='1';
-        bindBuyNow();
-    },true);
+    function applyAuthenticatedUser(user){
+        try{
+            if(typeof globiraCurrentUser !== 'undefined'){
+                globiraCurrentUser = user || null;
+            }
+        }catch(e){}
+
+        if(user && user.id){
+            readUserCart();
+        }else{
+            cart = [];
+        }
+
+        /* Old unowned data must never be shown to anybody. */
+        removeLegacySharedData();
+        refreshUserView();
+    }
+
+    function connect(){
+        if(typeof globiraAuth === 'undefined' || !globiraAuth || !globiraAuth.auth){
+            setTimeout(connect,150);
+            return;
+        }
+
+        globiraAuth.auth.getSession().then(function(result){
+            const session = result && result.data ? result.data.session : null;
+            applyAuthenticatedUser(session ? session.user : null);
+        }).catch(function(){
+            applyAuthenticatedUser(null);
+        });
+
+        globiraAuth.auth.onAuthStateChange(function(event,session){
+            applyAuthenticatedUser(session ? session.user : null);
+        });
+    }
+
+    /* Never allow an old shared cart to survive this version. */
+    removeLegacySharedData();
+
+    /* Auth may already be initialized; otherwise wait briefly. */
+    connect();
 })();
 </script>
 
@@ -10586,5 +10628,507 @@
     /* Existing openProduct finishes before this script runs; install when buttons exist. */
     setTimeout(installCartRules,50);
     setTimeout(installCartRules,300);
+})();
+</script>
+
+<style id="globira-user-enhancements-v1">
+/* =========================================================
+   GLOBIRA USER ENHANCEMENTS
+   Wishlist + larger navigation + worldwide currency picker
+========================================================= */
+
+.globira-currency-trigger{
+    border:0!important;background:transparent!important;padding:0!important;
+    font:inherit!important;color:inherit!important;cursor:pointer!important;
+    display:inline-flex!important;align-items:center!important;gap:3px!important;
+}
+.globira-currency-trigger:hover{opacity:.72}
+
+.globira-currency-backdrop{
+    position:fixed;inset:0;z-index:100500;background:rgba(20,18,16,.28);
+    display:none;align-items:flex-start;justify-content:flex-end;padding:88px 4.2% 20px;
+    backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+}
+.globira-currency-backdrop.active{display:flex}
+.globira-currency-panel{
+    width:min(520px,calc(100vw - 28px));max-height:min(78vh,720px);overflow:hidden;
+    background:#fffdf9;border:1px solid #ded4c8;box-shadow:0 25px 70px rgba(30,25,20,.22);
+}
+.globira-currency-head{padding:22px 24px 16px;border-bottom:1px solid #e8e0d7;display:flex;justify-content:space-between;align-items:flex-start}
+.globira-currency-head h3{font-family:'Playfair Display',serif;font-size:24px;font-weight:500;margin:0 0 4px;color:#302821}
+.globira-currency-head p{font-size:11px;color:#85786c;margin:0;line-height:1.5}
+.globira-currency-close{border:0;background:transparent;font-size:24px;line-height:1;cursor:pointer;color:#3a332d}
+.globira-currency-search{padding:13px 18px;border-bottom:1px solid #eee6de}
+.globira-currency-search input{width:100%;height:40px;border:1px solid #d9d0c7;padding:0 12px;font:inherit;font-size:13px;outline:none;box-sizing:border-box}
+.globira-currency-list{padding:12px;overflow:auto;max-height:calc(min(78vh,720px) - 145px);display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.globira-currency-option{border:1px solid transparent;background:#faf7f2;text-align:left;padding:11px 12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;font:inherit}
+.globira-currency-option:hover{border-color:#cfc3b7;background:#f5eee6}
+.globira-currency-option.selected{border-color:#222;background:#efe7dd}
+.globira-currency-option strong{font-size:12px;color:#2e2924}
+.globira-currency-option span{font-size:10px;color:#84786c}
+
+.gw-card-heart{
+    transition:transform .15s ease,background .15s ease,color .15s ease!important;
+    font-size:21px!important;line-height:1!important;
+}
+.gw-card-heart.is-wishlisted{color:#171717!important;background:#fff!important;transform:scale(1.04)}
+
+.globira-wishlist-overlay{
+    position:fixed;inset:0;z-index:100400;background:rgba(0,0,0,.62);
+    display:none;align-items:center;justify-content:center;padding:22px;
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+.globira-wishlist-overlay.active{display:flex}
+.globira-wishlist-box{
+    width:min(1100px,100%);max-height:92vh;overflow:auto;background:#fffdf9;
+    border:1px solid #ded5cc;box-shadow:0 30px 100px rgba(0,0,0,.28);position:relative;padding:30px;
+}
+.globira-wishlist-close{position:absolute;right:18px;top:14px;border:0;background:transparent;font-size:27px;cursor:pointer;color:#29241f}
+.globira-wishlist-eyebrow{font-size:9px;letter-spacing:3px;color:#968a80;text-transform:uppercase;margin-bottom:8px}
+.globira-wishlist-title{font-family:'Playfair Display',serif;font-size:34px;font-weight:500;margin:0;color:#2f2822}
+.globira-wishlist-subtitle{font-size:12px;color:#7b7067;margin:7px 0 24px}
+.globira-wishlist-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.globira-wishlist-grid .product{min-width:0}
+.globira-wishlist-empty{padding:70px 25px;text-align:center;border:1px solid #e7dfd7;background:#faf7f2}
+.globira-wishlist-empty h3{font-family:'Playfair Display',serif;font-size:27px;font-weight:500;margin:0 0 8px}
+.globira-wishlist-empty p{font-size:13px;color:#80756d;margin:0 0 20px}
+.globira-wishlist-shop{border:0;background:#171717;color:#fff;padding:12px 18px;cursor:pointer;letter-spacing:1px;font-size:10px}
+
+/* Main category/navigation text was too small. */
+.globira-global-nav a{font-size:14px!important;font-weight:500!important}
+.globira-global-nav em{font-size:9px!important}
+.ref-four-panel h3{font-size:25px!important}
+.ref-four-panel p{font-size:12px!important}
+.ref-products-head h2{font-size:27px!important}
+@media(max-width:900px){
+    .globira-global-nav a{font-size:13px!important}
+    .globira-wishlist-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:650px){
+    .globira-currency-backdrop{padding:70px 10px 10px}
+    .globira-currency-list{grid-template-columns:1fr;max-height:65vh}
+    .globira-wishlist-box{padding:24px 14px}
+    .globira-wishlist-title{font-size:28px}
+    .globira-wishlist-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+    .globira-global-nav a{font-size:12px!important;padding-left:12px!important;padding-right:12px!important}
+}
+</style>
+
+<div id="globiraCurrencyBackdrop" class="globira-currency-backdrop" onclick="if(event.target===this)closeCurrencyPicker()">
+    <div class="globira-currency-panel" role="dialog" aria-modal="true" aria-labelledby="globiraCurrencyTitle">
+        <div class="globira-currency-head">
+            <div>
+                <h3 id="globiraCurrencyTitle">Choose your currency</h3>
+                <p>Prices are converted from GLOBIRA's INR base price.</p>
+            </div>
+            <button type="button" class="globira-currency-close" onclick="closeCurrencyPicker()" aria-label="Close">×</button>
+        </div>
+        <div class="globira-currency-search">
+            <input id="globiraCurrencySearch" type="search" placeholder="Search currency or country..." autocomplete="off">
+        </div>
+        <div id="globiraCurrencyList" class="globira-currency-list"></div>
+    </div>
+</div>
+
+<div id="globiraWishlistOverlay" class="globira-wishlist-overlay" onclick="if(event.target===this)closeWishlist()">
+    <div class="globira-wishlist-box" role="dialog" aria-modal="true" aria-labelledby="globiraWishlistTitle">
+        <button type="button" class="globira-wishlist-close" onclick="closeWishlist()" aria-label="Close">×</button>
+        <div class="globira-wishlist-eyebrow">GLOBIRA / MY WISHLIST</div>
+        <h2 id="globiraWishlistTitle" class="globira-wishlist-title">Saved for later</h2>
+        <p id="globiraWishlistSubtitle" class="globira-wishlist-subtitle">Your favourite products will appear here.</p>
+        <div id="globiraWishlistContent"></div>
+    </div>
+</div>
+
+<script id="globira-user-features-v1">
+(function(){
+    'use strict';
+
+    /* =========================================================
+       CURRENCY
+       Base price remains INR. Display currency is user-selected.
+       Rates are fallbacks; the browser attempts a fresh INR-rate
+       feed when available.
+    ========================================================= */
+
+    const GLOBIRA_CURRENCIES = {
+        INR:{name:'Indian Rupee',country:'India',symbol:'₹',inr:1,decimals:0,group:'Asia'},
+        USD:{name:'US Dollar',country:'United States',symbol:'$',inr:95.824,decimals:2,group:'Americas'},
+        EUR:{name:'Euro',country:'Eurozone',symbol:'€',inr:110.15,decimals:2,group:'Europe'},
+        GBP:{name:'British Pound',country:'United Kingdom',symbol:'£',inr:128.46,decimals:2,group:'Europe'},
+        CHF:{name:'Swiss Franc',country:'Switzerland',symbol:'CHF',inr:116.45,decimals:2,group:'Europe'},
+        SEK:{name:'Swedish Krona',country:'Sweden',symbol:'kr',inr:9.74,decimals:2,group:'Europe'},
+        NOK:{name:'Norwegian Krone',country:'Norway',symbol:'kr',inr:10.16,decimals:2,group:'Europe'},
+        DKK:{name:'Danish Krone',country:'Denmark',symbol:'kr',inr:14.71,decimals:2,group:'Europe'},
+        PLN:{name:'Polish Zloty',country:'Poland',symbol:'zł',inr:25.19,decimals:2,group:'Europe'},
+        CZK:{name:'Czech Koruna',country:'Czechia',symbol:'Kč',inr:4.58,decimals:2,group:'Europe'},
+        HUF:{name:'Hungarian Forint',country:'Hungary',symbol:'Ft',inr:0.245,decimals:0,group:'Europe'},
+        RON:{name:'Romanian Leu',country:'Romania',symbol:'lei',inr:19.75,decimals:2,group:'Europe'},
+        BGN:{name:'Bulgarian Lev',country:'Bulgaria',symbol:'лв',inr:56.32,decimals:2,group:'Europe'},
+        ISK:{name:'Icelandic Krona',country:'Iceland',symbol:'kr',inr:0.766,decimals:0,group:'Europe'},
+        TRY:{name:'Turkish Lira',country:'Türkiye',symbol:'₺',inr:2.39,decimals:2,group:'Europe'},
+        JPY:{name:'Japanese Yen',country:'Japan',symbol:'¥',inr:0.610,decimals:0,group:'Asia'},
+        CNY:{name:'Chinese Yuan',country:'China',symbol:'¥',inr:14.31,decimals:2,group:'Asia'},
+        KRW:{name:'South Korean Won',country:'South Korea',symbol:'₩',inr:0.065,decimals:0,group:'Asia'},
+        SGD:{name:'Singapore Dollar',country:'Singapore',symbol:'S$',inr:75.19,decimals:2,group:'Asia'},
+        HKD:{name:'Hong Kong Dollar',country:'Hong Kong',symbol:'HK$',inr:12.22,decimals:2,group:'Asia'},
+        MYR:{name:'Malaysian Ringgit',country:'Malaysia',symbol:'RM',inr:22.90,decimals:2,group:'Asia'},
+        THB:{name:'Thai Baht',country:'Thailand',symbol:'฿',inr:2.98,decimals:2,group:'Asia'},
+        IDR:{name:'Indonesian Rupiah',country:'Indonesia',symbol:'Rp',inr:0.0059,decimals:0,group:'Asia'},
+        PHP:{name:'Philippine Peso',country:'Philippines',symbol:'₱',inr:1.525,decimals:2,group:'Asia'},
+        AUD:{name:'Australian Dollar',country:'Australia',symbol:'A$',inr:68.277,decimals:2,group:'Oceania'},
+        NZD:{name:'New Zealand Dollar',country:'New Zealand',symbol:'NZ$',inr:55.90,decimals:2,group:'Oceania'},
+        CAD:{name:'Canadian Dollar',country:'Canada',symbol:'C$',inr:68.572,decimals:2,group:'Americas'},
+        BRL:{name:'Brazilian Real',country:'Brazil',symbol:'R$',inr:17.75,decimals:2,group:'Americas'},
+        MXN:{name:'Mexican Peso',country:'Mexico',symbol:'MX$',inr:5.10,decimals:2,group:'Americas'},
+        ZAR:{name:'South African Rand',country:'South Africa',symbol:'R',inr:5.91,decimals:2,group:'Africa'},
+        NGN:{name:'Nigerian Naira',country:'Nigeria',symbol:'₦',inr:0.068,decimals:2,group:'Africa'},
+        EGP:{name:'Egyptian Pound',country:'Egypt',symbol:'E£',inr:1.89,decimals:2,group:'Middle East'},
+        AED:{name:'UAE Dirham',country:'United Arab Emirates',symbol:'د.إ',inr:26.084,decimals:2,group:'Middle East'},
+        SAR:{name:'Saudi Riyal',country:'Saudi Arabia',symbol:'﷼',inr:25.511,decimals:2,group:'Middle East'},
+        QAR:{name:'Qatari Riyal',country:'Qatar',symbol:'﷼',inr:26.225,decimals:2,group:'Middle East'},
+        KWD:{name:'Kuwaiti Dinar',country:'Kuwait',symbol:'د.ك',inr:310.86,decimals:3,group:'Middle East'},
+        BHD:{name:'Bahraini Dinar',country:'Bahrain',symbol:'.د.ب',inr:255.19,decimals:3,group:'Middle East'},
+        OMR:{name:'Omani Rial',country:'Oman',symbol:'﷼',inr:248.67,decimals:3,group:'Middle East'},
+        JOD:{name:'Jordanian Dinar',country:'Jordan',symbol:'د.ا',inr:135.11,decimals:3,group:'Middle East'},
+        ILS:{name:'Israeli New Shekel',country:'Israel',symbol:'₪',inr:28.70,decimals:2,group:'Middle East'},
+        MAD:{name:'Moroccan Dirham',country:'Morocco',symbol:'د.م.',inr:10.55,decimals:2,group:'Middle East'}
+    };
+
+    let globiraCurrency = 'INR';
+
+    function currencyKey(){
+        const user = (typeof globiraCurrentUser !== 'undefined') ? globiraCurrentUser : null;
+        return user && user.id
+            ? 'globira:user:' + user.id + ':currency'
+            : 'globira:guest:currency';
+    }
+
+    function saveCurrencyPreference(){
+        try{localStorage.setItem(currencyKey(),globiraCurrency);}catch(e){}
+    }
+
+    function localeCurrency(){
+        const lang = String(navigator.language || '').toLowerCase();
+        const map = {
+            'en-us':'USD','en-ca':'CAD','en-gb':'GBP','en-au':'AUD','en-nz':'NZD',
+            'en-in':'INR','de-de':'EUR','fr-fr':'EUR','es-es':'EUR','it-it':'EUR','pt-pt':'EUR',
+            'nl-nl':'EUR','fi-fi':'EUR','el-gr':'EUR','de-at':'EUR','fr-be':'EUR','de-be':'EUR',
+            'sv-se':'SEK','nb-no':'NOK','nn-no':'NOK','da-dk':'DKK','pl-pl':'PLN','cs-cz':'CZK',
+            'hu-hu':'HUF','ro-ro':'RON','bg-bg':'BGN','is-is':'ISK','tr-tr':'TRY',
+            'ja-jp':'JPY','zh-cn':'CNY','zh-tw':'TWD','ko-kr':'KRW','en-sg':'SGD','zh-hk':'HKD',
+            'ms-my':'MYR','th-th':'THB','id-id':'IDR','fil-ph':'PHP','en-za':'ZAR','en-ng':'NGN',
+            'ar-ae':'AED','ar-sa':'SAR','ar-qa':'QAR','ar-kw':'KWD','ar-bh':'BHD','ar-om':'OMR',
+            'ar-jo':'JOD','he-il':'ILS','ar-eg':'EGP','fr-ma':'MAD'
+        };
+        if(map[lang] && GLOBIRA_CURRENCIES[map[lang]]) return map[lang];
+        const prefix=lang.split('-')[0];
+        if(prefix==='de'||prefix==='fr'||prefix==='es'||prefix==='it'||prefix==='nl'||prefix==='pt'||prefix==='fi'||prefix==='el') return 'EUR';
+        return 'INR';
+    }
+
+    function applyCurrencyFromStorage(){
+        let saved=null;
+        try{saved=localStorage.getItem(currencyKey());}catch(e){}
+        globiraCurrency = GLOBIRA_CURRENCIES[saved] ? saved : localeCurrency();
+        updateCurrencyUI();
+    }
+
+    function formatCurrencyValue(inrValue){
+        const meta=GLOBIRA_CURRENCIES[globiraCurrency] || GLOBIRA_CURRENCIES.INR;
+        const value=Number(inrValue||0) / Number(meta.inr||1);
+        try{
+            return new Intl.NumberFormat(undefined,{
+                style:'currency',currency:globiraCurrency,
+                minimumFractionDigits:meta.decimals,
+                maximumFractionDigits:meta.decimals
+            }).format(value);
+        }catch(e){
+            return meta.symbol + value.toLocaleString(undefined,{minimumFractionDigits:meta.decimals,maximumFractionDigits:meta.decimals});
+        }
+    }
+
+    /* Replace the original INR-only formatter without changing product prices. */
+    window.formatPrice = formatCurrencyValue;
+
+    function updateCurrencyUI(){
+        const label=document.getElementById('globiraCurrencyLabel');
+        if(label) label.textContent=globiraCurrency;
+        const account=document.getElementById('globiraAccountCurrency');
+        if(account) account.textContent=globiraCurrency;
+        const trigger=document.getElementById('globiraCurrencyTrigger');
+        if(trigger) trigger.setAttribute('aria-label','Currency: '+globiraCurrency);
+        renderCurrencyList();
+        refreshPriceViews();
+    }
+
+    function refreshPriceViews(){
+        /* Re-render visible product cards while preserving the page position. */
+        try{
+            if(typeof renderFeatured==='function') renderFeatured();
+        }catch(e){}
+        try{
+            if(typeof renderCart==='function') renderCart();
+        }catch(e){}
+        try{
+            if(typeof renderGlobiraAccount==='function' && globiraCurrentUser) renderGlobiraAccount();
+        }catch(e){}
+        try{
+            if(typeof renderCheckoutSummary==='function') renderCheckoutSummary();
+        }catch(e){}
+
+        document.querySelectorAll('.gw-product-card').forEach(card=>{
+            const heart=card.querySelector('.gw-card-heart');
+            if(heart && heart.dataset.wishlistProduct){
+                const id=heart.dataset.wishlistProduct;
+                const wish=isProductWishlisted(id);
+                heart.textContent=wish?'♥':'♡';
+                heart.classList.toggle('is-wishlisted',wish);
+
+                const product=findProduct(id);
+                const priceEl=card.querySelector('.gw-product-bottom .price');
+                if(product && priceEl){
+                    const old=Number(product.oldPrice||0)>Number(product.price||0)
+                        ? '<span class=\"old-price\">'+formatCurrencyValue(product.oldPrice)+'</span>'
+                        : '';
+                    priceEl.innerHTML=formatCurrencyValue(product.price)+' '+old;
+                }
+            }
+        });
+
+        if(typeof currentProduct!=='undefined' && currentProduct && document.getElementById('productModal')?.classList.contains('active')){
+            const p=window.currentProduct;
+            const priceEl=document.getElementById('popupPrice');
+            if(priceEl) priceEl.innerHTML=formatCurrencyValue(p.price)+' <span class="old-price">'+formatCurrencyValue(p.oldPrice)+'</span>';
+        }
+    }
+
+    function renderCurrencyList(filter=''){
+        const box=document.getElementById('globiraCurrencyList');
+        if(!box) return;
+        const q=String(filter||'').trim().toLowerCase();
+        const items=Object.entries(GLOBIRA_CURRENCIES).filter(([code,m])=>{
+            if(!q) return true;
+            return (code+' '+m.name+' '+m.country+' '+m.group).toLowerCase().includes(q);
+        });
+        box.innerHTML=items.map(([code,m])=>`
+            <button type="button" class="globira-currency-option ${code===globiraCurrency?'selected':''}" onclick="selectGlobiraCurrency('${code}')">
+                <span><strong>${code}</strong> · ${escapeHtml(m.name)}</span>
+                <span>${escapeHtml(m.country)}</span>
+            </button>
+        `).join('') || '<div style="grid-column:1/-1;padding:30px;text-align:center;font-size:12px;color:#777">No currency found.</div>';
+    }
+
+    window.openCurrencyPicker=function(){
+        const el=document.getElementById('globiraCurrencyBackdrop');
+        if(!el)return;
+        el.classList.add('active');
+        document.getElementById('globiraCurrencyTrigger')?.setAttribute('aria-expanded','true');
+        const input=document.getElementById('globiraCurrencySearch');
+        if(input){input.value='';renderCurrencyList();setTimeout(()=>input.focus(),80);}
+    };
+
+    window.closeCurrencyPicker=function(){
+        const el=document.getElementById('globiraCurrencyBackdrop');
+        if(el)el.classList.remove('active');
+        document.getElementById('globiraCurrencyTrigger')?.setAttribute('aria-expanded','false');
+    };
+
+    window.selectGlobiraCurrency=function(code){
+        if(!GLOBIRA_CURRENCIES[code])return;
+        globiraCurrency=code;
+        saveCurrencyPreference();
+        updateCurrencyUI();
+        closeCurrencyPicker();
+        if(typeof showToast==='function') showToast('Currency changed to '+code+'.');
+    };
+
+    document.getElementById('globiraCurrencySearch')?.addEventListener('input',function(){renderCurrencyList(this.value);});
+
+    /* Attempt to refresh rates from a public INR feed; fallback values remain if unavailable. */
+    async function refreshLiveRates(){
+        try{
+            const response=await fetch('https://open.er-api.com/v6/latest/INR',{cache:'no-store'});
+            if(!response.ok)return;
+            const data=await response.json();
+            if(!data || !data.rates)return;
+            Object.keys(GLOBIRA_CURRENCIES).forEach(code=>{
+                if(code==='INR')return;
+                const direct=Number(data.rates[code]);
+                if(direct>0) GLOBIRA_CURRENCIES[code].inr=1/direct;
+            });
+            refreshPriceViews();
+            renderCurrencyList();
+        }catch(e){
+            /* Keep safe fallback rates. */
+        }
+    }
+
+    /* =========================================================
+       WISHLIST
+    ========================================================= */
+
+    function wishlistKey(){
+        const user=(typeof globiraCurrentUser !== 'undefined') ? globiraCurrentUser : null;
+        return user && user.id
+            ? 'globira:user:'+user.id+':wishlist'
+            : 'globira:guest:wishlist';
+    }
+
+    function readWishlist(){
+        try{
+            const data=JSON.parse(localStorage.getItem(wishlistKey())||'[]');
+            return Array.isArray(data)?data:[];
+        }catch(e){return []}
+    }
+
+    function saveWishlist(items){
+        try{localStorage.setItem(wishlistKey(),JSON.stringify(items));}catch(e){}
+    }
+
+    window.isProductWishlisted=function(id){
+        return readWishlist().some(item=>String(item.id)===String(id));
+    };
+
+    function wishlistSnapshot(product){
+        if(!product)return null;
+        return {
+            id:product.id,
+            name:product.name||'GLOBIRA Product',
+            price:Number(product.price||0),
+            oldPrice:Number(product.oldPrice||0),
+            description:product.description||'',
+            images:Array.isArray(product.images)?product.images.slice(0,6):[],
+            image:product.image||'',
+            source:product.source||'',
+            category:product.category||'',
+            subcategory:product.subcategory||'',
+            gender:product.gender||'',
+            variants:Array.isArray(product.variants)?product.variants.slice(0,30):[]
+        };
+    }
+
+    window.toggleProductWishlist=function(id){
+        const product=findProduct(id);
+        if(!product){
+            showToast?.('This product is still loading. Please try again.');
+            return;
+        }
+        let items=readWishlist();
+        const index=items.findIndex(item=>String(item.id)===String(id));
+        if(index>=0){
+            items.splice(index,1);
+            showToast?.('Removed from wishlist.');
+        }else{
+            items.unshift(wishlistSnapshot(product));
+            showToast?.('Added to wishlist.');
+        }
+        saveWishlist(items);
+        updateWishlistHearts();
+        if(document.getElementById('globiraWishlistOverlay')?.classList.contains('active')) renderWishlist();
+    };
+
+    window.toggleWishlist=function(){
+        openWishlist();
+    };
+
+    function updateWishlistHearts(){
+        document.querySelectorAll('.gw-card-heart').forEach(btn=>{
+            const id=btn.dataset.wishlistProduct;
+            if(!id)return;
+            const active=isProductWishlisted(id);
+            btn.textContent=active?'♥':'♡';
+            btn.classList.toggle('is-wishlisted',active);
+            btn.setAttribute('aria-label',active?'Remove from wishlist':'Add to wishlist');
+        });
+    }
+
+    function renderWishlist(){
+        const content=document.getElementById('globiraWishlistContent');
+        const subtitle=document.getElementById('globiraWishlistSubtitle');
+        if(!content)return;
+        const items=readWishlist();
+        if(subtitle)subtitle.textContent=items.length ? `${items.length} saved product${items.length===1?'':'s'}` : 'Your favourite products will appear here.';
+        if(!items.length){
+            content.innerHTML=`<div class="globira-wishlist-empty"><h3>Your wishlist is waiting</h3><p>Tap the heart on any product and it will be saved here.</p><button type="button" class="globira-wishlist-shop" onclick="closeWishlist();showNewArrivals();">CONTINUE SHOPPING →</button></div>`;
+            return;
+        }
+        const products=items.map(item=>findProduct(item.id)||item).filter(Boolean);
+        content.innerHTML=`<div class="globira-wishlist-grid">${products.map(product=>productCard(product)).join('')}</div>`;
+        updateWishlistHearts();
+    }
+
+    window.openWishlist=function(){
+        const overlay=document.getElementById('globiraWishlistOverlay');
+        if(!overlay)return;
+        renderWishlist();
+        overlay.classList.add('active');
+        overlay.setAttribute('aria-hidden','false');
+        document.body.classList.add('no-scroll');
+    };
+
+    window.closeWishlist=function(){
+        const overlay=document.getElementById('globiraWishlistOverlay');
+        if(overlay){overlay.classList.remove('active');overlay.setAttribute('aria-hidden','true');}
+        if(!document.getElementById('globiraAccountOverlay')?.classList.contains('active') && !document.getElementById('globiraLoginOverlay')?.classList.contains('active')) document.body.classList.remove('no-scroll');
+    };
+
+    /* Ensure the final product-card renderer keeps the existing gallery/design. */
+    const originalProductCard=window.productCard;
+    if(typeof originalProductCard==='function'){
+        window.productCard=function(product){
+            const html=originalProductCard(product);
+            if(!html)return html;
+            const id=String(product?.id||'').replace(/'/g,'\\\'');
+            const active=isProductWishlisted(product?.id);
+            return html.replace(
+                /(<button[^>]*class="gw-card-heart"[^>]*>)([^<]*)(<\/button>)/,
+                '$1'+(active?'♥':'♡')+'$3'
+            ).replace(
+                /class="gw-card-heart"/,
+                'class="gw-card-heart '+(active?'is-wishlisted':'')+'" data-wishlist-product="'+id+'"'
+            );
+        };
+    }
+
+    /* Account changes: never carry guest wishlist into a different account. */
+    let lastWishlistUserId=null;
+    function syncWishlistForUser(){
+        const user=(typeof globiraCurrentUser !== 'undefined') ? globiraCurrentUser : null;
+        const id=user?.id || null;
+        if(id!==lastWishlistUserId){
+            lastWishlistUserId=id;
+            updateWishlistHearts();
+            if(document.getElementById('globiraWishlistOverlay')?.classList.contains('active'))renderWishlist();
+        }
+    }
+
+    if(typeof globiraAuth!=='undefined' && globiraAuth?.auth){
+        globiraAuth.auth.getSession().then(({data})=>{
+            globiraCurrentUser=data?.session?.user||null;
+            applyCurrencyFromStorage();
+            syncWishlistForUser();
+        }).catch(()=>applyCurrencyFromStorage());
+        globiraAuth.auth.onAuthStateChange((event,session)=>{
+            globiraCurrentUser=session?.user||null;
+            applyCurrencyFromStorage();
+            syncWishlistForUser();
+        });
+    }else{
+        applyCurrencyFromStorage();
+    }
+
+    document.addEventListener('keydown',function(e){
+        if(e.key==='Escape'){
+            closeCurrencyPicker();
+            closeWishlist();
+        }
+    });
+
+    /* Start with a region-aware currency suggestion and then refresh rates. */
+    applyCurrencyFromStorage();
+    refreshLiveRates();
+    setTimeout(updateWishlistHearts,100);
+    setTimeout(updateWishlistHearts,700);
 })();
 </script>
