@@ -12441,3 +12441,150 @@ body{font-size:15px!important}
   }
 })();
 </script>
+
+<style id="globira-mobile-responsive-final-v7">
+/* =========================================================
+   GLOBIRA — FINAL MOBILE RESPONSIVE PASS
+   Keep the desktop layout unchanged. On phones, keep the
+   full header actions visible, including Wishlist, while
+   preventing horizontal overflow.
+========================================================= */
+html,body{
+  max-width:100%;
+  overflow-x:hidden!important;
+}
+
+@media(max-width:600px){
+  .globira-main-header{
+    width:100%!important;
+    box-sizing:border-box!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    gap:10px!important;
+    padding-left:12px!important;
+    padding-right:12px!important;
+  }
+
+  .globira-main-header .logo-wrap{
+    min-width:0!important;
+    overflow:hidden!important;
+  }
+  .globira-main-header .logo{
+    font-size:27px!important;
+    white-space:nowrap!important;
+  }
+  .logo-subtitle{
+    font-size:9px!important;
+    letter-spacing:1.5px!important;
+    white-space:nowrap!important;
+  }
+
+  /* Account + Wishlist + Cart are all available on mobile. */
+  .header-actions{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    gap:4px!important;
+    min-width:0!important;
+  }
+  .header-actions .desktop-only-action{
+    display:inline-flex!important;
+  }
+  .header-icon-btn,
+  .header-cart-btn{
+    width:34px!important;
+    min-width:34px!important;
+    height:38px!important;
+    padding:4px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    box-sizing:border-box!important;
+    position:relative!important;
+  }
+  .header-icon-btn svg,
+  .header-cart-btn svg{
+    width:20px!important;
+    height:20px!important;
+  }
+  .header-icon-btn .action-label,
+  .header-cart-btn .action-label{
+    display:none!important;
+  }
+  .header-cart-count{
+    position:absolute!important;
+    top:1px!important;
+    right:0!important;
+    min-width:14px!important;
+    height:14px!important;
+    line-height:14px!important;
+    padding:0 3px!important;
+    box-sizing:border-box!important;
+    font-size:9px!important;
+  }
+
+  .modern-header-search{
+    width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+  .modern-header-search input{
+    width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+
+  .globira-reference-nav.globira-global-nav{
+    width:100%!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    -webkit-overflow-scrolling:touch!important;
+    white-space:nowrap!important;
+    scrollbar-width:none!important;
+  }
+  .globira-reference-nav.globira-global-nav::-webkit-scrollbar{display:none!important}
+  .globira-reference-nav.globira-global-nav a{
+    flex:0 0 auto!important;
+  }
+
+  /* Product/category grids stay inside the phone width. */
+  .gw-products-grid,
+  .category-result-grid{
+    width:100%!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+  }
+  .gw-product-card{min-width:0!important;max-width:100%!important}
+  .gw-product-image{max-width:100%!important}
+
+  /* Wishlist itself is phone-sized and scrolls internally. */
+  .globira-wishlist-overlay{
+    padding:8px!important;
+    box-sizing:border-box!important;
+  }
+  .globira-wishlist-box{
+    width:100%!important;
+    max-width:100%!important;
+    max-height:calc(100dvh - 16px)!important;
+    box-sizing:border-box!important;
+    padding:22px 12px 18px!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+  }
+  .globira-wishlist-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+  }
+}
+
+@media(max-width:360px){
+  .globira-main-header{gap:6px!important;padding-left:9px!important;padding-right:9px!important}
+  .globira-main-header .logo{font-size:24px!important}
+  .logo-subtitle{font-size:8px!important;letter-spacing:1.1px!important}
+  .header-actions{gap:2px!important}
+  .header-icon-btn,.header-cart-btn{width:31px!important;min-width:31px!important;height:36px!important}
+  .header-icon-btn svg,.header-cart-btn svg{width:18px!important;height:18px!important}
+  .header-cart-count{font-size:8px!important;min-width:13px!important;height:13px!important;line-height:13px!important}
+}
+</style>
