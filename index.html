@@ -3077,6 +3077,18 @@
 #cartItems .cart-size{letter-spacing:.8px}
 </style>
 
+
+<style id="globira-checkout-category-layer-fix">
+/* Keep the existing checkout design, but place it above the fixed Men/Women category layer. */
+#checkoutModal{
+    z-index:10000 !important;
+}
+#checkoutModal.active{
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+}
+</style>
 </head>
 
     <body>
@@ -4557,6 +4569,7 @@
 
     let cjProducts = [];
     let currentCategory = null;
+    let globiraSearchActive = false;
     let catalogLoading = false;
 
     function allProducts(){
@@ -5094,6 +5107,7 @@
 
     function showHome(){
 
+        globiraSearchActive = false;
         currentCategory = null;
 
         document.getElementById('categoryPage')
@@ -6647,9 +6661,10 @@
                 renderCart();
                 updateGWLiveStatus();
                 renderHomepageLiveSections();
-                /* Never call showCategory() during background loading.
-                Re-rendering the category page used to jump the user to the top. */
-                if(currentCategory){
+                /* Never repaint a category/search page while a search is active.
+                The live catalog loads in the background, but search results must
+                remain exactly the active query results. */
+                if(currentCategory && !globiraSearchActive){
                     refreshCurrentCategoryInPlace();
                 }
 
@@ -6942,8 +6957,45 @@
     }
 
     /* Preserve the actual product family and also record gender separately. */
+    /* =========================================================
+       GLOBIRA PRICING BASE
+       CJ Dropshipping product prices are supplied in USD. Internally GLOBIRA
+       keeps a single INR base so every storefront currency can be converted
+       correctly. A minimum $8 USD markup is applied to the supplier cost.
+       Existing normalized products are never converted twice.
+       ========================================================= */
+    const GLOBIRA_MIN_MARKUP_USD = 8;
+    const GLOBIRA_USD_INR_FALLBACK = 95.7623;
+
+    function globiraNormalizeCJPrice(product){
+        const s = product || {};
+        if(s._globiraPriceNormalized === true) return s;
+
+        const raw = Number(s.price);
+        if(!Number.isFinite(raw) || raw <= 0) return s;
+
+        const supplierUSD = Number(s.supplierPriceUSD);
+        const costUSD = Number.isFinite(supplierUSD) && supplierUSD > 0 ? supplierUSD : raw;
+        const retailUSD = Math.max(raw, costUSD + GLOBIRA_MIN_MARKUP_USD);
+
+        s.supplierPriceUSD = costUSD;
+        s.retailPriceUSD = retailUSD;
+        s.price = retailUSD * GLOBIRA_USD_INR_FALLBACK;
+
+        const oldUSD = Number(s.oldPrice);
+        if(Number.isFinite(oldUSD) && oldUSD > 0){
+            s.oldPrice = Math.max(oldUSD, retailUSD) * GLOBIRA_USD_INR_FALLBACK;
+        }else{
+            s.oldPrice = retailUSD * 1.20 * GLOBIRA_USD_INR_FALLBACK;
+        }
+        s._globiraPriceNormalized = true;
+        s.baseCurrency = 'INR';
+        return s;
+    }
+
     function classifyCJProduct(product){
         const s={...(product||{})};
+        globiraNormalizeCJPrice(s);
         const detectedGender=globiraGender(s);
         const detectedCategory=strictCategoryFromProduct(s);
         s.category=(String(s.category||'').trim() && String(s.category).toLowerCase()!=='other') ? String(s.category).trim() : detectedCategory;
@@ -8660,6 +8712,7 @@
 
     /* ---------- Final category page handler ---------- */
     window.showCategory = function(category){
+        globiraSearchActive = false;
         currentCategory = category;
         const home = document.getElementById('homePage');
         const page = document.getElementById('categoryPage');
@@ -8684,6 +8737,7 @@
     };
 
     window.showSubcategory = function(category, sub){
+        globiraSearchActive = false;
         currentCategory = category;
         const d = GLOBIRA_MENU_DATA[category];
         const found = (d?.groups||[]).find(([t])=>slugify(t)===sub);
@@ -8741,6 +8795,8 @@
          * loading can never replace "pants" with all Men/Women products.
          */
         currentCategory = null;
+        globiraSearchActive = true;
+        if(typeof categoryRequest !== 'undefined') categoryRequest++;
 
         const home = document.getElementById('homePage');
         const page = document.getElementById('categoryPage');
@@ -8788,23 +8844,7 @@
          * grid, so the products already shown never move, disappear, or get
          * replaced while the user is looking at them.
          */
-        const existingIds = new Set(products.map(p=>String(p.id)));
-        const newLiveProducts = liveMatches.filter(p=>p?.id && !existingIds.has(String(p.id)));
-
-        if(newLiveProducts.length){
-            const container = document.getElementById('categoryProducts');
-            const grid = container?.querySelector('.category-result-grid');
-            if(grid){
-                grid.insertAdjacentHTML('beforeend', newLiveProducts.map(productCard).join(''));
-                newLiveProducts.forEach(p=>products.push(p));
-                grid.querySelectorAll('.gw-card-main-image').forEach((img,i)=>{
-                    if(i<12){img.loading='eager';img.setAttribute('fetchpriority','high');}
-                });
-            }
-        }
-
-        /* Keep the live catalog updated silently for future searches.
-           Never replace an already-visible product in the current search. */
+        /* Cache live matches silently. NEVER modify the visible search grid. */
         liveMatches.forEach(p=>{
             if(p?.id){
             const i=cjProducts.findIndex(x=>x.id===p.id);
@@ -11363,7 +11403,7 @@ body{font-size:14px!important}
 
     const GLOBIRA_CURRENCIES = {
         INR:{name:'Indian Rupee',country:'India',symbol:'₹',inr:1,decimals:0,group:'Asia'},
-        USD:{name:'US Dollar',country:'United States',symbol:'$',inr:95.824,decimals:2,group:'Americas'},
+        USD:{name:'US Dollar',country:'United States',symbol:'$',inr:95.7623,decimals:2,group:'Americas'},
         EUR:{name:'Euro',country:'Eurozone',symbol:'€',inr:110.15,decimals:2,group:'Europe'},
         GBP:{name:'British Pound',country:'United Kingdom',symbol:'£',inr:128.46,decimals:2,group:'Europe'},
         CHF:{name:'Swiss Franc',country:'Switzerland',symbol:'CHF',inr:116.45,decimals:2,group:'Europe'},
