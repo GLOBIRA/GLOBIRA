@@ -3539,77 +3539,117 @@
 
                             <h2>Delivery Details</h2>
 
+                            <p class="globira-address-help">Enter the address exactly as it should appear on your delivery label. GLOBIRA adapts the fields and postal-code format to the destination country.</p>
 
-                            <label class="form-label">
-                                Full Name
-                            </label>
-
-                            <input id="customerName"
-                                placeholder="Enter your full name">
-
-
-                            <label class="form-label">
-                                Mobile Number
-                            </label>
-
-                            <input id="customerMobile"
-                                type="tel"
-                                maxlength="10"
-                                placeholder="10 digit mobile number">
-
-
-                            <label class="form-label">
-                                Complete Address
-                            </label>
-
-                            <textarea id="customerAddress"
-                                    placeholder="House / Flat / Street / Area"></textarea>
-
-
-                            <div class="form-row">
-
-                                <div>
-
-                                    <label class="form-label">
-                                        City
-                                    </label>
-
-                                    <input id="customerCity"
-                                        placeholder="City">
-
-                                </div>
-
-
-                                <div>
-
-                                    <label class="form-label">
-                                        State
-                                    </label>
-
-                                    <input id="customerState"
-                                        placeholder="State">
-
-                                </div>
-
+                            <div class="globira-address-type-row">
+                                <div class="globira-address-type-title">SAVE ADDRESS AS</div>
+                                <label class="globira-address-type-option active" data-address-type="Home">
+                                    <input type="radio" name="globiraAddressType" value="Home" checked>
+                                    <span>⌂</span> Home
+                                </label>
+                                <label class="globira-address-type-option" data-address-type="Work">
+                                    <input type="radio" name="globiraAddressType" value="Work">
+                                    <span>▣</span> Work / Office
+                                </label>
+                                <label class="globira-address-type-option" data-address-type="Other">
+                                    <input type="radio" name="globiraAddressType" value="Other">
+                                    <span>＋</span> Other
+                                </label>
                             </div>
 
+                            <label class="form-label">Full Name *</label>
+                            <input id="customerName" autocomplete="shipping name" placeholder="Enter your full name">
 
-                            <label class="form-label">
-                                PIN Code
-                            </label>
+                            <label class="form-label">Email Address *</label>
+                            <input id="customerEmail" type="email" autocomplete="shipping email" placeholder="you@example.com">
 
-                            <input id="customerPin"
-                                maxlength="8"
-                                placeholder="6 digit PIN code">
+                            <div class="form-row">
+                                <div>
+                                    <label class="form-label">Mobile Number *</label>
+                                    <input id="customerMobile" type="tel" inputmode="tel" autocomplete="shipping tel" placeholder="Country code + mobile number">
+                                </div>
+                                <div>
+                                    <label class="form-label">Alternative Mobile <span class="optional-label">(optional)</span></label>
+                                    <input id="customerAltMobile" type="tel" inputmode="tel" autocomplete="tel" placeholder="Backup contact number">
+                                </div>
+                            </div>
 
+                            <label class="form-label">Country / Region *</label>
+                            <select id="customerCountry" autocomplete="shipping country">
+                                <option value="IN">India</option>
+                                <option value="US">United States</option>
+                                <option value="CA">Canada</option>
+                                <option value="GB">United Kingdom</option>
+                                <option value="IE">Ireland</option>
+                                <option value="DE">Germany</option>
+                                <option value="FR">France</option>
+                                <option value="IT">Italy</option>
+                                <option value="ES">Spain</option>
+                                <option value="NL">Netherlands</option>
+                                <option value="BE">Belgium</option>
+                                <option value="AT">Austria</option>
+                                <option value="CH">Switzerland</option>
+                                <option value="SE">Sweden</option>
+                                <option value="NO">Norway</option>
+                                <option value="DK">Denmark</option>
+                                <option value="PL">Poland</option>
+                                <option value="PT">Portugal</option>
+                                <option value="TR">Türkiye</option>
+                                <option value="AU">Australia</option>
+                                <option value="NZ">New Zealand</option>
+                                <option value="SG">Singapore</option>
+                                <option value="HK">Hong Kong</option>
+                                <option value="MY">Malaysia</option>
+                                <option value="TH">Thailand</option>
+                                <option value="ID">Indonesia</option>
+                                <option value="PH">Philippines</option>
+                                <option value="CN">China</option>
+                                <option value="JP">Japan</option>
+                                <option value="KR">South Korea</option>
+                                <option value="AE">United Arab Emirates</option>
+                                <option value="SA">Saudi Arabia</option>
+                                <option value="QA">Qatar</option>
+                                <option value="KW">Kuwait</option>
+                                <option value="BH">Bahrain</option>
+                                <option value="OM">Oman</option>
+                                <option value="JO">Jordan</option>
+                                <option value="IL">Israel</option>
+                                <option value="EG">Egypt</option>
+                                <option value="MA">Morocco</option>
+                                <option value="ZA">South Africa</option>
+                                <option value="NG">Nigeria</option>
+                                <option value="BR">Brazil</option>
+                                <option value="MX">Mexico</option>
+                            </select>
 
-                            <button class="next-btn"
-                                    onclick="goToPayment()">
+                            <label class="form-label">Address Line 1 *</label>
+                            <input id="customerAddress" autocomplete="shipping address-line1" placeholder="House / building number / street">
+
+                            <label class="form-label">Apartment / Suite / Unit <span class="optional-label">(optional)</span></label>
+                            <input id="customerAddress2" autocomplete="shipping address-line2" placeholder="Apartment, suite, floor or unit">
+
+                            <div class="form-row">
+                                <div>
+                                    <label class="form-label" id="customerCityLabel">City / Town *</label>
+                                    <input id="customerCity" autocomplete="shipping address-level2" placeholder="City or town">
+                                </div>
+                                <div id="customerStateWrap">
+                                    <label class="form-label" id="customerStateLabel">State / Province / Region</label>
+                                    <input id="customerState" autocomplete="shipping address-level1" placeholder="State / province / region">
+                                </div>
+                            </div>
+
+                            <label class="form-label" id="customerPinLabel">Postal / ZIP Code *</label>
+                            <input id="customerPin" autocomplete="shipping postal-code" placeholder="Postal / ZIP code">
+
+                            <label class="form-label">Landmark / Delivery instructions <span class="optional-label">(optional)</span></label>
+                            <textarea id="customerLandmark" autocomplete="off" placeholder="Nearby landmark, gate, floor or useful delivery instructions"></textarea>
+
+                            <button class="next-btn" onclick="goToPayment()">
                                 CONTINUE TO PAYMENT
                             </button>
 
-                            <button class="back-btn"
-                                    onclick="showStep(1)">
+                            <button class="back-btn" onclick="showStep(1)">
                                 BACK TO REVIEW
                             </button>
 
@@ -11360,5 +11400,228 @@
     installUnifiedButtons();
     setTimeout(installUnifiedButtons,100);
     setTimeout(installUnifiedButtons,400);
+})();
+</script>
+
+
+<!-- GLOBIRA INTERNATIONAL CHECKOUT + WISHLIST PRODUCT OPEN FIX -->
+<style id="globira-international-checkout-v1">
+.globira-address-help{font-size:12px!important;line-height:1.6!important;color:#7b7067!important;margin:-8px 0 20px!important;max-width:760px}
+.globira-address-type-row{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin:0 0 20px;padding:13px 14px;border:1px solid #e2d9d0;background:#faf7f2}
+.globira-address-type-title{width:100%;font-size:10px;letter-spacing:2px;color:#82766b;text-transform:uppercase;margin-bottom:2px}
+.globira-address-type-option{display:inline-flex;align-items:center;gap:7px;border:1px solid #d7cec5;background:#fff;padding:10px 14px;cursor:pointer;font-size:12px;color:#40372f;transition:.15s ease}
+.globira-address-type-option input{position:absolute;opacity:0;pointer-events:none}
+.globira-address-type-option.active{border-color:#171717;background:#171717;color:#fff}
+.globira-address-type-option span{font-size:14px;line-height:1}
+.optional-label{font-size:10px;color:#8b8076;font-weight:400;text-transform:none;letter-spacing:0}
+#step2 select{width:100%;box-sizing:border-box;border:1px solid #d7d0c9;background:#fff;height:46px;padding:0 12px;font:inherit;color:#40372f;margin-bottom:14px}
+#step2 input,#step2 textarea,#step2 select{font-size:12px}
+#step2 textarea{min-height:92px;resize:vertical}
+#step2 .form-label{margin-top:4px}
+@media(max-width:650px){
+ .globira-address-type-row{gap:7px}
+ .globira-address-type-option{padding:9px 11px;font-size:11px}
+ .globira-address-help{font-size:11px!important}
+}
+</style>
+<script id="globira-international-checkout-v1">
+(function(){
+ 'use strict';
+ const countries={
+  IN:{currency:'INR',city:'City / Town',state:'State',stateReq:true,postal:'PIN Code',postalPlaceholder:'6 digit PIN code',mobile:'91'},
+  US:{currency:'USD',city:'City',state:'State',stateReq:true,postal:'ZIP Code',postalPlaceholder:'ZIP code or ZIP+4',mobile:'1'},
+  CA:{currency:'CAD',city:'City / Town',state:'Province / Territory',stateReq:true,postal:'Postal Code',postalPlaceholder:'A1A 1A1',mobile:'1'},
+  GB:{currency:'GBP',city:'Town / City',state:'County / Region (optional)',stateReq:false,postal:'Postcode',postalPlaceholder:'e.g. SW1A 1AA',mobile:'44'},
+  IE:{currency:'EUR',city:'Town / City',state:'County / Region (optional)',stateReq:false,postal:'Eircode',postalPlaceholder:'Eircode',mobile:'353'},
+  DE:{currency:'EUR',city:'Town / City',state:'State / Region (optional)',stateReq:false,postal:'Postal Code',postalPlaceholder:'5-digit postal code',mobile:'49'},
+  FR:{currency:'EUR',city:'City / Commune',state:'Region / Department (optional)',stateReq:false,postal:'Postal Code',postalPlaceholder:'5-digit postal code',mobile:'33'},
+  IT:{currency:'EUR',city:'City / Town',state:'Province / Region (optional)',stateReq:false,postal:'CAP / Postal Code',postalPlaceholder:'Postal code',mobile:'39'},
+  ES:{currency:'EUR',city:'City / Town',state:'Province / Region (optional)',stateReq:false,postal:'Postal Code',postalPlaceholder:'5-digit postal code',mobile:'34'},
+  NL:{currency:'EUR',city:'Town / City',state:'Province (optional)',stateReq:false,postal:'Postcode',postalPlaceholder:'e.g. 1012 AB',mobile:'31'},
+  BE:{currency:'EUR',city:'City / Municipality',state:'Province / Region (optional)',stateReq:false,postal:'Postal Code',postalPlaceholder:'4-digit postal code',mobile:'32'},
+  AT:{currency:'EUR',city:'Town / City',state:'State / Region (optional)',stateReq:false,postal:'Postal Code',postalPlaceholder:'4-digit postal code',mobile:'43'},
+  CH:{currency:'CHF',city:'Town / City',state:'Canton (optional)',stateReq:false,postal:'Postal Code',postalPlaceholder:'Postal code',mobile:'41'},
+  SE:{currency:'SEK',city:'Town / City',state:'County / Region (optional)',stateReq:false,postal:'Postcode',postalPlaceholder:'Postcode',mobile:'46'},
+  NO:{currency:'NOK',city:'Town / City',state:'County / Region (optional)',stateReq:false,postal:'Postcode',postalPlaceholder:'4-digit postcode',mobile:'47'},
+  DK:{currency:'DKK',city:'Town / City',state:'Region (optional)',stateReq:false,postal:'Postal Code',postalPlaceholder:'4-digit postal code',mobile:'45'},
+  PL:{currency:'PLN',city:'City / Town',state:'Voivodeship (optional)',stateReq:false,postal:'Postal Code',postalPlaceholder:'e.g. 00-001',mobile:'48'},
+  PT:{currency:'EUR',city:'City / Town',state:'District / Region (optional)',stateReq:false,postal:'Postal Code',postalPlaceholder:'e.g. 1000-001',mobile:'351'},
+  TR:{currency:'TRY',city:'City / District',state:'Province',stateReq:true,postal:'Postal Code',postalPlaceholder:'5-digit postal code',mobile:'90'},
+  AU:{currency:'AUD',city:'Suburb / City',state:'State / Territory',stateReq:true,postal:'Postcode',postalPlaceholder:'4-digit postcode',mobile:'61'},
+  NZ:{currency:'NZD',city:'Suburb / City',state:'Region (optional)',stateReq:false,postal:'Postcode',postalPlaceholder:'Postcode',mobile:'64'},
+  SG:{currency:'SGD',city:'Town / City',state:'Region (optional)',stateReq:false,postal:'Postal Code',postalPlaceholder:'6-digit postal code',mobile:'65'},
+  HK:{currency:'HKD',city:'District / Area',state:'Region (optional)',stateReq:false,postal:'Postal Code (if applicable)',postalPlaceholder:'Postal code if applicable',mobile:'852'},
+  MY:{currency:'MYR',city:'City / Town',state:'State',stateReq:true,postal:'Postcode',postalPlaceholder:'5-digit postcode',mobile:'60'},
+  TH:{currency:'THB',city:'District / City',state:'Province',stateReq:true,postal:'Postal Code',postalPlaceholder:'5-digit postal code',mobile:'66'},
+  ID:{currency:'IDR',city:'City / Regency',state:'Province',stateReq:true,postal:'Postal Code',postalPlaceholder:'5-digit postal code',mobile:'62'},
+  PH:{currency:'PHP',city:'City / Municipality',state:'Province / Region',stateReq:true,postal:'ZIP Code',postalPlaceholder:'4-digit ZIP code',mobile:'63'},
+  CN:{currency:'CNY',city:'City',state:'Province / Municipality',stateReq:true,postal:'Postal Code',postalPlaceholder:'6-digit postal code',mobile:'86'},
+  JP:{currency:'JPY',city:'City / Ward',state:'Prefecture',stateReq:true,postal:'Postal Code',postalPlaceholder:'e.g. 100-0001',mobile:'81'},
+  KR:{currency:'KRW',city:'City / District',state:'Province / Metropolitan City',stateReq:true,postal:'Postal Code',postalPlaceholder:'5-digit postal code',mobile:'82'},
+  AE:{currency:'AED',city:'City / Area',state:'Emirate',stateReq:true,postal:'Postal Code (if applicable)',postalPlaceholder:'Postal code if applicable',mobile:'971'},
+  SA:{currency:'SAR',city:'City',state:'Province / Region',stateReq:true,postal:'Postal Code',postalPlaceholder:'5-digit postal code',mobile:'966'},
+  QA:{currency:'QAR',city:'City / Area',state:'Municipality / Zone',stateReq:false,postal:'Postal Code (if applicable)',postalPlaceholder:'Postal code if applicable',mobile:'974'},
+  KW:{currency:'KWD',city:'City / Area',state:'Governorate',stateReq:true,postal:'Postal Code',postalPlaceholder:'Postal code',mobile:'965'},
+  BH:{currency:'BHD',city:'City / Area',state:'Governorate',stateReq:false,postal:'Postcode / Block',postalPlaceholder:'Postcode or block number',mobile:'973'},
+  OM:{currency:'OMR',city:'City / Town',state:'Governorate',stateReq:true,postal:'Postal Code',postalPlaceholder:'Postal code',mobile:'968'},
+  JO:{currency:'JOD',city:'City / Town',state:'Governorate',stateReq:true,postal:'Postal Code',postalPlaceholder:'Postal code',mobile:'962'},
+  IL:{currency:'ILS',city:'City / Town',state:'District / Region (optional)',stateReq:false,postal:'Postal Code',postalPlaceholder:'Postal code',mobile:'972'},
+  EG:{currency:'EGP',city:'City',state:'Governorate',stateReq:true,postal:'Postal Code',postalPlaceholder:'Postal code',mobile:'20'},
+  MA:{currency:'MAD',city:'City / Town',state:'Region / Province (optional)',stateReq:false,postal:'Postal Code',postalPlaceholder:'Postal code',mobile:'212'},
+  ZA:{currency:'ZAR',city:'City / Town',state:'Province',stateReq:true,postal:'Postal Code',postalPlaceholder:'4-digit postal code',mobile:'27'},
+  NG:{currency:'NGN',city:'City / Town',state:'State',stateReq:true,postal:'Postal Code',postalPlaceholder:'Postal code',mobile:'234'},
+  BR:{currency:'BRL',city:'City / Municipality',state:'State',stateReq:true,postal:'CEP',postalPlaceholder:'e.g. 01310-100',mobile:'55'},
+  MX:{currency:'MXN',city:'City / Municipality',state:'State',stateReq:true,postal:'Código Postal',postalPlaceholder:'5-digit postal code',mobile:'52'}
+ };
+ const currencyDefault={INR:'IN',USD:'US',CAD:'CA',GBP:'GB',EUR:'DE',CHF:'CH',SEK:'SEK' in countries?'SE':'SE',NOK:'NO',DKK:'DK',PLN:'PL',TRY:'TR',AUD:'AU',NZD:'NZ',SGD:'SG',HKD:'HK',MYR:'MY',THB:'TH',IDR:'ID',PHP:'PH',CNY:'CN',JPY:'JP',KRW:'KR',AED:'AE',SAR:'SA',QAR:'QA',KWD:'KW',BHD:'BH',OMR:'OM',JOD:'JO',ILS:'IL',EGP:'EG',MAD:'MA',ZAR:'ZA',NGN:'NG',BRL:'BR',MXN:'MX'};
+ function userKey(){
+  try{const u=(typeof globiraCurrentUser!=='undefined')?globiraCurrentUser:null;return u?.id?'globira:user:'+u.id+':checkout-country':'globira:guest:checkout-country';}catch(e){return 'globira:guest:checkout-country';}
+ }
+ function selectedCountry(){return document.getElementById('customerCountry')?.value||'IN';}
+ function updateAddressFields(){
+  const code=selectedCountry(), cfg=countries[code]||countries.IN;
+  const stateWrap=document.getElementById('customerStateWrap'), stateLabel=document.getElementById('customerStateLabel'), stateInput=document.getElementById('customerState');
+  const cityLabel=document.getElementById('customerCityLabel'), pinLabel=document.getElementById('customerPinLabel'), pin=document.getElementById('customerPin'), mobile=document.getElementById('customerMobile');
+  if(cityLabel) cityLabel.textContent=cfg.city+' *';
+  if(stateLabel) stateLabel.textContent=cfg.state+(cfg.stateReq?' *':'');
+  if(stateWrap) stateWrap.style.display='block';
+  if(stateInput){stateInput.required=!!cfg.stateReq;stateInput.placeholder=cfg.stateReq?'Enter '+cfg.state.replace(' *','').toLowerCase():'Optional '+cfg.state.replace(' (optional)','').toLowerCase();}
+  if(pinLabel) pinLabel.textContent=cfg.postal+' *';
+  if(pin){pin.placeholder=cfg.postalPlaceholder;pin.inputMode='text';pin.maxLength=16;}
+  if(mobile && !mobile.value) mobile.placeholder='+'+cfg.mobile+' mobile number';
+  try{localStorage.setItem(userKey(),code);}catch(e){}
+ }
+ function defaultCountry(){
+  let saved='';try{saved=localStorage.getItem(userKey())||'';}catch(e){}
+  if(countries[saved]) return saved;
+  const currency=document.getElementById('globiraCurrencyLabel')?.textContent?.trim()||'INR';
+  return currencyDefault[currency]||'IN';
+ }
+ function setCountry(code){
+  const select=document.getElementById('customerCountry');if(!select)return;
+  if(countries[code]) select.value=code;else select.value='IN';
+  updateAddressFields();
+ }
+ function addressType(){return document.querySelector('input[name="globiraAddressType"]:checked')?.value||'Home';}
+ function prepareCheckoutAddress(){
+  const select=document.getElementById('customerCountry');if(!select)return;
+  if(!select.value||select.dataset.globiraTouched!=='1') setCountry(defaultCountry());
+  const u=(typeof globiraCurrentUser!=='undefined')?globiraCurrentUser:null, meta=u?.user_metadata||{};
+  const email=document.getElementById('customerEmail');
+  const name=document.getElementById('customerName');
+  const mobile=document.getElementById('customerMobile');
+  if(email && !email.value) email.value=u?.email||'';
+  if(name && !name.value) name.value=meta.full_name||[meta.first_name,meta.last_name].filter(Boolean).join(' ');
+  if(mobile && !mobile.value) mobile.value=meta.mobile||'';
+  updateAddressFields();
+ }
+ window.globiraPrepareCheckoutAddress=prepareCheckoutAddress;
+ document.addEventListener('change',function(e){
+  if(e.target.id==='customerCountry'){e.target.dataset.globiraTouched='1';updateAddressFields();}
+  if(e.target.matches('input[name="globiraAddressType"]')) document.querySelectorAll('.globira-address-type-option').forEach(x=>x.classList.toggle('active',x.dataset.addressType===e.target.value));
+ });
+ const originalOpenCheckout=window.openCheckout;
+ if(typeof originalOpenCheckout==='function' && !originalOpenCheckout.__globiraInternational){
+  window.openCheckout=async function(){const result=await originalOpenCheckout.apply(this,arguments);setTimeout(prepareCheckoutAddress,30);return result;};
+  window.openCheckout.__globiraInternational=true;
+ }
+ // Country-aware validation and customer data capture.
+ const originalGoToPayment=window.goToPayment;
+ if(typeof originalGoToPayment==='function' && !originalGoToPayment.__globiraInternational){
+  window.goToPayment=function(){
+   const name=document.getElementById('customerName')?.value.trim()||'';
+   const email=document.getElementById('customerEmail')?.value.trim()||'';
+   const mobile=document.getElementById('customerMobile')?.value.trim()||'';
+   const alt=document.getElementById('customerAltMobile')?.value.trim()||'';
+   const country=selectedCountry(), cfg=countries[country]||countries.IN;
+   const address=document.getElementById('customerAddress')?.value.trim()||'';
+   const city=document.getElementById('customerCity')?.value.trim()||'';
+   const state=document.getElementById('customerState')?.value.trim()||'';
+   const pin=document.getElementById('customerPin')?.value.trim()||'';
+   if(!name||!email||!mobile||!address||!city||!pin||(cfg.stateReq&&!state)){
+    showToast('Please complete the required delivery details.');
+    return false;
+   }
+   if(!/^\S+@\S+\.\S+$/.test(email)){showToast('Please enter a valid email address.');return false;}
+   const digits=mobile.replace(/[^0-9]/g,'');
+   if(digits.length<7||digits.length>15){showToast('Please enter a valid mobile number.');return false;}
+   if(alt){const ad=alt.replace(/[^0-9]/g,'');if(ad.length<7||ad.length>15){showToast('Please enter a valid alternative mobile number.');return false;}}
+   if(pin.length<3||pin.length>16){showToast('Please enter a valid postal / ZIP code.');return false;}
+   showStep(3);
+   return true;
+  };
+  window.goToPayment.__globiraInternational=true;
+ }
+ // Preserve the new fields in the existing order object.
+ const originalPlaceOrder=window.placeOrder;
+ if(typeof originalPlaceOrder==='function' && !originalPlaceOrder.__globiraInternational){
+  window.placeOrder=function(){
+   const country=selectedCountry();
+   const cfg=countries[country]||countries.IN;
+   const stateInput=document.getElementById('customerState');
+   const actualState=stateInput?.value.trim()||'';
+   window.globiraCheckoutExtra={
+    email:document.getElementById('customerEmail')?.value.trim()||'',
+    alternativeMobile:document.getElementById('customerAltMobile')?.value.trim()||'',
+    country,
+    countryName:document.getElementById('customerCountry')?.selectedOptions?.[0]?.textContent||country,
+    addressLine2:document.getElementById('customerAddress2')?.value.trim()||'',
+    landmark:document.getElementById('customerLandmark')?.value.trim()||'',
+    addressType:addressType(),
+    state:actualState
+   };
+   /* The legacy order writer expects a state value. For countries where
+      a state/region is not used, pass a neutral internal value and replace
+      it with the real (possibly blank) value immediately after saving. */
+   if(!cfg.stateReq && stateInput && !stateInput.value.trim()) stateInput.value='N/A';
+   const result=originalPlaceOrder.apply(this,arguments);
+   try{
+    const raw=localStorage.getItem('globiraLastOrder'), order=raw?JSON.parse(raw):null;
+    if(order){
+     order.customer=order.customer||{};
+     order.customer.state=actualState;
+     localStorage.setItem('globiraLastOrder',JSON.stringify(order));
+    }
+   }catch(e){}
+   if(stateInput && !cfg.stateReq && stateInput.value==='N/A') stateInput.value='';
+   return result;
+  };
+  window.placeOrder.__globiraInternational=true;
+ }
+ // Patch the saved order customer block after the existing order is created.
+ const originalSetItem=localStorage.setItem.bind(localStorage);
+ // No global interception: order is updated by the helper below when placeOrder finishes.
+})();
+</script>
+
+<script id="globira-order-and-wishlist-final-patch">
+(function(){
+ 'use strict';
+ const originalPlace=window.placeOrder;
+ if(typeof originalPlace==='function' && !originalPlace.__globiraFinalOrderPatch){
+  window.placeOrder=function(){
+   const result=originalPlace.apply(this,arguments);
+   try{
+    const raw=localStorage.getItem('globiraLastOrder'), order=raw?JSON.parse(raw):null, extra=window.globiraCheckoutExtra||{};
+    if(order){
+     order.customer=order.customer||{};
+     Object.assign(order.customer,extra);
+     localStorage.setItem('globiraLastOrder',JSON.stringify(order));
+    }
+   }catch(e){}
+   return result;
+  };
+  window.placeOrder.__globiraFinalOrderPatch=true;
+ }
+ const pc=window.productCard;
+ if(typeof pc==='function' && !pc.__globiraWishlistPopupPatch){
+  window.productCard=function(product){
+   let html=pc(product);
+   if(typeof html!=='string') return html;
+   html=html.replace(/onclick="openProduct\(([^\)]*)\)"/, 'onclick="closeWishlist?.();openProduct($1)"');
+   return html;
+  };
+  window.productCard.__globiraWishlistPopupPatch=true;
+ }
 })();
 </script>
