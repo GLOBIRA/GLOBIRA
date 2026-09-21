@@ -9309,7 +9309,7 @@
         options.innerHTML=colors.map(c=>`
             <button type="button" class="color-option"
                 data-color="${esc(c)}"
-                onclick="globiraFinalSelectColor(${JSON.stringify(c)})">
+                onclick="globiraFinalSelectColor(this.dataset.color)">
                 <span class="color-dot"></span>${esc(c)}
             </button>
         `).join('');
@@ -10173,6 +10173,72 @@
     connect();
 })();
 </script>
+
+
+<style id="globira-font-12-and-color-final-fix">
+/* GLOBIRA FINAL UI FIX: readable 12px body text + reliable CJ color selection. */
+body{font-size:12px!important;}
+
+/* Main storefront/product cards */
+.product-info,.product-info p,.product-info h3,.product-info .price,
+.gw-product-info,.gw-product-info h3,.gw-product-info p,.gw-product-info span,
+.gw-product-category,.gw-product-bottom,.gw-product-bottom .price,
+.category-page #categoryProducts .gw-product-info,
+.category-page #categoryProducts .gw-product-info h3,
+.category-page #categoryProducts .gw-product-info p,
+.category-page #categoryProducts .gw-product-category,
+.category-page #categoryProducts .gw-product-bottom,
+.reference-live-products .product-info,
+.reference-live-products .product-info p,
+.reference-live-products .product-info h3,
+.reference-live-products .price{
+    font-size:12px!important;
+}
+
+/* Main page navigation, category/product labels and controls */
+.globira-reference-nav a,
+.globira-global-nav a,
+.category-subgroups span,
+.category-subgroups small,
+.reference-category-shortcuts button,
+.reference-promo small,
+.reference-promo button,
+.ref-four-panel p,
+.ref-four-panel button,
+.ref-four-panel span,
+.reference-section-title button,
+.subcategory-strip span{
+    font-size:12px!important;
+}
+
+/* Product popup details */
+#productModal .popup-description,
+#productModal .details-box,
+#productModal .details-box strong,
+#productModal .details-box br,
+#productModal .color-title,
+#productModal .color-option,
+#productModal .selection-note,
+#productModal .size-title,
+#productModal .size,
+#productModal .quantity,
+#productModal .quantity button,
+#productModal #popupAddButton,
+#productModal #popupBuyButton{
+    font-size:12px!important;
+}
+#productModal .details-box{line-height:1.9!important;}
+#productModal .color-option{min-height:42px!important;}
+
+/* Keep the selected color unmistakable. */
+#productModal #globiraFinalColorOptions .color-option.selected,
+#productModal #globiraColorOptions .color-option.selected{
+    border:2px solid #111!important;
+    background:#f7f4ee!important;
+    box-shadow:inset 0 0 0 1px #111!important;
+    font-weight:600!important;
+}
+</style>
 
 </body>
     </html>
