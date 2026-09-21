@@ -8765,20 +8765,38 @@
             }
         });
 
-        const map = new Map(products.map(p=>[p.id,p]));
-        liveMatches.forEach(p=>{if(p?.id) map.set(p.id,p);});
-        products = Array.from(map.values());
+        /*
+         * IMPORTANT: Do NOT rebuild the search results after the live CJ
+         * response arrives. Re-rendering here was causing the products to
+         * visibly change/re-order about a second after the first results.
+         * Keep the first matching result set exactly as painted.
+         *
+         * We only add genuinely new live products at the END of the existing
+         * grid, so the products already shown never move, disappear, or get
+         * replaced while the user is looking at them.
+         */
+        const existingIds = new Set(products.map(p=>String(p.id)));
+        const newLiveProducts = liveMatches.filter(p=>p?.id && !existingIds.has(String(p.id)));
 
+        if(newLiveProducts.length){
+            const container = document.getElementById('categoryProducts');
+            const grid = container?.querySelector('.category-result-grid');
+            if(grid){
+                grid.insertAdjacentHTML('beforeend', newLiveProducts.map(productCard).join(''));
+                newLiveProducts.forEach(p=>products.push(p));
+                grid.querySelectorAll('.gw-card-main-image').forEach((img,i)=>{
+                    if(i<12){img.loading='eager';img.setAttribute('fetchpriority','high');}
+                });
+            }
+        }
+
+        /* Keep the live catalog updated silently for future searches.
+           Never replace an already-visible product in the current search. */
         liveMatches.forEach(p=>{
             if(p?.id){
             const i=cjProducts.findIndex(x=>x.id===p.id);
             if(i>=0) cjProducts[i]=p; else cjProducts.push(p);
             }
-        });
-
-        renderFastResults(document.getElementById('categoryProducts'),products,rawQuery,false);
-        document.querySelectorAll('#categoryProducts .gw-card-main-image').forEach((img,i)=>{
-            if(i<12){img.loading='eager';img.setAttribute('fetchpriority','high');}
         });
         }catch(error){
         console.warn('GLOBIRA LIVE SEARCH V2:',error);
