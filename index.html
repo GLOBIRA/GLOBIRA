@@ -3077,18 +3077,6 @@
 #cartItems .cart-size{letter-spacing:.8px}
 </style>
 
-
-<style id="globira-checkout-category-layer-fix">
-/* Keep the existing checkout design, but place it above the fixed Men/Women category layer. */
-#checkoutModal{
-    z-index:10000 !important;
-}
-#checkoutModal.active{
-    display:block !important;
-    visibility:visible !important;
-    opacity:1 !important;
-}
-</style>
 </head>
 
     <body>
@@ -4569,7 +4557,6 @@
 
     let cjProducts = [];
     let currentCategory = null;
-    let globiraSearchActive = false;
     let catalogLoading = false;
 
     function allProducts(){
@@ -5107,7 +5094,6 @@
 
     function showHome(){
 
-        globiraSearchActive = false;
         currentCategory = null;
 
         document.getElementById('categoryPage')
@@ -6661,10 +6647,9 @@
                 renderCart();
                 updateGWLiveStatus();
                 renderHomepageLiveSections();
-                /* Never repaint a category/search page while a search is active.
-                The live catalog loads in the background, but search results must
-                remain exactly the active query results. */
-                if(currentCategory && !globiraSearchActive){
+                /* Never call showCategory() during background loading.
+                Re-rendering the category page used to jump the user to the top. */
+                if(currentCategory){
                     refreshCurrentCategoryInPlace();
                 }
 
@@ -6957,45 +6942,8 @@
     }
 
     /* Preserve the actual product family and also record gender separately. */
-    /* =========================================================
-       GLOBIRA PRICING BASE
-       CJ Dropshipping product prices are supplied in USD. Internally GLOBIRA
-       keeps a single INR base so every storefront currency can be converted
-       correctly. A minimum $8 USD markup is applied to the supplier cost.
-       Existing normalized products are never converted twice.
-       ========================================================= */
-    const GLOBIRA_MIN_MARKUP_USD = 8;
-    const GLOBIRA_USD_INR_FALLBACK = 95.7623;
-
-    function globiraNormalizeCJPrice(product){
-        const s = product || {};
-        if(s._globiraPriceNormalized === true) return s;
-
-        const raw = Number(s.price);
-        if(!Number.isFinite(raw) || raw <= 0) return s;
-
-        const supplierUSD = Number(s.supplierPriceUSD);
-        const costUSD = Number.isFinite(supplierUSD) && supplierUSD > 0 ? supplierUSD : raw;
-        const retailUSD = Math.max(raw, costUSD + GLOBIRA_MIN_MARKUP_USD);
-
-        s.supplierPriceUSD = costUSD;
-        s.retailPriceUSD = retailUSD;
-        s.price = retailUSD * GLOBIRA_USD_INR_FALLBACK;
-
-        const oldUSD = Number(s.oldPrice);
-        if(Number.isFinite(oldUSD) && oldUSD > 0){
-            s.oldPrice = Math.max(oldUSD, retailUSD) * GLOBIRA_USD_INR_FALLBACK;
-        }else{
-            s.oldPrice = retailUSD * 1.20 * GLOBIRA_USD_INR_FALLBACK;
-        }
-        s._globiraPriceNormalized = true;
-        s.baseCurrency = 'INR';
-        return s;
-    }
-
     function classifyCJProduct(product){
         const s={...(product||{})};
-        globiraNormalizeCJPrice(s);
         const detectedGender=globiraGender(s);
         const detectedCategory=strictCategoryFromProduct(s);
         s.category=(String(s.category||'').trim() && String(s.category).toLowerCase()!=='other') ? String(s.category).trim() : detectedCategory;
@@ -8712,7 +8660,6 @@
 
     /* ---------- Final category page handler ---------- */
     window.showCategory = function(category){
-        globiraSearchActive = false;
         currentCategory = category;
         const home = document.getElementById('homePage');
         const page = document.getElementById('categoryPage');
@@ -8737,7 +8684,6 @@
     };
 
     window.showSubcategory = function(category, sub){
-        globiraSearchActive = false;
         currentCategory = category;
         const d = GLOBIRA_MENU_DATA[category];
         const found = (d?.groups||[]).find(([t])=>slugify(t)===sub);
@@ -8783,21 +8729,6 @@
         if(!rawQuery){ showHome(); return; }
 
         const query = normalizeGlobiraSearch(rawQuery);
-
-        /*
-         * IMPORTANT:
-         * Search is its own page/state. If the user searched from Men/Women,
-         * currentCategory may still contain "men" or "women". The background
-         * CJ catalog loader uses currentCategory to refresh category pages,
-         * which was replacing the search results with the full category.
-         *
-         * Clear it BEFORE painting search results so background catalog
-         * loading can never replace "pants" with all Men/Women products.
-         */
-        currentCategory = null;
-        globiraSearchActive = true;
-        if(typeof categoryRequest !== 'undefined') categoryRequest++;
-
         const home = document.getElementById('homePage');
         const page = document.getElementById('categoryPage');
         if(home) home.style.display='none';
@@ -8834,22 +8765,20 @@
             }
         });
 
-        /*
-         * IMPORTANT: Do NOT rebuild the search results after the live CJ
-         * response arrives. Re-rendering here was causing the products to
-         * visibly change/re-order about a second after the first results.
-         * Keep the first matching result set exactly as painted.
-         *
-         * We only add genuinely new live products at the END of the existing
-         * grid, so the products already shown never move, disappear, or get
-         * replaced while the user is looking at them.
-         */
-        /* Cache live matches silently. NEVER modify the visible search grid. */
+        const map = new Map(products.map(p=>[p.id,p]));
+        liveMatches.forEach(p=>{if(p?.id) map.set(p.id,p);});
+        products = Array.from(map.values());
+
         liveMatches.forEach(p=>{
             if(p?.id){
             const i=cjProducts.findIndex(x=>x.id===p.id);
             if(i>=0) cjProducts[i]=p; else cjProducts.push(p);
             }
+        });
+
+        renderFastResults(document.getElementById('categoryProducts'),products,rawQuery,false);
+        document.querySelectorAll('#categoryProducts .gw-card-main-image').forEach((img,i)=>{
+            if(i<12){img.loading='eager';img.setAttribute('fetchpriority','high');}
         });
         }catch(error){
         console.warn('GLOBIRA LIVE SEARCH V2:',error);
@@ -10421,6 +10350,395 @@ body{font-size:14px!important}
 }
 </style>
 
+
+<!-- GLOBIRA FINAL CART REMOVE + PRODUCT PHOTO GALLERY FIX -->
+<style id="globira-final-cart-gallery-fix">
+    /* Make the cart remove action clearly visible without changing the existing layout. */
+    #cartItems .cart-item .remove,
+    #cartItems .cart-item .globira-remove-item{
+        display:inline-flex !important;
+        align-items:center !important;
+        justify-content:center !important;
+        margin-top:12px !important;
+        padding:7px 0 !important;
+        min-height:28px !important;
+        border:0 !important;
+        background:transparent !important;
+        color:#666 !important;
+        font-size:11px !important;
+        font-weight:600 !important;
+        letter-spacing:1.2px !important;
+        text-decoration:underline !important;
+        cursor:pointer !important;
+        opacity:1 !important;
+        visibility:visible !important;
+    }
+
+    #cartItems .cart-item .remove:hover,
+    #cartItems .cart-item .globira-remove-item:hover{
+        color:#111 !important;
+    }
+
+    /* Product popup gallery: show a clean row of 3–4 product-angle thumbnails. */
+    #productModal .thumbnails{
+        display:flex !important;
+        flex-wrap:nowrap !important;
+        gap:9px !important;
+        width:100% !important;
+        overflow-x:auto !important;
+        overflow-y:hidden !important;
+        padding:10px !important;
+        background:#fff !important;
+        box-sizing:border-box !important;
+        scrollbar-width:thin !important;
+    }
+
+    #productModal .thumbnails img{
+        width:78px !important;
+        height:92px !important;
+        min-width:78px !important;
+        object-fit:cover !important;
+        display:block !important;
+        cursor:pointer !important;
+        border:1px solid #ddd !important;
+        opacity:.72 !important;
+        background:#f3f1ed !important;
+    }
+
+    #productModal .thumbnails img:hover,
+    #productModal .thumbnails img.active{
+        opacity:1 !important;
+        border-color:#111 !important;
+    }
+</style>
+
+<script id="globira-final-cart-gallery-fix-script">
+(function(){
+    'use strict';
+
+    /* =========================================================
+       1. GUARANTEE A WORKING REMOVE BUTTON IN EVERY CART ROW
+       ========================================================= */
+
+    function globiraRemoveCartIndex(index){
+        if(!Array.isArray(window.cart) || !window.cart[index]) return;
+
+        window.cart.splice(index,1);
+
+        if(typeof window.saveCart === 'function'){
+            window.saveCart();
+        }
+
+        if(typeof window.renderCart === 'function'){
+            window.renderCart();
+        }
+
+        if(typeof window.showToast === 'function'){
+            window.showToast('Product removed from your cart');
+        }
+    }
+
+    function ensureCartRemoveButtons(){
+        const rows=[...document.querySelectorAll('#cartItems .cart-item')];
+
+        rows.forEach((row,index)=>{
+            if(row.querySelector('.globira-remove-item, .remove')) return;
+
+            const info=row.querySelector('.cart-item-info') || row;
+
+            const button=document.createElement('button');
+            button.type='button';
+            button.className='globira-remove-item';
+            button.textContent='REMOVE';
+            button.setAttribute('aria-label','Remove product from cart');
+
+            button.addEventListener('click',function(e){
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                globiraRemoveCartIndex(index);
+            },true);
+
+            info.appendChild(button);
+        });
+    }
+
+    function patchCartRemoveButtons(){
+        ensureCartRemoveButtons();
+
+        const cartItems=document.getElementById('cartItems');
+        if(!cartItems || cartItems.__globiraRemoveObserver) return;
+
+        const observer=new MutationObserver(function(){
+            ensureCartRemoveButtons();
+        });
+
+        observer.observe(cartItems,{childList:true,subtree:true});
+        cartItems.__globiraRemoveObserver=true;
+    }
+
+    document.addEventListener('DOMContentLoaded',patchCartRemoveButtons);
+    setTimeout(patchCartRemoveButtons,100);
+    setTimeout(patchCartRemoveButtons,600);
+    setTimeout(patchCartRemoveButtons,1500);
+
+    /* =========================================================
+       2. PRODUCT POPUP — RESTORE 3–4 REAL PRODUCT PHOTOS
+       ========================================================= */
+
+    function globiraGalleryImages(product){
+        if(!product) return [];
+
+        const out=[];
+
+        function add(value){
+            if(!value) return;
+
+            if(Array.isArray(value)){
+                value.forEach(add);
+                return;
+            }
+
+            if(typeof value === 'object'){
+                add(
+                    value.url ||
+                    value.imageUrl ||
+                    value.image ||
+                    value.picUrl ||
+                    value.imgUrl ||
+                    value.productImage ||
+                    value.productImg ||
+                    value.fileUrl ||
+                    value.thumbnail ||
+                    value.src
+                );
+                return;
+            }
+
+            if(typeof value === 'string'){
+                const str=value.trim();
+                if(!str) return;
+
+                if(
+                    (str[0]==='[' && str[str.length-1]===']') ||
+                    (str[0]==='{' && str[str.length-1]==='}')
+                ){
+                    try{
+                        add(JSON.parse(str));
+                        return;
+                    }catch(e){}
+                }
+
+                str.split(/\s*[|,]\s*/).forEach(x=>{
+                    x=x.trim();
+                    if(/^https?:\/\//i.test(x)) out.push(x);
+                });
+            }
+        }
+
+        [
+            'images','imageUrls','imageList','productImages','pictures','pics',
+            'productImageList','productImgList','productImagesList',
+            'detailImages','detailImageList','imageArr','imgs','imgList',
+            'skuImages','variantImages','galleryImages'
+        ].forEach(key=>add(product[key]));
+
+        [
+            'image','imageUrl','productImage','mainImage','picUrl','imgUrl',
+            'coverImage','productImg','productImageUrl'
+        ].forEach(key=>add(product[key]));
+
+        [
+            'variants','variantList','variantOptions','skus','skuList',
+            'productVariants','productSkuList','skuInfoList'
+        ].forEach(key=>{
+            const list=product[key];
+            if(!Array.isArray(list)) return;
+
+            list.forEach(v=>{
+                if(!v || typeof v!=='object') return;
+
+                [
+                    'images','imageUrls','imageList','productImages','pictures','pics',
+                    'image','imageUrl','productImage','picUrl','imgUrl',
+                    'skuImage','skuImageUrl','variantImage','variantImages'
+                ].forEach(k=>add(v[k]));
+            });
+        });
+
+        return [...new Set(out)].filter(x=>/^https?:\/\//i.test(x));
+    }
+
+    function renderGlobiraProductGallery(product){
+        const main=document.getElementById('mainProductImage');
+        const thumbs=document.getElementById('productThumbnails');
+
+        if(!main || !thumbs || !product) return;
+
+        let images=globiraGalleryImages(product);
+
+        /* Keep the existing image first if the API gave it in another field. */
+        const current=String(main.src||'').trim();
+        if(/^https?:\/\//i.test(current) && !images.includes(current)){
+            images.unshift(current);
+        }
+
+        images=[...new Set(images)].slice(0,4);
+
+        if(!images.length) return;
+
+        main.src=images[0];
+
+        thumbs.innerHTML=images.map((image,index)=>`
+            <img
+                src="${String(image).replace(/"/g,'&quot;')}"
+                class="${index===0?'active':''}"
+                alt="${String(product.name||'Product').replace(/"/g,'&quot;')} photo ${index+1}"
+                loading="${index===0?'eager':'lazy'}"
+                decoding="async"
+                onclick="globiraFinalChangeProductImage(this)"
+            >
+        `).join('');
+    }
+
+    window.globiraFinalChangeProductImage=function(thumb){
+        if(!thumb) return;
+
+        const main=document.getElementById('mainProductImage');
+        if(main) main.src=thumb.src;
+
+        document.querySelectorAll('#productModal .thumbnails img').forEach(img=>{
+            img.classList.remove('active');
+        });
+
+        thumb.classList.add('active');
+    };
+
+    async function loadExtraProductPhotos(product){
+        if(!product) return;
+
+        /* First render whatever images are already available. */
+        renderGlobiraProductGallery(product);
+
+        const source=String(product.source||'').toLowerCase();
+        if(source!=='cjdropshipping') return;
+
+        let cjId=
+            product.cjProductId ||
+            product.pid ||
+            product.productId ||
+            product.id;
+
+        cjId=String(cjId||'').replace(/^cj-/i,'');
+
+        /* Only call the detail endpoint for a numeric CJ product id. */
+        if(!/^\d+$/.test(cjId)) return;
+
+        const urls=[
+            '/api/cj-product/'+encodeURIComponent(cjId),
+            '/api/cj-product?id='+encodeURIComponent(cjId),
+            '/api/cj-product?pid='+encodeURIComponent(cjId),
+            '/api/cj-product?productId='+encodeURIComponent(cjId)
+        ];
+
+        for(const url of urls){
+            try{
+                const response=await fetch(url,{cache:'no-store'});
+                if(!response.ok) continue;
+
+                const payload=await response.json();
+
+                const detail=
+                    payload?.product ||
+                    payload?.data?.product ||
+                    (payload?.data && typeof payload.data==='object' ? payload.data : null) ||
+                    payload;
+
+                if(detail && typeof detail==='object'){
+                    const merged=Object.assign({},product,detail);
+
+                    /* Make sure the currently opened product still matches. */
+                    if(
+                        window.currentProduct &&
+                        String(window.currentProduct.id)!==String(product.id)
+                    ){
+                        return;
+                    }
+
+                    renderGlobiraProductGallery(merged);
+                    return;
+                }
+            }catch(e){}
+        }
+    }
+
+    function hookProductOpen(){
+        if(typeof window.openProduct!=='function'){
+            setTimeout(hookProductOpen,300);
+            return;
+        }
+
+        if(window.openProduct.__globiraGalleryPatched) return;
+
+        const originalOpenProduct=window.openProduct;
+
+        function patchedOpenProduct(id,preselectedSize){
+            const result=originalOpenProduct.apply(this,arguments);
+
+            setTimeout(()=>{
+                let product=null;
+
+                try{
+                    if(typeof window.findProduct==='function'){
+                        product=window.findProduct(id);
+                    }
+                }catch(e){}
+
+                if(!product && Array.isArray(window.cjProducts)){
+                    product=window.cjProducts.find(x=>String(x.id)===String(id));
+                }
+
+                if(product){
+                    loadExtraProductPhotos(product);
+                }
+            },80);
+
+            return result;
+        }
+
+        patchedOpenProduct.__globiraGalleryPatched=true;
+        window.openProduct=patchedOpenProduct;
+    }
+
+    hookProductOpen();
+
+    /* Also refresh the gallery whenever the popup becomes visible. */
+    const modal=document.getElementById('productModal');
+
+    if(modal){
+        const observer=new MutationObserver(()=>{
+            if(!modal.classList.contains('active')) return;
+
+            const id=window.currentProduct?.id;
+            if(!id) return;
+
+            let product=null;
+            try{
+                if(typeof window.findProduct==='function'){
+                    product=window.findProduct(id);
+                }
+            }catch(e){}
+
+            if(product) loadExtraProductPhotos(product);
+        });
+
+        observer.observe(modal,{attributes:true,attributeFilter:['class']});
+    }
+
+})();
+</script>
+<!-- END GLOBIRA FINAL CART REMOVE + PRODUCT PHOTO GALLERY FIX -->
+
 </body>
     
 
@@ -11403,7 +11721,7 @@ body{font-size:14px!important}
 
     const GLOBIRA_CURRENCIES = {
         INR:{name:'Indian Rupee',country:'India',symbol:'₹',inr:1,decimals:0,group:'Asia'},
-        USD:{name:'US Dollar',country:'United States',symbol:'$',inr:95.7623,decimals:2,group:'Americas'},
+        USD:{name:'US Dollar',country:'United States',symbol:'$',inr:95.824,decimals:2,group:'Americas'},
         EUR:{name:'Euro',country:'Eurozone',symbol:'€',inr:110.15,decimals:2,group:'Europe'},
         GBP:{name:'British Pound',country:'United Kingdom',symbol:'£',inr:128.46,decimals:2,group:'Europe'},
         CHF:{name:'Swiss Franc',country:'Switzerland',symbol:'CHF',inr:116.45,decimals:2,group:'Europe'},
@@ -12441,150 +12759,3 @@ body{font-size:15px!important}
   }
 })();
 </script>
-
-<style id="globira-mobile-responsive-final-v7">
-/* =========================================================
-   GLOBIRA — FINAL MOBILE RESPONSIVE PASS
-   Keep the desktop layout unchanged. On phones, keep the
-   full header actions visible, including Wishlist, while
-   preventing horizontal overflow.
-========================================================= */
-html,body{
-  max-width:100%;
-  overflow-x:hidden!important;
-}
-
-@media(max-width:600px){
-  .globira-main-header{
-    width:100%!important;
-    box-sizing:border-box!important;
-    grid-template-columns:minmax(0,1fr) auto!important;
-    gap:10px!important;
-    padding-left:12px!important;
-    padding-right:12px!important;
-  }
-
-  .globira-main-header .logo-wrap{
-    min-width:0!important;
-    overflow:hidden!important;
-  }
-  .globira-main-header .logo{
-    font-size:27px!important;
-    white-space:nowrap!important;
-  }
-  .logo-subtitle{
-    font-size:9px!important;
-    letter-spacing:1.5px!important;
-    white-space:nowrap!important;
-  }
-
-  /* Account + Wishlist + Cart are all available on mobile. */
-  .header-actions{
-    display:flex!important;
-    align-items:center!important;
-    justify-content:flex-end!important;
-    gap:4px!important;
-    min-width:0!important;
-  }
-  .header-actions .desktop-only-action{
-    display:inline-flex!important;
-  }
-  .header-icon-btn,
-  .header-cart-btn{
-    width:34px!important;
-    min-width:34px!important;
-    height:38px!important;
-    padding:4px!important;
-    display:inline-flex!important;
-    align-items:center!important;
-    justify-content:center!important;
-    box-sizing:border-box!important;
-    position:relative!important;
-  }
-  .header-icon-btn svg,
-  .header-cart-btn svg{
-    width:20px!important;
-    height:20px!important;
-  }
-  .header-icon-btn .action-label,
-  .header-cart-btn .action-label{
-    display:none!important;
-  }
-  .header-cart-count{
-    position:absolute!important;
-    top:1px!important;
-    right:0!important;
-    min-width:14px!important;
-    height:14px!important;
-    line-height:14px!important;
-    padding:0 3px!important;
-    box-sizing:border-box!important;
-    font-size:9px!important;
-  }
-
-  .modern-header-search{
-    width:100%!important;
-    min-width:0!important;
-    box-sizing:border-box!important;
-  }
-  .modern-header-search input{
-    width:100%!important;
-    min-width:0!important;
-    box-sizing:border-box!important;
-  }
-
-  .globira-reference-nav.globira-global-nav{
-    width:100%!important;
-    max-width:100%!important;
-    box-sizing:border-box!important;
-    overflow-x:auto!important;
-    overflow-y:hidden!important;
-    -webkit-overflow-scrolling:touch!important;
-    white-space:nowrap!important;
-    scrollbar-width:none!important;
-  }
-  .globira-reference-nav.globira-global-nav::-webkit-scrollbar{display:none!important}
-  .globira-reference-nav.globira-global-nav a{
-    flex:0 0 auto!important;
-  }
-
-  /* Product/category grids stay inside the phone width. */
-  .gw-products-grid,
-  .category-result-grid{
-    width:100%!important;
-    max-width:100%!important;
-    box-sizing:border-box!important;
-  }
-  .gw-product-card{min-width:0!important;max-width:100%!important}
-  .gw-product-image{max-width:100%!important}
-
-  /* Wishlist itself is phone-sized and scrolls internally. */
-  .globira-wishlist-overlay{
-    padding:8px!important;
-    box-sizing:border-box!important;
-  }
-  .globira-wishlist-box{
-    width:100%!important;
-    max-width:100%!important;
-    max-height:calc(100dvh - 16px)!important;
-    box-sizing:border-box!important;
-    padding:22px 12px 18px!important;
-    overflow-x:hidden!important;
-    overflow-y:auto!important;
-  }
-  .globira-wishlist-grid{
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    gap:8px!important;
-  }
-}
-
-@media(max-width:360px){
-  .globira-main-header{gap:6px!important;padding-left:9px!important;padding-right:9px!important}
-  .globira-main-header .logo{font-size:24px!important}
-  .logo-subtitle{font-size:8px!important;letter-spacing:1.1px!important}
-  .header-actions{gap:2px!important}
-  .header-icon-btn,.header-cart-btn{width:31px!important;min-width:31px!important;height:36px!important}
-  .header-icon-btn svg,.header-cart-btn svg{width:18px!important;height:18px!important}
-  .header-cart-count{font-size:8px!important;min-width:13px!important;height:13px!important;line-height:13px!important}
-}
-</style>
