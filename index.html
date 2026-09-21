@@ -8729,6 +8729,19 @@
         if(!rawQuery){ showHome(); return; }
 
         const query = normalizeGlobiraSearch(rawQuery);
+
+        /*
+         * IMPORTANT:
+         * Search is its own page/state. If the user searched from Men/Women,
+         * currentCategory may still contain "men" or "women". The background
+         * CJ catalog loader uses currentCategory to refresh category pages,
+         * which was replacing the search results with the full category.
+         *
+         * Clear it BEFORE painting search results so background catalog
+         * loading can never replace "pants" with all Men/Women products.
+         */
+        currentCategory = null;
+
         const home = document.getElementById('homePage');
         const page = document.getElementById('categoryPage');
         if(home) home.style.display='none';
