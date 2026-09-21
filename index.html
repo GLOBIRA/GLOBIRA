@@ -1,6 +1,4 @@
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
+<html lang="en"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -3064,7 +3062,7 @@
 
 </head>
 
-    <body>
+    <body class="">
 
     <!-- =========================
     HEADER
@@ -3072,7 +3070,7 @@
 
     <div class="globira-utility-bar">
     <div class="utility-left"><span>◉ Free Shipping Worldwide</span><span>│</span><span>▣ Easy Returns</span><span>│</span><span>♡ Secure Payments</span></div>
-    <div class="utility-right"><button type="button" class="globira-currency-trigger" id="globiraCurrencyTrigger" onclick="openCurrencyPicker()" aria-haspopup="dialog" aria-expanded="false">◉ <span id="globiraCurrencyLabel">INR</span> ▾</button><span>│</span><span>Track Order</span><span>│</span><span>Help</span></div>
+    <div class="utility-right"><button type="button" class="globira-currency-trigger" id="globiraCurrencyTrigger" onclick="openCurrencyPicker()" aria-haspopup="dialog" aria-expanded="false" aria-label="Currency: USD">◉ <span id="globiraCurrencyLabel">USD</span> ▾</button><span>│</span><span>Track Order</span><span>│</span><span>Help</span></div>
     </div>
     <header class="globira-main-header">
     <div class="logo-wrap">
@@ -3081,10 +3079,7 @@
     </div>
 
     <div class="header-search modern-header-search">
-        <input id="globiraSearchInput" type="search"
-        placeholder="Search products, brands, electronics, home & more..."
-        autocomplete="off"
-        onkeydown="if(event.key==='Enter') searchProducts();">
+        <input id="globiraSearchInput" type="search" placeholder="Search products, brands, electronics, home &amp; more..." autocomplete="off" onkeydown="if(event.key==='Enter') searchProducts();">
         <button type="button" onclick="searchProducts()" aria-label="Search">⌕</button>
     </div>
 
@@ -3115,9 +3110,9 @@
     <a href="#" onclick="showCategory('men');closeAllMegaMenus();return false;">Men</a>
     <a href="#" onclick="showCategory('bags');closeAllMegaMenus();return false;">Bags</a>
     <a href="#" onclick="showCategory('electronics');closeAllMegaMenus();return false;">Electronics</a>
-    <a href="#" onclick="showCategory('home');closeAllMegaMenus();return false;">Home & Living</a>
+    <a href="#" onclick="showCategory('home');closeAllMegaMenus();return false;">Home &amp; Living</a>
     <a href="#" onclick="showCategory('beauty');closeAllMegaMenus();return false;">Beauty</a>
-    <a href="#" onclick="showCategory('tools');closeAllMegaMenus();return false;">Tools & DIY</a>
+    <a href="#" onclick="showCategory('tools');closeAllMegaMenus();return false;">Tools &amp; DIY</a>
     <a href="#" onclick="showCategory('sports');closeAllMegaMenus();return false;">Sports</a>
     <a href="#" onclick="showCategory('more');closeAllMegaMenus();return false;">More</a>
     <a href="#" onclick="showNewArrivals();closeAllMegaMenus();return false;">New <em>NEW</em></a>
@@ -3132,7 +3127,7 @@
     <div class="globira-mega" data-menu="tools"></div>
     <div class="globira-mega" data-menu="sports"></div>
     <div class="globira-mega" data-menu="more"></div>
-    </div><div class="globira-mega" data-menu="men"></div><div class="globira-mega" data-menu="bags"></div><div class="globira-mega" data-menu="shoes"></div><div class="globira-mega" data-menu="accessories"></div></div>
+    </div><div class="globira-mega" data-menu="men"></div><div class="globira-mega" data-menu="bags"></div><div class="globira-mega" data-menu="shoes"></div><div class="globira-mega" data-menu="accessories"></div>
 
 
     <!-- =========================
@@ -3151,7 +3146,7 @@
             <button class="ref-shop-btn" onclick="showNewArrivals()">Shop Now <b>→</b></button>
         </div>
         <div class="ref-hero-image">
-            <img id="heroSlideImage" src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1800&q=92" alt="GLOBIRA worldwide marketplace">
+            <img id="heroSlideImage" src="https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&amp;fit=crop&amp;w=1400&amp;q=90" alt="GLOBIRA worldwide marketplace" style="opacity: 1;">
             <div class="ref-hero-slogan">More<br>Choices<br>Bigger<br>Dreams <span>♡</span></div>
             <div class="ref-arrows">
             <button onclick="changeHeroSlide(-1)" aria-label="Previous">‹</button>
@@ -3167,19 +3162,19 @@
     <!-- FOUR EDITORIAL CATEGORY PANELS -->
     <section class="ref-four-panels">
         <article class="ref-four-panel" onclick="showCategory('women')">
-        <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1400&q=92" alt="Fashion collection">
+        <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&amp;fit=crop&amp;w=1400&amp;q=92" alt="Fashion collection">
         <div><span>FASHION</span><h3>Style For Every Moment</h3><p>New looks, timeless pieces and everyday essentials.</p><button>Explore Fashion <b>→</b></button></div>
         </article>
         <article class="ref-four-panel" onclick="showCategory('home')">
-        <img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1400&q=92" alt="Home and living collection">
+        <img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&amp;fit=crop&amp;w=1400&amp;q=92" alt="Home and living collection">
         <div><span>HOME &amp; LIVING</span><h3>Make Space Feel Like Home</h3><p>Furniture, decor, kitchen and everyday home finds.</p><button>Explore Home <b>→</b></button></div>
         </article>
         <article class="ref-four-panel" onclick="showCategory('electronics')">
-        <img src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=1400&q=92" alt="Technology collection">
+        <img src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&amp;fit=crop&amp;w=1400&amp;q=92" alt="Technology collection">
         <div><span>TECH &amp; GADGETS</span><h3>Smart Things. Better Living.</h3><p>Modern gadgets, devices and connected essentials.</p><button>Explore Tech <b>→</b></button></div>
         </article>
         <article class="ref-four-panel" onclick="showCategory('electronics')">
-        <img src="https://images.unsplash.com/photo-1468495244123-6c6c332eeece?auto=format&fit=crop&w=1400&q=92" alt="Electronics collection">
+        <img src="https://images.unsplash.com/photo-1468495244123-6c6c332eeece?auto=format&amp;fit=crop&amp;w=1400&amp;q=92" alt="Electronics collection">
         <div><span>ELECTRONICS</span><h3>Power Your Everyday</h3><p>Audio, accessories, devices and useful electronics.</p><button>Explore Electronics <b>→</b></button></div>
         </article>
     </section>
@@ -3211,10 +3206,1010 @@
         <b id="gwLiveStatusText">Connecting to the live catalog…</b>
         <small id="gwLiveCount"></small>
         </div>
-        <div class="products gw-products-grid" id="featuredProducts"></div>
+        <div class="products gw-products-grid" id="featuredProducts"><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('w1')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Silk Evening Dress" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="w1" onclick="event.stopPropagation();toggleProductWishlist?.('w1')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Silk Evening Dress</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$34.35 <span class="old-price">US$46.85</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('w2')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Satin Midi Dress" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="w2" onclick="event.stopPropagation();toggleProductWishlist?.('w2')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Satin Midi Dress</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$26.02 <span class="old-price">US$36.44</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('w3')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Premium Blazer" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="w3" onclick="event.stopPropagation();toggleProductWishlist?.('w3')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1591369822096-ffd140ec948f?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1591369822096-ffd140ec948f?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Premium Blazer</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$30.19 <span class="old-price">US$41.64</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('w4')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Classic White Shirt" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="w4" onclick="event.stopPropagation();toggleProductWishlist?.('w4')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1603252110481-7ba873bf42ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1603252110481-7ba873bf42ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Classic White Shirt</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$18.73 <span class="old-price">US$26.02</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('w5')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Minimal Black Dress" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="w5" onclick="event.stopPropagation();toggleProductWishlist?.('w5')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Minimal Black Dress</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$28.10 <span class="old-price">US$38.52</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('w6')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Premium Knit Top" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="w6" onclick="event.stopPropagation();toggleProductWishlist?.('w6')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1583743814966-8936f37f4678?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1583743814966-8936f37f4678?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Premium Knit Top</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$14.57 <span class="old-price">US$20.82</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('w7')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Linen Co-Ord Set" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="w7" onclick="event.stopPropagation();toggleProductWishlist?.('w7')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Linen Co-Ord Set</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$31.23 <span class="old-price">US$41.64</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('w8')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Tailored Trousers" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="w8" onclick="event.stopPropagation();toggleProductWishlist?.('w8')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1506629905607-d9d4a3f9a96d?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1506629905607-d9d4a3f9a96d?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Tailored Trousers</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$20.82 <span class="old-price">US$29.15</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('w9')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1544022613-e87ca75a784a?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Luxury Trench Coat" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="w9" onclick="event.stopPropagation();toggleProductWishlist?.('w9')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1544022613-e87ca75a784a?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1544022613-e87ca75a784a?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1539533113208-f6df8cc8b543?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1539533113208-f6df8cc8b543?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Luxury Trench Coat</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$41.64 <span class="old-price">US$57.26</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('w10')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85" alt="Pleated Skirt" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="w10" onclick="event.stopPropagation();toggleProductWishlist?.('w10')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1583496661160-fb5886a13d27?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1583496661160-fb5886a13d27?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Pleated Skirt</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$19.77 <span class="old-price">US$27.06</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('w11')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1543076447-215ad9ba6923?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Premium Denim Jacket" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="w11" onclick="event.stopPropagation();toggleProductWishlist?.('w11')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1543076447-215ad9ba6923?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1543076447-215ad9ba6923?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Premium Denim Jacket</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$22.90 <span class="old-price">US$31.23</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('w12')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Soft Cashmere Sweater" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="w12" onclick="event.stopPropagation();toggleProductWishlist?.('w12')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1583743814966-8936f37f4678?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1583743814966-8936f37f4678?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Soft Cashmere Sweater</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$34.35 <span class="old-price">US$46.85</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('w13')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Evening Satin Top" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="w13" onclick="event.stopPropagation();toggleProductWishlist?.('w13')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Evening Satin Top</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$16.65 <span class="old-price">US$23.94</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('w14')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Relaxed Cotton Dress" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="w14" onclick="event.stopPropagation();toggleProductWishlist?.('w14')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Relaxed Cotton Dress</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$23.94 <span class="old-price">US$33.31</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('w15')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Wide Leg Pants" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="w15" onclick="event.stopPropagation();toggleProductWishlist?.('w15')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1506629905607-d9d4a3f9a96d?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1506629905607-d9d4a3f9a96d?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Wide Leg Pants</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$21.86 <span class="old-price">US$30.19</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('w16')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Luxury Maxi Dress" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="w16" onclick="event.stopPropagation();toggleProductWishlist?.('w16')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Luxury Maxi Dress</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$36.44 <span class="old-price">US$49.97</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('w17')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Structured Vest" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="w17" onclick="event.stopPropagation();toggleProductWishlist?.('w17')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1591369822096-ffd140ec948f?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1591369822096-ffd140ec948f?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Structured Vest</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$18.73 <span class="old-price">US$26.02</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('w18')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Premium Lounge Set" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="w18" onclick="event.stopPropagation();toggleProductWishlist?.('w18')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Premium Lounge Set</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$26.02 <span class="old-price">US$35.39</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('w19')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Signature Blouse" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="w19" onclick="event.stopPropagation();toggleProductWishlist?.('w19')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Signature Blouse</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$17.69 <span class="old-price">US$24.98</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('w20')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="GLOBIRA Signature Dress" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="w20" onclick="event.stopPropagation();toggleProductWishlist?.('w20')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>GLOBIRA Signature Dress</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$39.56 <span class="old-price">US$52.05</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('m1')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1603252110481-7ba873bf42ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Premium Oxford Shirt" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="m1" onclick="event.stopPropagation();toggleProductWishlist?.('m1')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1603252110481-7ba873bf42ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1603252110481-7ba873bf42ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Premium Oxford Shirt</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$18.73 <span class="old-price">US$26.02</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('m2')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1621072156002-e2fccdc0b176?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Luxury Black Shirt" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="m2" onclick="event.stopPropagation();toggleProductWishlist?.('m2')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1621072156002-e2fccdc0b176?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1621072156002-e2fccdc0b176?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1603252110481-7ba873bf42ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1603252110481-7ba873bf42ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Luxury Black Shirt</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$19.77 <span class="old-price">US$28.10</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('m3')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1555069519-127aadedf1ee?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Tailored Black Blazer" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="m3" onclick="event.stopPropagation();toggleProductWishlist?.('m3')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1555069519-127aadedf1ee?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1555069519-127aadedf1ee?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1598808503746-f34c53b9323e?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1598808503746-f34c53b9323e?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Tailored Black Blazer</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$36.44 <span class="old-price">US$52.05</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('m4')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Essential White Tee" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="m4" onclick="event.stopPropagation();toggleProductWishlist?.('m4')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1583743814966-8936f37f4678?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1583743814966-8936f37f4678?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Essential White Tee</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$9.36 <span class="old-price">US$13.53</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('m5')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Relaxed Beige Shirt" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="m5" onclick="event.stopPropagation();toggleProductWishlist?.('m5')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1603252110481-7ba873bf42ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1603252110481-7ba873bf42ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Relaxed Beige Shirt</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$17.69 <span class="old-price">US$24.98</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('m6')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85" alt="Premium Polo" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="m6" onclick="event.stopPropagation();toggleProductWishlist?.('m6')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1625910513413-5fc45b2b4a3c?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1625910513413-5fc45b2b4a3c?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1583743814966-8936f37f4678?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1583743814966-8936f37f4678?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Premium Polo</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$15.61 <span class="old-price">US$22.90</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('m7')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1603252110481-7ba873bf42ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Classic Navy Shirt" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="m7" onclick="event.stopPropagation();toggleProductWishlist?.('m7')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1603252110481-7ba873bf42ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1603252110481-7ba873bf42ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1621072156002-e2fccdc0b176?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1621072156002-e2fccdc0b176?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Classic Navy Shirt</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$18.73 <span class="old-price">US$26.02</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('m8')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85" alt="Smart Trousers" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="m8" onclick="event.stopPropagation();toggleProductWishlist?.('m8')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1506629905607-d9d4a3f9a96d?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1506629905607-d9d4a3f9a96d?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1516826957135-700dedea698c?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1516826957135-700dedea698c?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Smart Trousers</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$22.90 <span class="old-price">US$31.23</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('m9')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Premium Denim" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="m9" onclick="event.stopPropagation();toggleProductWishlist?.('m9')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1475178626620-a4d074967452?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1475178626620-a4d074967452?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Premium Denim</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$23.94 <span class="old-price">US$33.31</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('m10')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1544022613-e87ca75a784a?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Luxury Trench Coat" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="m10" onclick="event.stopPropagation();toggleProductWishlist?.('m10')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1544022613-e87ca75a784a?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1544022613-e87ca75a784a?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1539533113208-f6df8cc8b543?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1539533113208-f6df8cc8b543?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Luxury Trench Coat</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$41.64 <span class="old-price">US$57.26</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('m11')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Premium Knit Sweater" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="m11" onclick="event.stopPropagation();toggleProductWishlist?.('m11')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1583743814966-8936f37f4678?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1583743814966-8936f37f4678?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Premium Knit Sweater</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$26.02 <span class="old-price">US$36.44</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('m12')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Oversized Premium Tee" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="m12" onclick="event.stopPropagation();toggleProductWishlist?.('m12')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1583743814966-8936f37f4678?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1583743814966-8936f37f4678?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Oversized Premium Tee</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$11.44 <span class="old-price">US$16.65</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('m13')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Signature Suit Jacket" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="m13" onclick="event.stopPropagation();toggleProductWishlist?.('m13')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1555069519-127aadedf1ee?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1555069519-127aadedf1ee?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1598808503746-f34c53b9323e?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1598808503746-f34c53b9323e?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Signature Suit Jacket</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$44.77 <span class="old-price">US$62.47</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('m14')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Linen Resort Shirt" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="m14" onclick="event.stopPropagation();toggleProductWishlist?.('m14')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1603252110481-7ba873bf42ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1603252110481-7ba873bf42ab?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1621072156002-e2fccdc0b176?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1621072156002-e2fccdc0b176?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Linen Resort Shirt</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$20.82 <span class="old-price">US$29.15</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('m15')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Minimalist Hoodie" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="m15" onclick="event.stopPropagation();toggleProductWishlist?.('m15')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1578681994506-b8f463449011?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1578681994506-b8f463449011?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Minimalist Hoodie</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$19.77 <span class="old-price">US$27.06</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('m16')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1516826957135-700dedea698c?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Cargo Trousers" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="m16" onclick="event.stopPropagation();toggleProductWishlist?.('m16')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1516826957135-700dedea698c?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1516826957135-700dedea698c?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1506629905607-d9d4a3f9a96d?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1506629905607-d9d4a3f9a96d?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Cargo Trousers</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$20.82 <span class="old-price">US$30.19</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('m17')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1598808503746-f34c53b9323e?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Premium Overshirt" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="m17" onclick="event.stopPropagation();toggleProductWishlist?.('m17')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1598808503746-f34c53b9323e?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1598808503746-f34c53b9323e?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1555069519-127aadedf1ee?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1555069519-127aadedf1ee?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Premium Overshirt</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$23.94 <span class="old-price">US$33.31</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('m18')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Luxury Bomber Jacket" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="m18" onclick="event.stopPropagation();toggleProductWishlist?.('m18')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Luxury Bomber Jacket</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$31.23 <span class="old-price">US$43.72</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('m19')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="Classic Crewneck" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="m19" onclick="event.stopPropagation();toggleProductWishlist?.('m19')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1578681994506-b8f463449011?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1578681994506-b8f463449011?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>Classic Crewneck</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$16.65 <span class="old-price">US$22.90</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article><article class="product gw-product-card" onclick="closeWishlist?.();openProduct('m20')">
+        <div class="product-image gw-product-image">
+            <img class="gw-card-main-image" src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="GLOBIRA Signature Jacket" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&amp;fit=crop&amp;w=900&amp;q=85';">
+            <span class="globira-photo-count">3 photos</span>
+            <span class="badge">GLOBIRA</span>
+            <button class="gw-card-heart " data-wishlist-product="m20" onclick="event.stopPropagation();toggleProductWishlist?.('m20')" aria-label="Add to wishlist">♡</button>
+        </div>
+        
+        <div class="globira-card-gallery" aria-label="Product photos">
+            <button type="button" class="active" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 1">
+                <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1555069519-127aadedf1ee?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 2">
+                <img src="https://images.unsplash.com/photo-1555069519-127aadedf1ee?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button><button type="button" class="" onclick="event.stopPropagation();globiraCardImage(this,'https://images.unsplash.com/photo-1598808503746-f34c53b9323e?auto=format&amp;fit=crop&amp;w=900&amp;q=90')" aria-label="Product photo 3">
+                <img src="https://images.unsplash.com/photo-1598808503746-f34c53b9323e?auto=format&amp;fit=crop&amp;w=900&amp;q=90" alt="" loading="lazy" decoding="async">
+                </button>
+        </div>
+        <div class="product-info gw-product-info">
+            <div class="gw-product-category">other </div>
+            <h3>GLOBIRA Signature Jacket</h3>
+            <div class="gw-product-bottom">
+            <div class="price">US$39.56 <span class="old-price">US$52.05</span></div>
+            <span class="gw-view">View →</span>
+            </div>
+        </div>
+        </article></div>
         <div class="gw-home-catalog-footer">
-        <div class="gw-home-catalog-status" id="homeCatalogStatus">Loading live products…</div>
-        <button type="button" class="gw-home-load-more" id="homeLoadMoreBtn" onclick="loadMoreHomeProducts()">Load more products →</button>
+        <div class="gw-home-catalog-status" id="homeCatalogStatus">Showing 40 of 40 live products</div>
+        <button type="button" class="gw-home-load-more" id="homeLoadMoreBtn" onclick="loadMoreHomeProducts()" disabled="" style="display: block;">Loading more products…</button>
         </div>
     </section>
 
@@ -3251,7 +4246,7 @@
     ========================= -->
 
 
-    <section id="categoryPage" class="category-page">
+    <section id="categoryPage" class="category-page" style="overflow-y: scroll; touch-action: pan-y;">
         <button class="category-back" type="button" onclick="showHome()">← BACK TO GLOBIRA</button>
 
         <div class="category-page-title">
@@ -3264,7 +4259,7 @@
 
         </div>
 
-        <div class="products" id="categoryProducts"></div>
+        <div class="products" id="categoryProducts" style="width: calc(-40px + 100vw); max-width: none;"></div>
 
     </section>
 
@@ -3273,9 +4268,7 @@
     OVERLAY
     ========================= -->
 
-    <div class="overlay"
-        id="overlay"
-        onclick="overlayClose()">
+    <div class="overlay" id="overlay" onclick="overlayClose()">
     </div>
 
 
@@ -3289,12 +4282,32 @@
 
             <h2>Your Cart</h2>
 
-            <button class="close"
-                    onclick="closeCart()">×</button>
+            <button class="close" onclick="closeCart()">×</button>
 
         </div>
 
-        <div class="cart-items" id="cartItems"></div>
+        <div class="cart-items" id="cartItems">
+
+                <div style="
+                    text-align:center;
+                    color:#888;
+                    padding:70px 20px;
+                ">
+
+                    <div style="
+                        font-family:'Playfair Display',serif;
+                        font-size:28px;
+                        color:#111;
+                        margin-bottom:10px;
+                    ">
+                        Your Cart
+                    </div>
+
+                    Your cart is currently empty.
+
+                </div>
+
+            </div>
 
         <div class="cart-footer">
 
@@ -3302,12 +4315,11 @@
 
                 <span>Total</span>
 
-                <strong id="cartTotal">₹0</strong>
+                <strong id="cartTotal">US$0.00</strong>
 
             </div>
 
-            <button class="checkout-btn"
-                    onclick="openCheckout()">
+            <button class="checkout-btn" onclick="openCheckout()">
                 REVIEW ORDER
             </button>
 
@@ -3322,19 +4334,15 @@
 
     <div class="product-modal" id="productModal">
 
-        <button class="popup-close"
-                onclick="closeProduct()">×</button>
+        <button class="popup-close" onclick="closeProduct()">×</button>
 
         <div class="product-popup">
 
             <div class="popup-gallery">
 
-                <img id="mainProductImage"
-                    class="main-photo"
-                    alt="Product">
+                <img id="mainProductImage" class="main-photo" alt="Product">
 
-                <div class="thumbnails"
-                    id="productThumbnails"></div>
+                <div class="thumbnails" id="productThumbnails"></div>
 
             </div>
 
@@ -3343,11 +4351,9 @@
 
                 <h2 id="popupName"></h2>
 
-                <div class="popup-price"
-                    id="popupPrice"></div>
+                <div class="popup-price" id="popupPrice"></div>
 
-                <div class="popup-description"
-                    id="popupDescription"></div>
+                <div class="popup-description" id="popupDescription"></div>
 
                 <div class="details-box">
 
@@ -3356,7 +4362,7 @@
                     Premium quality fabric<br>
                     Comfortable modern fit<br>
                     Carefully finished details<br>
-                    Suitable for everyday & occasion wear<br>
+                    Suitable for everyday &amp; occasion wear<br>
                     Delivery: 4–7 working days
 
                 </div>
@@ -3368,33 +4374,23 @@
 
                 <div class="sizes">
 
-                    <button class="size"
-                            data-size="XS"
-                            onclick="selectSize(this)">
+                    <button class="size" data-size="XS" onclick="selectSize(this)">
                         XS
                     </button>
 
-                    <button class="size"
-                            data-size="S"
-                            onclick="selectSize(this)">
+                    <button class="size" data-size="S" onclick="selectSize(this)">
                         S
                     </button>
 
-                    <button class="size"
-                            data-size="M"
-                            onclick="selectSize(this)">
+                    <button class="size" data-size="M" onclick="selectSize(this)">
                         M
                     </button>
 
-                    <button class="size"
-                            data-size="L"
-                            onclick="selectSize(this)">
+                    <button class="size" data-size="L" onclick="selectSize(this)">
                         L
                     </button>
 
-                    <button class="size"
-                            data-size="XL"
-                            onclick="selectSize(this)">
+                    <button class="size" data-size="XL" onclick="selectSize(this)">
                         XL
                     </button>
 
@@ -3420,13 +4416,11 @@
                 </div>
 
 
-                <button class="add-popup"
-                        id="popupAddButton">
+                <button class="add-popup" id="popupAddButton">
                     ADD TO CART
                 </button>
 
-                <button class="buy-now"
-                        id="popupBuyButton">
+                <button class="buy-now" id="popupBuyButton">
                     BUY NOW
                 </button>
 
@@ -3441,8 +4435,7 @@
     CHECKOUT
     ========================= -->
 
-    <div class="checkout-modal"
-        id="checkoutModal">
+    <div class="checkout-modal" id="checkoutModal">
 
         <div class="checkout-shell">
 
@@ -3456,8 +4449,7 @@
                     SECURE CHECKOUT
                 </div>
 
-                <button class="checkout-close"
-                        onclick="closeCheckout()">
+                <button class="checkout-close" onclick="closeCheckout()">
                     ×
                 </button>
 
@@ -3482,23 +4474,19 @@
 
                 <div class="steps">
 
-                    <span id="stepLabel1"
-                        class="step active">
+                    <span id="stepLabel1" class="step active">
                         1 Review
                     </span>
 
-                    <span id="stepLabel2"
-                        class="step">
+                    <span id="stepLabel2" class="step">
                         2 Address
                     </span>
 
-                    <span id="stepLabel3"
-                        class="step">
+                    <span id="stepLabel3" class="step">
                         3 Payment
                     </span>
 
-                    <span id="stepLabel4"
-                        class="step">
+                    <span id="stepLabel4" class="step">
                         4 Done
                     </span>
 
@@ -3512,8 +4500,7 @@
 
                         <!-- REVIEW -->
 
-                        <div id="step1"
-                            class="checkout-step active">
+                        <div id="step1" class="checkout-step active">
 
                             <h2>Review Your Order</h2>
 
@@ -3528,8 +4515,7 @@
 
                             </div>
 
-                            <button class="next-btn"
-                                    onclick="goToDelivery()">
+                            <button class="next-btn" onclick="goToDelivery()">
                                 CONTINUE TO ADDRESS
                             </button>
 
@@ -3538,8 +4524,7 @@
 
                         <!-- ADDRESS -->
 
-                        <div id="step2"
-                            class="checkout-step">
+                        <div id="step2" class="checkout-step">
 
                             <h2>Delivery Details</h2>
 
@@ -3548,7 +4533,7 @@
                             <div class="globira-address-type-row">
                                 <div class="globira-address-type-title">SAVE ADDRESS AS</div>
                                 <label class="globira-address-type-option active" data-address-type="Home">
-                                    <input type="radio" name="globiraAddressType" value="Home" checked>
+                                    <input type="radio" name="globiraAddressType" value="Home" checked="">
                                     <span>⌂</span> Home
                                 </label>
                                 <label class="globira-address-type-option" data-address-type="Work">
@@ -3662,19 +4647,14 @@
 
                         <!-- PAYMENT -->
 
-                        <div id="step3"
-                            class="checkout-step">
+                        <div id="step3" class="checkout-step">
 
                             <h2>Choose Payment</h2>
 
 
-                            <div class="payment-option"
-                                data-payment="UPI"
-                                onclick="selectPayment('UPI')">
+                            <div class="payment-option" data-payment="UPI" onclick="selectPayment('UPI')">
 
-                                <input type="radio"
-                                    name="payment"
-                                    value="UPI">
+                                <input type="radio" name="payment" value="UPI">
 
                                 <div>
                                     <div class="payment-name">
@@ -3689,13 +4669,9 @@
                             </div>
 
 
-                            <div class="payment-option"
-                                data-payment="Paytm"
-                                onclick="selectPayment('Paytm')">
+                            <div class="payment-option" data-payment="Paytm" onclick="selectPayment('Paytm')">
 
-                                <input type="radio"
-                                    name="payment"
-                                    value="Paytm">
+                                <input type="radio" name="payment" value="Paytm">
 
                                 <div>
                                     <div class="payment-name">
@@ -3710,13 +4686,9 @@
                             </div>
 
 
-                            <div class="payment-option"
-                                data-payment="Card"
-                                onclick="selectPayment('Card')">
+                            <div class="payment-option" data-payment="Card" onclick="selectPayment('Card')">
 
-                                <input type="radio"
-                                    name="payment"
-                                    value="Card">
+                                <input type="radio" name="payment" value="Card">
 
                                 <div>
                                     <div class="payment-name">
@@ -3731,13 +4703,9 @@
                             </div>
 
 
-                            <div class="payment-option"
-                                data-payment="Net Banking"
-                                onclick="selectPayment('Net Banking')">
+                            <div class="payment-option" data-payment="Net Banking" onclick="selectPayment('Net Banking')">
 
-                                <input type="radio"
-                                    name="payment"
-                                    value="Net Banking">
+                                <input type="radio" name="payment" value="Net Banking">
 
                                 <div>
                                     <div class="payment-name">
@@ -3752,13 +4720,9 @@
                             </div>
 
 
-                            <div class="payment-option"
-                                data-payment="COD"
-                                onclick="selectPayment('COD')">
+                            <div class="payment-option" data-payment="COD" onclick="selectPayment('COD')">
 
-                                <input type="radio"
-                                    name="payment"
-                                    value="COD">
+                                <input type="radio" name="payment" value="COD">
 
                                 <div>
                                     <div class="payment-name">
@@ -3785,14 +4749,11 @@
                             </div>
 
 
-                            <button class="next-btn"
-                                    id="placeOrderButton"
-                                    onclick="placeOrder()">
+                            <button class="next-btn" id="placeOrderButton" onclick="placeOrder()">
                                 PLACE ORDER
                             </button>
 
-                            <button class="back-btn"
-                                    onclick="showStep(2)">
+                            <button class="back-btn" onclick="showStep(2)">
                                 BACK TO ADDRESS
                             </button>
 
@@ -3801,8 +4762,7 @@
 
                         <!-- DONE -->
 
-                        <div id="step4"
-                            class="checkout-step">
+                        <div id="step4" class="checkout-step">
 
                             <div class="done">
 
@@ -3818,16 +4778,13 @@
                                     Thank you for shopping with GLOBIRA.
                                 </p>
 
-                                <div class="order-id"
-                                    id="orderNumber">
+                                <div class="order-id" id="orderNumber">
                                 </div>
 
-                                <div class="delivery-estimate"
-                                    id="deliveryEstimate">
+                                <div class="delivery-estimate" id="deliveryEstimate">
                                 </div>
 
-                                <button class="next-btn"
-                                        onclick="finishOrder()">
+                                <button class="next-btn" onclick="finishOrder()">
                                     CONTINUE SHOPPING
                                 </button>
 
@@ -3850,9 +4807,7 @@
 
                             <span>Total</span>
 
-                            <strong id="checkoutTotal">
-                                ₹0
-                            </strong>
+                            <strong id="checkoutTotal">US$0.00</strong>
 
                         </div>
 
@@ -3911,8 +4866,8 @@
                 <a href="#new">New Arrivals</a>
                 <a href="#" onclick="showCategory('women');return false;">Women</a>
                 <a href="#" onclick="showCategory('men');return false;">Men</a>
-                <a href="#new">FAQ & Help</a>
-                <a href="#new">Shipping & Returns</a>
+                <a href="#new">FAQ &amp; Help</a>
+                <a href="#new">Shipping &amp; Returns</a>
             </div>
 
             <div class="footer-column">
@@ -7112,7 +8067,7 @@
                 <div class="globira-login-description">Enter your email to continue. We'll send you a secure one-time password.</div>
                 <input type="email" id="globiraEmail" class="globira-login-input" placeholder="Enter your email" autocomplete="email">
                 <button type="button" id="globiraSendOtpButton" class="globira-login-button" onclick="sendGlobiraOTP()">CONTINUE →</button>
-                <div id="globiraEmailMessage" class="globira-login-message"></div>
+                <div id="globiraEmailMessage" class="globira-login-message "></div>
                 <button type="button" class="globira-login-skip" onclick="skipGlobiraLogin()">SKIP FOR NOW</button>
             </div>
 
@@ -7124,7 +8079,7 @@
                 <div id="globiraOtpEmail" class="globira-login-email-display"></div>
                 <input type="text" id="globiraOtp" class="globira-login-input globira-otp-input" placeholder="00000000" inputmode="numeric" autocomplete="one-time-code" maxlength="8">
                 <button type="button" id="globiraVerifyOtpButton" class="globira-login-button" onclick="verifyGlobiraOTP()">VERIFY &amp; CONTINUE →</button>
-                <div id="globiraOtpMessage" class="globira-login-message"></div>
+                <div id="globiraOtpMessage" class="globira-login-message "></div>
                 <button type="button" class="globira-login-resend" onclick="resendGlobiraOTP()">RESEND CODE</button>
                 <button type="button" class="globira-login-secondary" onclick="backToGlobiraEmail()">← CHANGE EMAIL</button>
             </div>
@@ -7151,7 +8106,7 @@
             <div class="globira-account-stat"><strong id="globiraAccountOrderCount">0</strong><span>Orders</span></div>
             <div class="globira-account-stat"><strong id="globiraAccountActiveCount">0</strong><span>Active</span></div>
             <div class="globira-account-stat"><strong id="globiraAccountLastOrder">—</strong><span>Latest Order</span></div>
-            <div class="globira-account-stat"><strong id="globiraAccountCurrency">INR</strong><span>Currency</span></div>
+            <div class="globira-account-stat"><strong id="globiraAccountCurrency">USD</strong><span>Currency</span></div>
         </div>
         <div id="globiraAccountLatestOrder"></div>
         <div class="globira-account-actions">
@@ -10333,7 +11288,7 @@ body{font-size:14px!important}
 }
 </style>
 
-</body>
+
     
 
 <style id="globira-category-search-filter-v1">
@@ -10695,7 +11650,7 @@ body{font-size:14px!important}
 })();
 </script>
 
-</html>
+
 
     <style id="globira-v3-final-layout">
     html,body{width:100%;max-width:100%;}
@@ -11288,7 +12243,212 @@ body{font-size:14px!important}
         <div class="globira-currency-search">
             <input id="globiraCurrencySearch" type="search" placeholder="Search currency or country..." autocomplete="off">
         </div>
-        <div id="globiraCurrencyList" class="globira-currency-list"></div>
+        <div id="globiraCurrencyList" class="globira-currency-list">
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('INR')">
+                <span><strong>INR</strong> · Indian Rupee</span>
+                <span>India</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option selected" onclick="selectGlobiraCurrency('USD')">
+                <span><strong>USD</strong> · US Dollar</span>
+                <span>United States</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('EUR')">
+                <span><strong>EUR</strong> · Euro</span>
+                <span>Eurozone</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('GBP')">
+                <span><strong>GBP</strong> · British Pound</span>
+                <span>United Kingdom</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('CHF')">
+                <span><strong>CHF</strong> · Swiss Franc</span>
+                <span>Switzerland</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('SEK')">
+                <span><strong>SEK</strong> · Swedish Krona</span>
+                <span>Sweden</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('NOK')">
+                <span><strong>NOK</strong> · Norwegian Krone</span>
+                <span>Norway</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('DKK')">
+                <span><strong>DKK</strong> · Danish Krone</span>
+                <span>Denmark</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('PLN')">
+                <span><strong>PLN</strong> · Polish Zloty</span>
+                <span>Poland</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('CZK')">
+                <span><strong>CZK</strong> · Czech Koruna</span>
+                <span>Czechia</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('HUF')">
+                <span><strong>HUF</strong> · Hungarian Forint</span>
+                <span>Hungary</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('RON')">
+                <span><strong>RON</strong> · Romanian Leu</span>
+                <span>Romania</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('BGN')">
+                <span><strong>BGN</strong> · Bulgarian Lev</span>
+                <span>Bulgaria</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('ISK')">
+                <span><strong>ISK</strong> · Icelandic Krona</span>
+                <span>Iceland</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('TRY')">
+                <span><strong>TRY</strong> · Turkish Lira</span>
+                <span>Türkiye</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('JPY')">
+                <span><strong>JPY</strong> · Japanese Yen</span>
+                <span>Japan</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('CNY')">
+                <span><strong>CNY</strong> · Chinese Yuan</span>
+                <span>China</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('KRW')">
+                <span><strong>KRW</strong> · South Korean Won</span>
+                <span>South Korea</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('SGD')">
+                <span><strong>SGD</strong> · Singapore Dollar</span>
+                <span>Singapore</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('HKD')">
+                <span><strong>HKD</strong> · Hong Kong Dollar</span>
+                <span>Hong Kong</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('MYR')">
+                <span><strong>MYR</strong> · Malaysian Ringgit</span>
+                <span>Malaysia</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('THB')">
+                <span><strong>THB</strong> · Thai Baht</span>
+                <span>Thailand</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('IDR')">
+                <span><strong>IDR</strong> · Indonesian Rupiah</span>
+                <span>Indonesia</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('PHP')">
+                <span><strong>PHP</strong> · Philippine Peso</span>
+                <span>Philippines</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('AUD')">
+                <span><strong>AUD</strong> · Australian Dollar</span>
+                <span>Australia</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('NZD')">
+                <span><strong>NZD</strong> · New Zealand Dollar</span>
+                <span>New Zealand</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('CAD')">
+                <span><strong>CAD</strong> · Canadian Dollar</span>
+                <span>Canada</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('BRL')">
+                <span><strong>BRL</strong> · Brazilian Real</span>
+                <span>Brazil</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('MXN')">
+                <span><strong>MXN</strong> · Mexican Peso</span>
+                <span>Mexico</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('ZAR')">
+                <span><strong>ZAR</strong> · South African Rand</span>
+                <span>South Africa</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('NGN')">
+                <span><strong>NGN</strong> · Nigerian Naira</span>
+                <span>Nigeria</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('EGP')">
+                <span><strong>EGP</strong> · Egyptian Pound</span>
+                <span>Egypt</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('AED')">
+                <span><strong>AED</strong> · UAE Dirham</span>
+                <span>United Arab Emirates</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('SAR')">
+                <span><strong>SAR</strong> · Saudi Riyal</span>
+                <span>Saudi Arabia</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('QAR')">
+                <span><strong>QAR</strong> · Qatari Riyal</span>
+                <span>Qatar</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('KWD')">
+                <span><strong>KWD</strong> · Kuwaiti Dinar</span>
+                <span>Kuwait</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('BHD')">
+                <span><strong>BHD</strong> · Bahraini Dinar</span>
+                <span>Bahrain</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('OMR')">
+                <span><strong>OMR</strong> · Omani Rial</span>
+                <span>Oman</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('JOD')">
+                <span><strong>JOD</strong> · Jordanian Dinar</span>
+                <span>Jordan</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('ILS')">
+                <span><strong>ILS</strong> · Israeli New Shekel</span>
+                <span>Israel</span>
+            </button>
+        
+            <button type="button" class="globira-currency-option " onclick="selectGlobiraCurrency('MAD')">
+                <span><strong>MAD</strong> · Moroccan Dirham</span>
+                <span>Morocco</span>
+            </button>
+        </div>
     </div>
 </div>
 
@@ -12353,3 +13513,4 @@ body{font-size:15px!important}
   }
 })();
 </script>
+</body></html>
