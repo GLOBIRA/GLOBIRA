@@ -10356,9 +10356,9 @@ body{font-size:14px!important}
 .gw-cat-search-shell button{height:40px;width:40px;border:0;background:#fff;color:#111;cursor:pointer;font-size:20px;flex:0 0 40px}
 .gw-cat-filter-count{min-width:17px;height:17px;padding:0 4px;border-radius:20px;background:#111;color:#fff;font-size:10px;display:none;align-items:center;justify-content:center}
 .gw-cat-filter-count.active{display:inline-flex}
-.gw-category-filter-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.38);z-index:799;display:none}
+.gw-category-filter-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.38);z-index:2998;display:none}
 .gw-category-filter-backdrop.active{display:block}
-.gw-category-filter-panel{position:fixed;right:0;top:0;height:100vh;width:min(390px,94vw);background:#fff;z-index:800;transform:translateX(102%);transition:transform .28s ease;box-shadow:-18px 0 55px rgba(0,0,0,.18);display:flex;flex-direction:column}
+.gw-category-filter-panel{position:fixed;right:0;top:0;height:100vh;width:min(390px,94vw);background:#fff;z-index:2999;transform:translateX(102%);transition:transform .28s ease;box-shadow:-18px 0 55px rgba(0,0,0,.18);display:flex;flex-direction:column}
 .gw-category-filter-panel.active{transform:translateX(0)}
 .gw-filter-head{padding:25px 25px 19px;border-bottom:1px solid #e6e1d8;display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
 .gw-filter-head small{display:block;font-size:10px;letter-spacing:2.2px;color:#888;margin-bottom:5px}
@@ -10475,9 +10475,12 @@ body{font-size:14px!important}
     let products=baseForState();
     const q=categoryFilterState.query.toLowerCase().trim();
     if(q){
+      /* Search is collection-scoped and term-scoped. A search such as "shorts"
+         must never broaden back to the whole Women/Men collection. */
+      const words=q.split(/\s+/).filter(Boolean);
       products=products.filter(p=>{
-        const hay=[p?.name,p?.category,p?.subcategory,p?.description,p?.gender].filter(Boolean).join(' ').toLowerCase();
-        return q.split(/\s+/).filter(Boolean).every(w=>hay.includes(w));
+        const hay=[p?.name,p?.subcategory,p?.description].filter(Boolean).join(' ').toLowerCase();
+        return words.every(w=>hay.includes(w));
       });
     }
     if(categoryFilterState.color){
@@ -10552,7 +10555,38 @@ body{font-size:14px!important}
   window.applyCategoryInlineSearch=function(){
     const input=document.getElementById('gwCategorySearchInput');
     categoryFilterState.query=input?input.value.trim():'';
+    /* Cancel any earlier live-category request. Otherwise its response can
+       arrive after the search and repaint the full Women/Men collection. */
+    if(typeof categoryRequest!=='undefined') categoryRequest++;
     applyCategoryFilters(true);
+
+    /* If the local catalog is missing matches, ask CJ for the exact search
+       term, then merge ONLY products that still match the active collection
+       and search. Never repaint with the full category. */
+    const q=categoryFilterState.query;
+    if(q && categoryFilterState.category){
+      const searchRequest=(typeof categoryRequest!=='undefined'?categoryRequest:0);
+      Promise.all([1,2,3].map(page=>fetch(`/api/cj-products?page=${page}&size=100&keyword=${encodeURIComponent(q)}`).then(r=>r.ok?r.json():null).catch(()=>null)))
+        .then(results=>{
+          if(typeof categoryRequest!=='undefined' && searchRequest!==categoryRequest)return;
+          const matches=[];
+          results.forEach(payload=>{
+            if(payload?.success && Array.isArray(payload.products)){
+              payload.products.map(classifyCJProduct).forEach(p=>{
+                const hay=[p?.name,p?.subcategory,p?.description].filter(Boolean).join(' ').toLowerCase();
+                const words=q.toLowerCase().split(/\s+/).filter(Boolean);
+                if(categoryMatches(p,categoryFilterState.category) && words.every(w=>hay.includes(w))) matches.push(p);
+              });
+            }
+          });
+          if(matches.length){
+            const map=new Map(categoryFilterState.base.map(p=>[p.id,p]));
+            matches.forEach(p=>map.set(p.id,p));
+            categoryFilterState.base=Array.from(map.values());
+            applyCategoryFilters(true);
+          }
+        }).catch(()=>{});
+    }
   };
 
   window.openCategoryFilters=function(){
@@ -10563,8 +10597,12 @@ body{font-size:14px!important}
       <aside id="gwCategoryFilterPanel" class="gw-category-filter-panel" aria-label="Product filters"></aside>`);
       panel=document.getElementById('gwCategoryFilterPanel');backdrop=document.getElementById('gwCategoryFilterBackdrop');
     }
-    const s=categoryFilterState, min=s.priceMin,max=s.priceMax;
-    const currentMin=s.min===null?min:s.min,currentMax=s.max===null?max:s.max;
+    const s=categoryFilterState;
+    const rate=Number((typeof GLOBIRA_CURRENCIES!=='undefined' && GLOBIRA_CURRENCIES[globiraCurrency]?.inr)||1);
+    /* Slider values are shown in the user's selected currency, while the
+       actual filter comparison remains in the storefront's INR base values. */
+    const min=Math.floor(s.priceMin/rate), max=Math.ceil(s.priceMax/rate);
+    const currentMin=s.min===null?min:Math.floor(s.min/rate),currentMax=s.max===null?max:Math.ceil(s.max/rate);
     const colors=[...new Set(s.base.flatMap(categoryProductColors))].sort((a,b)=>a.localeCompare(b));
     const colorList=(colors.length?colors:colorNames).slice(0,24);
     panel.innerHTML=`<div class="gw-filter-head"><div><small>GLOBIRA / ${escapeHtml(s.category||'COLLECTION').toUpperCase()}</small><h2>Filter</h2></div><button class="gw-filter-close" onclick="closeCategoryFilters()">×</button></div>
@@ -10585,24 +10623,33 @@ body{font-size:14px!important}
           ${[['any','Any delivery time'],['1-3','1–3 days'],['4-7','4–7 days'],['8-14','8–14 days'],['15+','15+ days']].map(([v,l])=>`<label class="gw-delivery-option"><input type="radio" name="gwDeliveryPeriod" value="${v}" ${s.delivery===v?'checked':''} onchange="selectCategoryDelivery(this.value)"><span>${l}</span></label>`).join('')}
         </div></section>
       </div>
-      <div class="gw-filter-footer"><button onclick="resetCategoryFilters()">RESET</button><button class="apply" onclick="applyCategoryFilterPanel()">SHOW ${s.base.length.toLocaleString()} PRODUCTS</button></div>`;
+      <div class="gw-filter-footer"><button onclick="resetCategoryFilters()">RESET</button><button class="apply" onclick="applyCategoryFilterPanel()">SHOW RESULTS</button></div>`;
     panel.classList.add('active');backdrop.classList.add('active');document.body.classList.add('no-scroll');
   };
   window.closeCategoryFilters=function(){document.getElementById('gwCategoryFilterPanel')?.classList.remove('active');document.getElementById('gwCategoryFilterBackdrop')?.classList.remove('active');document.body.classList.remove('no-scroll');};
+  window.refreshCategoryFilterCurrency=function(){
+    const panel=document.getElementById('gwCategoryFilterPanel');
+    if(panel?.classList.contains('active')) openCategoryFilters();
+  };
   window.selectCategoryColor=function(color){categoryFilterState.color=color;openCategoryFilters();};
   window.selectCategoryDelivery=function(v){categoryFilterState.delivery=v;openCategoryFilters();};
   window.syncCategoryPrice=function(which,value){
     const n=Number(value);if(!Number.isFinite(n))return;
-    if(which==='min')categoryFilterState.min=Math.min(n,categoryFilterState.max===null?categoryFilterState.priceMax:categoryFilterState.max);
-    else categoryFilterState.max=Math.max(n,categoryFilterState.min===null?categoryFilterState.priceMin:categoryFilterState.min);
+    const rate=Number((typeof GLOBIRA_CURRENCIES!=='undefined' && GLOBIRA_CURRENCIES[globiraCurrency]?.inr)||1);
+    const baseValue=n*rate;
+    if(which==='min')categoryFilterState.min=Math.min(baseValue,categoryFilterState.max===null?categoryFilterState.priceMax:categoryFilterState.max);
+    else categoryFilterState.max=Math.max(baseValue,categoryFilterState.min===null?categoryFilterState.priceMin:categoryFilterState.min);
     const min=document.getElementById('gwPriceMin'),max=document.getElementById('gwPriceMax');
-    if(min)min.value=String(categoryFilterState.min??categoryFilterState.priceMin);
-    if(max)max.value=String(categoryFilterState.max??categoryFilterState.priceMax);
+    if(min)min.value=String(Math.floor((categoryFilterState.min??categoryFilterState.priceMin)/rate));
+    if(max)max.value=String(Math.ceil((categoryFilterState.max??categoryFilterState.priceMax)/rate));
     const a=document.getElementById('gwPriceMinLabel'),b=document.getElementById('gwPriceMaxLabel');
-    if(a)a.textContent=formatPrice(Number(min?.value||categoryFilterState.priceMin));
-    if(b)b.textContent=formatPrice(Number(max?.value||categoryFilterState.priceMax));
+    if(a)a.textContent=formatPrice(categoryFilterState.min??categoryFilterState.priceMin);
+    if(b)b.textContent=formatPrice(categoryFilterState.max??categoryFilterState.priceMax);
   };
-  window.setCategoryPrice=function(min,max){categoryFilterState.min=Number(min);categoryFilterState.max=Number(max);openCategoryFilters();};
+  window.setCategoryPrice=function(min,max){
+    const rate=Number((typeof GLOBIRA_CURRENCIES!=='undefined' && GLOBIRA_CURRENCIES[globiraCurrency]?.inr)||1);
+    categoryFilterState.min=Number(min)*rate;categoryFilterState.max=Number(max)*rate;openCategoryFilters();
+  };
   window.resetCategoryFilters=function(){categoryFilterState.query='';categoryFilterState.color='';categoryFilterState.min=null;categoryFilterState.max=null;categoryFilterState.delivery='any';categoryFilterState.sort='featured';openCategoryFilters();};
   window.applyCategoryFilterPanel=function(){closeCategoryFilters();applyCategoryFilters(true);};
 
