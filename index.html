@@ -2256,7 +2256,7 @@
     border-bottom:1px solid #ededed !important;
     box-shadow:none !important;
     }
-    .globira-main-header .logo-wrap{align-self:center}
+    .globira-main-header .logo-wrap{align-self:center;text-align:center !important;}
     .globira-main-header .logo{
     font-family:'Playfair Display',serif !important;
     font-size:35px !important;
@@ -2264,13 +2264,15 @@
     font-weight:700 !important;
     line-height:1 !important;
     color:#111820 !important;
+    text-align:center !important;
     }
     .logo-subtitle{
     font-size:11px !important;
     letter-spacing:2px !important;
-    text-align:left !important;
-    margin:7px 0 0 18px !important;
+    text-align:center !important;
+    margin:6px 0 0 0 !important;
     color:#111820 !important;
+    width:100% !important;
     }
     .modern-header-search{
     display:flex !important;
@@ -2900,7 +2902,7 @@
     .globira-utility-bar{padding:0 14px !important;font-size:11px !important}
     .utility-right span:nth-child(n+3){display:none}
     .globira-main-header .logo{font-size:27px !important}
-    .logo-subtitle{font-size:11px !important;margin-left:10px !important}
+    .logo-subtitle{font-size:11px !important;margin:6px 0 0 !important;text-align:center !important}
     .header-actions{gap:6px !important}
     .header-actions .desktop-only-action{display:none !important}
     .action-label{display:none !important}
@@ -10237,6 +10239,97 @@ body{font-size:12px!important;}
     background:#f7f4ee!important;
     box-shadow:inset 0 0 0 1px #111!important;
     font-weight:600!important;
+}
+</style>
+
+
+<style id="globira-readable-text-v4">
+/* =========================================================
+   GLOBIRA READABLE TEXT PASS
+   Keep the existing luxury design, but make customer-facing
+   information comfortably readable across the storefront.
+   ========================================================= */
+html{font-size:14px!important}
+body{font-size:14px!important}
+
+/* Header / navigation */
+.nav a{font-size:14px!important}
+.account-btn,.cart-btn{font-size:14px!important}
+.header-search input{font-size:14px!important}
+
+/* Main redesigned homepage */
+.ref-hero-copy p{font-size:14px!important;line-height:1.6!important}
+.ref-trust b{font-size:13px!important}
+.ref-trust small{font-size:12px!important;line-height:1.5!important}
+.ref-categories b{font-size:13px!important}
+.ref-products-head>button{font-size:13px!important}
+.ref-tabs button{font-size:13px!important}
+.ref-live-line{font-size:13px!important}
+.ref-live-line small{font-size:12px!important}
+.ref-promo p{font-size:13px!important;line-height:1.45!important}
+.ref-promo button{font-size:13px!important}
+.ref-four-panel span{font-size:12px!important}
+.ref-four-panel p{font-size:13px!important;line-height:1.45!important}
+.ref-four-panel button{font-size:13px!important}
+.ref-four-panel button b{font-size:13px!important}
+
+/* Homepage product cards */
+.gw-product-category{font-size:12px!important}
+.gw-product-info h3{font-size:14px!important;line-height:1.4!important;height:auto!important;min-height:39px!important}
+.gw-product-bottom .price{font-size:15px!important}
+.gw-product-bottom .old-price{font-size:12px!important}
+.gw-view{font-size:13px!important}
+.gw-card-heart{font-size:18px!important}
+
+/* Older / supporting homepage sections still present in the file */
+.gw-trust strong{font-size:13px!important}
+.gw-trust small{font-size:12px!important}
+.gw-discovery span{font-size:12px!important}
+.gw-discovery b{font-size:15px!important}
+.gw-discovery small{font-size:12px!important}
+.gw-category-toolbar b{font-size:14px!important}
+.gw-category-toolbar span{font-size:13px!important}
+.gw-category-toolbar select,.gw-load-more{font-size:13px!important}
+.gw-editorial-copy>span,.gw-feature-row article span{font-size:12px!important}
+.gw-editorial-copy p{font-size:14px!important}
+.gw-editorial-copy button,.gw-feature-row button{font-size:13px!important}
+.gw-hero p{font-size:14px!important}
+.gw-hero-actions button{font-size:13px!important}
+.gw-hero-meta{font-size:13px!important}
+
+/* Product popup: make every important product detail easier to read */
+.popup-description{font-size:14px!important;line-height:1.75!important}
+.details-box{font-size:14px!important;line-height:1.9!important}
+.size-title,.product-quantity-title{font-size:13px!important}
+.size,.product-quantity span{font-size:14px!important}
+.add-popup,.buy-now{font-size:14px!important}
+.popup-price{font-size:25px!important}
+
+/* Checkout / delivery details */
+.checkout-secure{font-size:12px!important}
+.checkout-top p{font-size:14px!important;line-height:1.6!important}
+.step{font-size:12px!important}
+.checkout-summary-row{font-size:14px!important;line-height:1.45!important}
+.checkout-summary-total{font-size:21px!important}
+.delivery-note{font-size:13px!important;line-height:1.7!important}
+.delivery-estimate{font-size:14px!important;line-height:1.8!important}
+.form-label{font-size:12px!important}
+#step2 input,#step2 textarea,#step2 select{font-size:14px!important}
+#step2 .globira-address-help{font-size:13px!important;line-height:1.6!important}
+.globira-address-type-title{font-size:11px!important}
+.globira-address-type-option{font-size:13px!important}
+.globira-address-type-option span{font-size:15px!important}
+.optional-label{font-size:11px!important}
+
+/* Buttons and common controls on the storefront */
+.reference-section-title button,.reference-category-shortcuts button,.subcategory-strip span{font-size:13px!important}
+
+/* Keep small-screen layouts readable without changing their structure */
+@media(max-width:650px){
+  body{font-size:14px!important}
+  .gw-product-info h3{font-size:13px!important}
+  .gw-product-bottom .price{font-size:14px!important}
+  #step2 input,#step2 textarea,#step2 select{font-size:14px!important}
 }
 </style>
 
