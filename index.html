@@ -10334,7 +10334,321 @@ body{font-size:14px!important}
 </style>
 
 </body>
-    </html>
+    
+
+<style id="globira-category-search-filter-v1">
+/* ===== CATEGORY SEARCH + FILTER ===== */
+#categoryProducts .gw-category-toolbar{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  gap:18px!important;width:100%!important;margin:0 0 22px!important;padding:0 0 16px!important;
+  border-bottom:1px solid #e6e1d8!important;box-sizing:border-box!important;
+}
+#categoryProducts .gw-category-count{font-size:13px!important;color:#777!important;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#categoryProducts .gw-category-count b{color:#111!important;font-weight:600!important}
+#categoryProducts .gw-category-count span{color:#888!important}
+.gw-category-tools{display:flex;align-items:center;gap:9px;margin-left:auto}
+.gw-cat-tool-btn{height:42px;border:1px solid #cfc9bf;background:#fff;color:#111;display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:0 15px;font-family:inherit;font-size:12px;letter-spacing:.6px;cursor:pointer;transition:.18s;white-space:nowrap}
+.gw-cat-tool-btn:hover{border-color:#111;background:#111;color:#fff}
+.gw-cat-tool-btn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.gw-cat-search-shell{height:42px;width:0;overflow:hidden;display:flex;align-items:center;border:1px solid #cfc9bf;background:#fff;opacity:0;transition:width .22s ease,opacity .18s ease}
+.gw-cat-search-shell.open{width:min(330px,32vw);opacity:1}
+.gw-cat-search-shell input{width:100%!important;height:40px!important;border:0!important;margin:0!important;padding:0 11px!important;font-size:13px!important;background:#fff!important;outline:0!important;box-sizing:border-box!important}
+.gw-cat-search-shell button{height:40px;width:40px;border:0;background:#fff;color:#111;cursor:pointer;font-size:20px;flex:0 0 40px}
+.gw-cat-filter-count{min-width:17px;height:17px;padding:0 4px;border-radius:20px;background:#111;color:#fff;font-size:10px;display:none;align-items:center;justify-content:center}
+.gw-cat-filter-count.active{display:inline-flex}
+.gw-category-filter-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.38);z-index:799;display:none}
+.gw-category-filter-backdrop.active{display:block}
+.gw-category-filter-panel{position:fixed;right:0;top:0;height:100vh;width:min(390px,94vw);background:#fff;z-index:800;transform:translateX(102%);transition:transform .28s ease;box-shadow:-18px 0 55px rgba(0,0,0,.18);display:flex;flex-direction:column}
+.gw-category-filter-panel.active{transform:translateX(0)}
+.gw-filter-head{padding:25px 25px 19px;border-bottom:1px solid #e6e1d8;display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
+.gw-filter-head small{display:block;font-size:10px;letter-spacing:2.2px;color:#888;margin-bottom:5px}
+.gw-filter-head h2{font-family:'Playfair Display',serif;font-size:30px;font-weight:500;margin:0}
+.gw-filter-close{border:0;background:transparent;font-size:28px;line-height:1;cursor:pointer;color:#222;padding:0}
+.gw-filter-body{overflow:auto;flex:1;padding:25px}
+.gw-filter-group{padding:0 0 24px;margin:0 0 23px;border-bottom:1px solid #ece8e1}
+.gw-filter-group:last-child{border-bottom:0}
+.gw-filter-group-title{font-size:11px;letter-spacing:1.7px;text-transform:uppercase;font-weight:600;margin-bottom:15px}
+.gw-color-grid{display:flex;flex-wrap:wrap;gap:8px}
+.gw-color-chip{border:1px solid #d6d0c7;background:#fff;padding:8px 11px;font-size:11px;cursor:pointer;transition:.15s}
+.gw-color-chip:hover,.gw-color-chip.active{border-color:#111;background:#111;color:#fff}
+.gw-price-values{display:flex;justify-content:space-between;font-size:12px;color:#555;margin-bottom:8px}
+.gw-price-range{position:relative;height:30px;padding-top:7px}
+.gw-price-range input[type=range]{position:absolute;left:0;top:0;width:100%;height:28px;margin:0;padding:0;border:0;background:transparent;appearance:none;pointer-events:none}
+.gw-price-range input[type=range]::-webkit-slider-runnable-track{height:2px;background:#d8d3ca}
+.gw-price-range input[type=range]::-moz-range-track{height:2px;background:#d8d3ca}
+.gw-price-range input[type=range]::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:#111;border:2px solid #fff;box-shadow:0 0 0 1px #111;pointer-events:auto;cursor:pointer;margin-top:-7px}
+.gw-price-range input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:#111;border:2px solid #fff;box-shadow:0 0 0 1px #111;pointer-events:auto;cursor:pointer}
+.gw-price-quick{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}
+.gw-price-quick button{border:1px solid #d6d0c7;background:#fff;padding:8px 10px;font-size:10px;cursor:pointer}
+.gw-price-quick button:hover{border-color:#111}
+.gw-delivery-options{display:grid;gap:8px}
+.gw-delivery-option{display:flex;align-items:center;gap:9px;border:1px solid #ddd8cf;padding:11px 12px;font-size:12px;cursor:pointer}
+.gw-delivery-option input{width:auto!important;margin:0!important;padding:0!important}
+.gw-filter-footer{padding:16px 25px;border-top:1px solid #e6e1d8;display:grid;grid-template-columns:1fr 1.4fr;gap:9px;background:#fff}
+.gw-filter-footer button{height:45px;border:1px solid #111;background:#fff;color:#111;font-family:inherit;letter-spacing:.7px;font-size:11px;cursor:pointer}
+.gw-filter-footer .apply{background:#111;color:#fff}
+.gw-filter-no-results{grid-column:1/-1;text-align:center;padding:65px 20px;background:#fff;border:1px solid #e4dfd7}
+.gw-filter-no-results h3{font-family:'Playfair Display',serif;font-size:28px;font-weight:500;margin-bottom:8px}
+.gw-filter-no-results p{font-size:12px;color:#777}
+@media(max-width:700px){
+  #categoryProducts .gw-category-toolbar{align-items:flex-start;flex-direction:column;gap:13px}
+  .gw-category-tools{width:100%;margin-left:0}
+  .gw-cat-tool-btn{flex:0 0 auto}
+  .gw-cat-search-shell{flex:1;width:auto;opacity:1}
+  .gw-cat-search-shell:not(.open){display:none}
+  .gw-cat-search-shell.open{width:auto}
+  .gw-filter-body{padding:20px}
+  .gw-filter-head{padding:20px}
+  .gw-filter-footer{padding:14px 20px}
+}
+</style>
+
+
+<script id="globira-category-search-filter-v1-js">
+(function(){
+  'use strict';
+
+  let categoryFilterState={
+    category:null,sub:null,base:[],filtered:[],query:'',color:'',min:null,max:null,delivery:'any',sort:'featured',
+    priceMin:0,priceMax:0
+  };
+
+  const colorNames=['Black','White','Red','Blue','Green','Yellow','Orange','Pink','Purple','Violet','Brown','Beige','Cream','Grey','Gold','Silver','Navy','Maroon','Burgundy','Wine','Khaki','Olive','Teal','Turquoise','Coral','Tan','Nude','Transparent','Multicolor'];
+
+  function num(v){const n=Number(v);return Number.isFinite(n)?n:null;}
+  function text(v){return String(v??'').trim();}
+
+  function categoryProductColors(product){
+    const found=[];
+    const seen=new Set();
+    const add=value=>{
+      let c=text(value).replace(/[_-]+/g,' ').replace(/\s+/g,' ').trim();
+      if(!c || c.toLowerCase()==='standard') return;
+      const match=colorNames.find(x=>new RegExp('(^|\\s)'+x.toLowerCase().replace(/ /g,'\\s+')+'(\\s|$)','i').test(c.toLowerCase()));
+      c=match||c;
+      const key=c.toLowerCase();
+      if(!seen.has(key)){seen.add(key);found.push(c);}
+    };
+    try{
+      const vars=typeof getVariants==='function'?getVariants(product):[];
+      vars.forEach(v=>{
+        if(typeof extractColor==='function') add(extractColor(v));
+        if(v&&typeof v==='object') ['color','colour','colorName','colourName','colorNameEn','colourNameEn','optionColor','propertyColor'].forEach(k=>add(v[k]));
+      });
+    }catch(e){}
+    ['color','colour','colorName','colourName','colors','colours'].forEach(k=>{
+      const v=product?.[k];
+      if(Array.isArray(v)) v.forEach(add); else if(v) String(v).split(/[,|;/]+/).forEach(add);
+    });
+    if(!found.length){
+      const hay=[product?.name,product?.description,product?.subcategory].filter(Boolean).join(' ');
+      colorNames.forEach(c=>{if(new RegExp('\\b'+c.replace(/ /g,'\\s+')+'\\b','i').test(hay)) add(c);});
+    }
+    return found;
+  }
+
+  function deliveryDaysFor(product){
+    const direct=['deliveryDays','delivery_days','estimatedDeliveryDays','estimated_delivery_days','shippingDays','shipping_days','transitDays','transit_days','daysToDeliver'];
+    for(const k of direct){const n=num(product?.[k]);if(n!==null&&n>=0)return n;}
+    const raw=[product?.deliveryTime,product?.delivery,time=product?.shippingTime,product?.shippingEstimate,product?.estimatedDelivery,product?.deliveryEstimate,product?.shipping].filter(Boolean).join(' ');
+    const range=raw.match(/(\d+)\s*(?:-|–|—|to)\s*(\d+)\s*(?:days?|working\s+days?)/i);
+    if(range) return (Number(range[1])+Number(range[2]))/2;
+    const single=raw.match(/(\d+)\s*(?:days?|working\s+days?)/i);
+    if(single)return Number(single[1]);
+    /* The current GLOBIRA storefront copy uses a 4–7 working-day estimate. */
+    return 5.5;
+  }
+
+  function deliveryMatches(product,period){
+    if(period==='any')return true;
+    const d=deliveryDaysFor(product);
+    if(period==='1-3')return d<=3;
+    if(period==='4-7')return d>=4&&d<=7;
+    if(period==='8-14')return d>=8&&d<=14;
+    if(period==='15+')return d>=15;
+    return true;
+  }
+
+  function baseForState(){return Array.isArray(categoryFilterState.base)?categoryFilterState.base.slice():[];}
+
+  function applyCategoryFilters(render=true){
+    let products=baseForState();
+    const q=categoryFilterState.query.toLowerCase().trim();
+    if(q){
+      products=products.filter(p=>{
+        const hay=[p?.name,p?.category,p?.subcategory,p?.description,p?.gender].filter(Boolean).join(' ').toLowerCase();
+        return q.split(/\s+/).filter(Boolean).every(w=>hay.includes(w));
+      });
+    }
+    if(categoryFilterState.color){
+      products=products.filter(p=>categoryProductColors(p).some(c=>c.toLowerCase()===categoryFilterState.color.toLowerCase()));
+    }
+    if(categoryFilterState.min!==null)products=products.filter(p=>Number(p?.price||0)>=categoryFilterState.min);
+    if(categoryFilterState.max!==null)products=products.filter(p=>Number(p?.price||0)<=categoryFilterState.max);
+    products=products.filter(p=>deliveryMatches(p,categoryFilterState.delivery));
+    if(categoryFilterState.sort==='price-low')products.sort((a,b)=>Number(a.price||0)-Number(b.price||0));
+    if(categoryFilterState.sort==='price-high')products.sort((a,b)=>Number(b.price||0)-Number(a.price||0));
+    if(categoryFilterState.sort==='name')products.sort((a,b)=>text(a.name).localeCompare(text(b.name)));
+    categoryFilterState.filtered=products;
+    if(render) renderCategoryGrid();
+    return products;
+  }
+
+  function renderCategoryGrid(){
+    const c=document.getElementById('categoryProducts');
+    if(!c)return;
+    const products=categoryFilterState.filtered||[];
+    const shown=products.slice(0,48);
+    const count=document.getElementById('gwCategoryCount');
+    if(count)count.innerHTML=`<b>${products.length.toLocaleString()} products</b><span>${categoryFilterState.query||categoryFilterState.color||categoryFilterState.delivery!=='any'?'Matching products only':'Live marketplace'}</span>`;
+    const grid=c.querySelector('.category-result-grid');
+    if(grid){
+      grid.innerHTML=shown.length?shown.map(productCard).join(''):`<div class="gw-filter-no-results"><h3>No products found</h3><p>Try another search or adjust your filters.</p></div>`;
+    }
+    const more=c.querySelector('.gw-load-more');
+    if(more){more.style.display=products.length>48?'block':'none';more.dataset.total=String(products.length);}
+    const badge=document.getElementById('gwCategoryFilterCount');
+    const active=(categoryFilterState.color?1:0)+(categoryFilterState.min!==null?1:0)+(categoryFilterState.max!==null?1:0)+(categoryFilterState.delivery!=='any'?1:0);
+    if(badge){badge.textContent=active;badge.classList.toggle('active',active>0);}
+  }
+
+  function toolbarHTML(){
+    return `<div class="gw-category-toolbar">
+      <div class="gw-category-count" id="gwCategoryCount"><b>0 products</b><span>Live marketplace</span></div>
+      <div class="gw-category-tools">
+        <div class="gw-cat-search-shell" id="gwCatSearchShell">
+          <input id="gwCategorySearchInput" type="search" placeholder="Search in ${escapeHtml(document.getElementById('categoryTitle')?.textContent||'this collection')}..." autocomplete="off" onkeydown="if(event.key==='Enter')applyCategoryInlineSearch()">
+          <button type="button" onclick="applyCategoryInlineSearch()" aria-label="Search">⌕</button>
+        </div>
+        <button type="button" class="gw-cat-tool-btn" onclick="toggleCategorySearch()" aria-label="Search this collection">
+          <svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 5 5"></path></svg><span>Search</span>
+        </button>
+        <button type="button" class="gw-cat-tool-btn" onclick="openCategoryFilters()" aria-label="Filter products">
+          <svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"></path></svg><span>Filter</span><span id="gwCategoryFilterCount" class="gw-cat-filter-count">0</span>
+        </button>
+      </div>
+    </div>`;
+  }
+
+  function buildCategoryPage(category,sub,products,title,eyebrow){
+    categoryFilterState={category,sub,base:products.slice(),filtered:products.slice(),query:'',color:'',min:null,max:null,delivery:'any',sort:'featured',priceMin:0,priceMax:0};
+    const prices=products.map(p=>Number(p?.price)).filter(Number.isFinite);
+    categoryFilterState.priceMin=prices.length?Math.floor(Math.min(...prices)):0;
+    categoryFilterState.priceMax=prices.length?Math.ceil(Math.max(...prices)):0;
+    if(categoryFilterState.priceMax<categoryFilterState.priceMin)categoryFilterState.priceMax=categoryFilterState.priceMin;
+    const c=document.getElementById('categoryProducts');
+    if(!c)return;
+    c.innerHTML=toolbarHTML()+`<div class="products category-result-grid"></div>${products.length>48?`<button class="gw-load-more" onclick="loadMoreCategory('${String(category).replace(/'/g,"\\'")}')">Load more products →</button>`:''}`;
+    applyCategoryFilters(true);
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  window.toggleCategorySearch=function(){
+    const shell=document.getElementById('gwCatSearchShell');
+    if(!shell)return;
+    shell.classList.toggle('open');
+    if(shell.classList.contains('open'))setTimeout(()=>document.getElementById('gwCategorySearchInput')?.focus(),80);
+  };
+  window.applyCategoryInlineSearch=function(){
+    const input=document.getElementById('gwCategorySearchInput');
+    categoryFilterState.query=input?input.value.trim():'';
+    applyCategoryFilters(true);
+  };
+
+  window.openCategoryFilters=function(){
+    let panel=document.getElementById('gwCategoryFilterPanel');
+    let backdrop=document.getElementById('gwCategoryFilterBackdrop');
+    if(!panel){
+      document.body.insertAdjacentHTML('beforeend',`<div id="gwCategoryFilterBackdrop" class="gw-category-filter-backdrop" onclick="closeCategoryFilters()"></div>
+      <aside id="gwCategoryFilterPanel" class="gw-category-filter-panel" aria-label="Product filters"></aside>`);
+      panel=document.getElementById('gwCategoryFilterPanel');backdrop=document.getElementById('gwCategoryFilterBackdrop');
+    }
+    const s=categoryFilterState, min=s.priceMin,max=s.priceMax;
+    const currentMin=s.min===null?min:s.min,currentMax=s.max===null?max:s.max;
+    const colors=[...new Set(s.base.flatMap(categoryProductColors))].sort((a,b)=>a.localeCompare(b));
+    const colorList=(colors.length?colors:colorNames).slice(0,24);
+    panel.innerHTML=`<div class="gw-filter-head"><div><small>GLOBIRA / ${escapeHtml(s.category||'COLLECTION').toUpperCase()}</small><h2>Filter</h2></div><button class="gw-filter-close" onclick="closeCategoryFilters()">×</button></div>
+      <div class="gw-filter-body">
+        <section class="gw-filter-group"><div class="gw-filter-group-title">Colour</div><div class="gw-color-grid">
+          <button type="button" class="gw-color-chip ${!s.color?'active':''}" onclick="selectCategoryColor('')">All</button>
+          ${colorList.map(c=>`<button type="button" class="gw-color-chip ${s.color.toLowerCase()===c.toLowerCase()?'active':''}" onclick="selectCategoryColor('${String(c).replace(/'/g,"\\'")}')">${escapeHtml(c)}</button>`).join('')}
+        </div></section>
+        <section class="gw-filter-group"><div class="gw-filter-group-title">Price range</div>
+          <div class="gw-price-values"><span id="gwPriceMinLabel">${formatPrice(currentMin)}</span><span id="gwPriceMaxLabel">${formatPrice(currentMax)}</span></div>
+          <div class="gw-price-range">
+            <input id="gwPriceMin" type="range" min="${min}" max="${max}" value="${currentMin}" step="1" oninput="syncCategoryPrice('min',this.value)">
+            <input id="gwPriceMax" type="range" min="${min}" max="${max}" value="${currentMax}" step="1" oninput="syncCategoryPrice('max',this.value)">
+          </div>
+          <div class="gw-price-quick"><button onclick="setCategoryPrice(0,${Math.ceil(max*.25)})">Under 25%</button><button onclick="setCategoryPrice(${Math.floor(max*.25)},${Math.ceil(max*.5)})">25–50%</button><button onclick="setCategoryPrice(${Math.floor(max*.5)},${Math.ceil(max*.75)})">50–75%</button><button onclick="setCategoryPrice(${Math.floor(max*.75)},${max})">75%+</button></div>
+        </section>
+        <section class="gw-filter-group"><div class="gw-filter-group-title">Delivery time</div><div class="gw-delivery-options">
+          ${[['any','Any delivery time'],['1-3','1–3 days'],['4-7','4–7 days'],['8-14','8–14 days'],['15+','15+ days']].map(([v,l])=>`<label class="gw-delivery-option"><input type="radio" name="gwDeliveryPeriod" value="${v}" ${s.delivery===v?'checked':''} onchange="selectCategoryDelivery(this.value)"><span>${l}</span></label>`).join('')}
+        </div></section>
+      </div>
+      <div class="gw-filter-footer"><button onclick="resetCategoryFilters()">RESET</button><button class="apply" onclick="applyCategoryFilterPanel()">SHOW ${s.base.length.toLocaleString()} PRODUCTS</button></div>`;
+    panel.classList.add('active');backdrop.classList.add('active');document.body.classList.add('no-scroll');
+  };
+  window.closeCategoryFilters=function(){document.getElementById('gwCategoryFilterPanel')?.classList.remove('active');document.getElementById('gwCategoryFilterBackdrop')?.classList.remove('active');document.body.classList.remove('no-scroll');};
+  window.selectCategoryColor=function(color){categoryFilterState.color=color;openCategoryFilters();};
+  window.selectCategoryDelivery=function(v){categoryFilterState.delivery=v;openCategoryFilters();};
+  window.syncCategoryPrice=function(which,value){
+    const n=Number(value);if(!Number.isFinite(n))return;
+    if(which==='min')categoryFilterState.min=Math.min(n,categoryFilterState.max===null?categoryFilterState.priceMax:categoryFilterState.max);
+    else categoryFilterState.max=Math.max(n,categoryFilterState.min===null?categoryFilterState.priceMin:categoryFilterState.min);
+    const min=document.getElementById('gwPriceMin'),max=document.getElementById('gwPriceMax');
+    if(min)min.value=String(categoryFilterState.min??categoryFilterState.priceMin);
+    if(max)max.value=String(categoryFilterState.max??categoryFilterState.priceMax);
+    const a=document.getElementById('gwPriceMinLabel'),b=document.getElementById('gwPriceMaxLabel');
+    if(a)a.textContent=formatPrice(Number(min?.value||categoryFilterState.priceMin));
+    if(b)b.textContent=formatPrice(Number(max?.value||categoryFilterState.priceMax));
+  };
+  window.setCategoryPrice=function(min,max){categoryFilterState.min=Number(min);categoryFilterState.max=Number(max);openCategoryFilters();};
+  window.resetCategoryFilters=function(){categoryFilterState.query='';categoryFilterState.color='';categoryFilterState.min=null;categoryFilterState.max=null;categoryFilterState.delivery='any';categoryFilterState.sort='featured';openCategoryFilters();};
+  window.applyCategoryFilterPanel=function(){closeCategoryFilters();applyCategoryFilters(true);};
+
+  window.loadMoreCategory=function(category){
+    const grid=document.querySelector('#categoryProducts .category-result-grid');if(!grid)return;
+    const current=grid.querySelectorAll('.gw-product-card').length;
+    const next=categoryFilterState.filtered.slice(current,current+48);
+    grid.insertAdjacentHTML('beforeend',next.map(productCard).join(''));
+    const more=document.querySelector('#categoryProducts .gw-load-more');
+    if(more)more.style.display=categoryFilterState.filtered.length>current+next.length?'block':'none';
+  };
+
+  window.showCategory=function(category){
+    currentCategory=category;
+    document.getElementById('homePage').style.display='none';
+    document.getElementById('categoryPage').classList.add('active');
+    const d=GLOBIRA_MENU_DATA[category];
+    const products=getCategoryProducts(category);
+    const title=d?.title||({women:'Women',men:'Men',bags:'Bags',electronics:'Electronics',home:'Home & Living',beauty:'Beauty & Personal Care',tools:'Tools & DIY',sports:'Sports & Fitness',automotive:'Automotive',pets:'Pet Supplies',office:'Office & School',baby:'Baby & Kids',health:'Health & Wellness',more:'All Products'}[category]||'Collection');
+    document.getElementById('categoryTitle').textContent=title;
+    document.getElementById('categoryEyebrow').textContent='GLOBIRA / '+title.toUpperCase();
+    buildCategoryPage(category,null,products,title,title);
+  };
+
+  window.showSubcategory=function(category,sub){
+    currentCategory=category;
+    document.getElementById('homePage').style.display='none';
+    document.getElementById('categoryPage').classList.add('active');
+    const d=GLOBIRA_MENU_DATA[category];
+    const found=(d?.groups||[]).find(([t])=>slugify(t)===sub);
+    const title=found?found[0]:sub.replace(/-/g,' ');
+    const base=getCategoryProducts(category);
+    const terms=title.toLowerCase().split(/\s+|&/).filter(x=>x.length>2);
+    const products=sub==='all'?base:base.filter(p=>terms.some(term=>[p.name,p.subcategory,p.description,p.category].filter(Boolean).join(' ').toLowerCase().includes(term)));
+    const pretty=title.replace(/\b\w/g,c=>c.toUpperCase());
+    document.getElementById('categoryTitle').textContent=pretty;
+    document.getElementById('categoryEyebrow').textContent='GLOBIRA / '+String(d?.title||category).toUpperCase()+' / '+pretty.toUpperCase();
+    buildCategoryPage(category,sub,products,pretty,category);
+  };
+
+  /* Make the sort control remain available through the same category toolbar. */
+  window.sortCategoryProducts=function(mode){categoryFilterState.sort=mode;applyCategoryFilters(true);};
+})();
+</script>
+
+</html>
 
     <style id="globira-v3-final-layout">
     html,body{width:100%;max-width:100%;}
@@ -11784,5 +12098,211 @@ body{font-size:14px!important}
   };
   window.productCard.__globiraWishlistPopupPatch=true;
  }
+})();
+</script>
+
+
+<style id="globira-readable-ui-v5">
+/* =========================================================
+   GLOBIRA READABILITY PASS V5
+   Customer-facing text is intentionally larger for easy reading.
+   Existing luxury typography/layout is preserved.
+   ========================================================= */
+html{font-size:15px!important}
+body{font-size:15px!important}
+
+/* Top utility bar: currency / track order / help / service links */
+.globira-utility-bar{font-size:14px!important;min-height:38px!important;height:38px!important}
+.globira-utility-bar .utility-left,.globira-utility-bar .utility-right{gap:14px!important}
+.globira-utility-bar .utility-left span,.globira-utility-bar .utility-right span{font-size:14px!important;line-height:1.2!important}
+.globira-utility-bar .globira-currency-trigger{font-size:14px!important;color:#fff!important}
+
+/* Main header */
+.globira-main-header .logo{font-size:36px!important}
+.logo-subtitle{font-size:12px!important;letter-spacing:2.2px!important;margin-top:5px!important}
+.modern-header-search input{font-size:15px!important}
+.modern-header-search input::placeholder{font-size:14px!important}
+.action-label{font-size:14px!important}
+.header-icon-btn,.header-cart-btn{font-size:14px!important}
+.header-cart-count{font-size:11px!important}
+
+/* Main navigation */
+.globira-global-nav a,.globira-reference-nav a{font-size:14px!important}
+.globira-global-nav em,.globira-reference-nav em{font-size:12px!important}
+
+/* Homepage hero and editorial sections */
+.ref-eyebrow{font-size:13px!important}
+.ref-hero-copy p{font-size:15px!important;line-height:1.65!important}
+.ref-shop-btn{font-size:14px!important}
+.ref-four-panel span{font-size:13px!important}
+.ref-four-panel h3{font-size:22px!important}
+.ref-four-panel p{font-size:14px!important;line-height:1.55!important}
+.ref-four-panel button{font-size:14px!important}
+
+/* Worldwide Shipping / Secure Payments / Returns / Support / Trusted bar */
+.ref-trust>div b,.gw-trust strong{font-size:15px!important}
+.ref-trust>div small,.gw-trust small{font-size:13px!important;line-height:1.5!important}
+.ref-trust>div>span{font-size:18px!important}
+
+/* Product section and cards */
+.ref-products-head h2{font-size:28px!important}
+.ref-tabs button,.ref-live-line,.ref-live-line small{font-size:14px!important}
+.gw-product-category{font-size:13px!important}
+.gw-product-info h3{font-size:16px!important;line-height:1.45!important;min-height:46px!important}
+.gw-product-info p{font-size:14px!important;line-height:1.5!important}
+.gw-product-bottom .price{font-size:17px!important}
+.gw-product-bottom .old-price{font-size:13px!important}
+.gw-view{font-size:14px!important}
+.gw-card-heart{font-size:20px!important}
+
+/* Category pages / supporting storefront text */
+.category-subgroups strong{font-size:15px!important}
+.category-subgroups span,.category-subgroups small{font-size:14px!important}
+.reference-category-shortcuts button,.subcategory-strip span{font-size:14px!important}
+.reference-promo small,.reference-promo button{font-size:14px!important}
+.reference-section-title h2{font-size:28px!important}
+.reference-section-title button{font-size:14px!important}
+.gw-discovery span,.gw-discovery small{font-size:13px!important}
+.gw-discovery b{font-size:16px!important}
+.gw-category-toolbar b{font-size:15px!important}
+.gw-category-toolbar span,.gw-category-toolbar select,.gw-load-more{font-size:14px!important}
+
+/* Cart drawer */
+.cart-header h2{font-size:30px!important}
+.cart-item-info h4{font-size:16px!important;line-height:1.45!important}
+.cart-size{font-size:13px!important}
+.cart-price,.line-total{font-size:15px!important}
+.quantity button,.quantity span{font-size:15px!important}
+.remove{font-size:13px!important}
+.total-row{font-size:20px!important}
+.checkout-btn{font-size:15px!important}
+
+/* Product popup */
+#productModal .popup-description,.popup-description{font-size:15px!important;line-height:1.75!important}
+#productModal .details-box,.details-box{font-size:15px!important;line-height:1.85!important}
+#productModal .color-title,#productModal .size-title,.product-quantity-title{font-size:14px!important}
+#productModal .color-option,#productModal .size,#productModal .quantity,#productModal .quantity button{font-size:15px!important}
+#productModal .selection-note{font-size:13px!important}
+#productModal #popupAddButton,#productModal #popupBuyButton,.add-popup,.buy-now{font-size:15px!important}
+
+/* Checkout / review / address: larger everywhere */
+.checkout-secure{font-size:14px!important}
+.checkout-top p{font-size:15px!important;line-height:1.65!important}
+.step{font-size:14px!important}
+.checkout-step h2{font-size:38px!important}
+.review-card-info h3{font-size:18px!important;line-height:1.45!important}
+.review-meta{font-size:15px!important;line-height:1.7!important}
+.review-price{font-size:16px!important}
+.review-total{font-size:21px!important}
+.delivery-note{font-size:14px!important;line-height:1.7!important}
+.form-label{font-size:13px!important}
+#step2{font-size:15px!important}
+#step2 input,#step2 textarea,#step2 select{font-size:15px!important;line-height:1.4!important}
+#step2 .globira-address-help{font-size:14px!important;line-height:1.7!important}
+.globira-address-type-title{font-size:13px!important}
+.globira-address-type-option{font-size:15px!important}
+.globira-address-type-option span{font-size:16px!important}
+.optional-label{font-size:13px!important}
+.checkout-summary h3{font-size:27px!important}
+.checkout-summary-row{font-size:15px!important;line-height:1.55!important}
+.checkout-summary-total{font-size:23px!important}
+
+/* Review-order remove control */
+.review-remove{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  margin-top:10px!important;
+  padding:7px 12px!important;
+  border:1px solid #cfcfcf!important;
+  background:#fff!important;
+  color:#555!important;
+  font-family:'DM Sans',Arial,sans-serif!important;
+  font-size:13px!important;
+  letter-spacing:.6px!important;
+  cursor:pointer!important;
+}
+.review-remove:hover{background:#111!important;color:#fff!important;border-color:#111!important}
+.review-card{align-items:flex-start!important}
+
+@media(max-width:650px){
+  html,body{font-size:15px!important}
+  .globira-utility-bar{font-size:13px!important}
+  .globira-utility-bar .utility-left span,.globira-utility-bar .utility-right span,.globira-utility-bar .globira-currency-trigger{font-size:13px!important}
+  .action-label{font-size:13px!important}
+  .globira-global-nav a,.globira-reference-nav a{font-size:13px!important}
+  .gw-product-info h3{font-size:15px!important}
+  .gw-product-bottom .price{font-size:16px!important}
+  #step2 input,#step2 textarea,#step2 select{font-size:15px!important}
+}
+</style>
+
+<script id="globira-review-remove-v5">
+(function(){
+  'use strict';
+
+  /* Remove one exact cart row from the Review Your Order step. */
+  window.removeCheckoutReviewItem=function(index){
+    if(!Array.isArray(cart) || index<0 || index>=cart.length) return;
+
+    cart.splice(index,1);
+
+    try{
+      if(typeof saveCart==='function') saveCart();
+    }catch(e){}
+
+    try{
+      if(typeof renderReview==='function') renderReview();
+      if(typeof renderCheckoutSummary==='function') renderCheckoutSummary();
+      if(typeof renderCart==='function') renderCart();
+    }catch(e){}
+
+    if(!cart.length){
+      try{ showToast('Your cart is now empty.'); }catch(e){}
+    }else{
+      try{ showToast('Product removed from your order review.'); }catch(e){}
+    }
+  };
+
+  /* Rebuild the review renderer with a Remove button while preserving
+     the existing product/variant/quantity/price information. */
+  const originalRenderReview=window.renderReview;
+  if(typeof originalRenderReview==='function' && !originalRenderReview.__globiraReviewRemoveV5){
+    window.renderReview=function(){
+      const container=document.getElementById('checkoutReview');
+      if(!container){ return originalRenderReview.apply(this,arguments); }
+
+      container.innerHTML=(Array.isArray(cart)?cart:[]).map(function(item,index){
+        const product=typeof findProduct==='function'?findProduct(item.id):null;
+        if(!product) return '';
+        const image=(product.images&&product.images[0])||product.image||'';
+        const safeName=String(product.name||'Product').replace(/"/g,'&quot;');
+        const size=String(item.size||'Standard').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return `
+          <div class="review-card">
+            <img src="${image}" alt="${safeName}">
+            <div class="review-card-info">
+              <h3>${product.name||'Product'}</h3>
+              <div class="review-meta">
+                Size: ${size}<br>
+                Quantity: ${item.quantity}
+              </div>
+              <div class="review-price">${formatPrice(product.price*item.quantity)}</div>
+              <button type="button" class="review-remove" onclick="removeCheckoutReviewItem(${index})">REMOVE</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const total=typeof getCartTotal==='function'?getCartTotal():0;
+      container.innerHTML+=`
+        <div class="review-total">
+          <strong>Total</strong>
+          <strong>${formatPrice(total)}</strong>
+        </div>
+      `;
+    };
+    window.renderReview.__globiraReviewRemoveV5=true;
+  }
 })();
 </script>
