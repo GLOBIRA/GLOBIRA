@@ -4612,7 +4612,7 @@
     ========================================================= */
 
     /* Show a large home feed, then reveal more with Load more. */
-    let homeVisibleCount = 20;
+    let homeVisibleCount = 48;
     const HOME_LOAD_STEP = 20;
 
     function renderFeatured(){
@@ -6596,27 +6596,66 @@
             const status = document.getElementById('homeCatalogStatus');
             if(status) status.textContent = 'Loading GLOBIRA catalog…';
 
-            /* The browser reads the stored GLOBIRA catalog. server.js syncs CJ in the background. */
-            const response = await fetch('/api/products',{
-                method:'GET',
-                cache:'no-store',
-                headers:{'Accept':'application/json'}
-            });
+            /*
+             * Load the first 3 live CJ pages.
+             * CJ returns up to 100 products per page, so the homepage
+             * now receives up to 300 live products instead of only 24.
+             */
+            const pages = [1,2,3];
 
-            if(!response.ok) throw new Error(`GLOBIRA catalog returned ${response.status}`);
+            const responses = await Promise.all(
+                pages.map(page =>
+                    fetch(`/api/products?page=${page}&size=100`,{
+                        method:'GET',
+                        cache:'no-store',
+                        headers:{'Accept':'application/json'}
+                    })
+                    .then(response=>{
+                        if(!response.ok){
+                            throw new Error(`GLOBIRA catalog returned ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .catch(error=>{
+                        console.warn(`GLOBIRA catalog page ${page} failed:`,error);
+                        return null;
+                    })
+                )
+            );
 
-            const payload = await response.json();
-            if(!payload || !payload.success){
-                throw new Error(payload?.message || payload?.error || 'Catalog request failed.');
-            }
-
-            globiraCatalogCurrency = String(payload.currency || 'USD').toUpperCase();
+            globiraCatalogCurrency = 'USD';
 
             const unique = new Map();
-            (Array.isArray(payload.products) ? payload.products : []).forEach(product=>{
-                if(!product || !product.id) return;
-                const normalized = classifyCJProduct(product);
-                unique.set(String(normalized.id),normalized);
+
+            responses.forEach(payload=>{
+                if(!payload || !payload.success || !Array.isArray(payload.products)) return;
+
+                globiraCatalogCurrency = String(payload.currency || globiraCatalogCurrency || 'USD').toUpperCase();
+
+                payload.products.forEach(product=>{
+                    if(!product || !product.id) return;
+
+                    const normalized = classifyCJProduct(product);
+
+                    /* Keep the existing frontend/cart price bridge. */
+                    const sellingPrice = Number(
+                        normalized.sellingPrice ??
+                        normalized.customerPrice ??
+                        normalized.sellingPriceMin ??
+                        normalized.price ??
+                        0
+                    );
+
+                    if(Number.isFinite(sellingPrice)) {
+                        normalized.price = sellingPrice;
+                    }
+
+                    if(!normalized.name && normalized.title) {
+                        normalized.name = normalized.title;
+                    }
+
+                    unique.set(String(normalized.id),normalized);
+                });
             });
 
             cjProducts = Array.from(unique.values());
@@ -6626,7 +6665,7 @@
             refreshCurrentCategoryInPlace();
             updateGWLiveStatus();
 
-            console.log(`GLOBIRA STOREFRONT: loaded ${cjProducts.length} stored products from /api/products.`);
+            console.log(`GLOBIRA STOREFRONT: loaded ${cjProducts.length} live CJ products from 3 pages.`);
 
         }catch(error){
             console.error('GLOBIRA STOREFRONT CATALOG ERROR:',error);
@@ -6895,8 +6934,18 @@
         const name=escapeHtml(product.name||'GLOBIRA Product');
         const images=normalizeProductImages(product);
         const image=images[0]||productFallbackImage(product);
-        const price=formatPrice(product.price);
-        const oldPrice=Number(product.oldPrice||0)>Number(product.price||0)?formatPrice(product.oldPrice):'';
+        const productPrice = Number(
+            product.sellingPrice ??
+            product.customerPrice ??
+            product.sellingPriceMin ??
+            product.price ??
+            0
+        );
+        const oldPriceValue = Number(product.oldPrice || 0);
+        const price = formatPrice(productPrice);
+        const oldPrice = oldPriceValue > productPrice
+            ? formatPrice(oldPriceValue)
+            : '';
         const live=String(product.source||'').toLowerCase()==='cjdropshipping';
         const cat=String(product.category||globiraGender(product)||'other').replace(/^\w/,c=>c.toUpperCase());
         const safeId=id.replace(/'/g,"\\'");
@@ -8408,8 +8457,15 @@
         const name = escapeHtml(product.name || 'GLOBIRA Product');
         const images = normalizeProductImages(product);
         const mainImage = images[0] || productFallbackImage(product);
-        const price = formatPrice(product.price);
-        const oldPrice = Number(product.oldPrice || 0) > Number(product.price || 0)
+        const productPrice = Number(
+            product.sellingPrice ??
+            product.customerPrice ??
+            product.sellingPriceMin ??
+            product.price ??
+            0
+        );
+        const price = formatPrice(productPrice);
+        const oldPrice = Number(product.oldPrice || 0) > productPrice
         ? formatPrice(product.oldPrice) : '';
         const live = String(product.source || '').toLowerCase() === 'cjdropshipping';
         const cat = String(product.category || globiraGender(product) || 'other')
