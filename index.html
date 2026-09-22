@@ -4612,8 +4612,8 @@
     ========================================================= */
 
     /* Show a large home feed, then reveal more with Load more. */
-    let homeVisibleCount = 20;
-    const HOME_LOAD_STEP = 20;
+    let homeVisibleCount = 100;
+    const HOME_LOAD_STEP = 100;
 
     function renderFeatured(){
         const container = document.getElementById('featuredProducts');
@@ -4652,9 +4652,17 @@
     }
 
     function loadMoreHomeProducts(){
-        homeVisibleCount += HOME_LOAD_STEP;
+        const sourceProducts = Array.isArray(cjProducts) ? cjProducts : [];
+        const current = homeVisibleCount;
         const y = window.scrollY || document.documentElement.scrollTop || 0;
-        renderFeatured();
+
+        /* Always show products immediately from the catalog already downloaded. */
+        if(current < sourceProducts.length){
+            homeVisibleCount += HOME_LOAD_STEP;
+            renderFeatured();
+            renderHomepageLiveSections();
+        }
+
         requestAnimationFrame(() => window.scrollTo(0, y));
     }
 
@@ -4831,9 +4839,15 @@
         const products = getCategoryProducts(category);
         const grid = document.querySelector('#categoryProducts .category-result-grid');
         if(!grid) return;
+
         const current = grid.querySelectorAll('.product').length;
-        const next = products.slice(current,current+48);
-        grid.insertAdjacentHTML('beforeend',next.map(productCard).join(''));
+        const next = products.slice(current,current+100);
+
+        if(next.length){
+            grid.insertAdjacentHTML('beforeend',next.map(productCard).join(''));
+        }
+
+        updateCategoryLoadMoreButton(products.length, current + next.length);
     }
 
     function loadMoreSubcategory(category,sub){
@@ -4842,11 +4856,25 @@
         const title=found?found[0]:sub.replace(/-/g,' ');
         const base=getCategoryProducts(category);
         const terms=title.toLowerCase().split(/\s+|&/).filter(x=>x.length>2);
-        const products=sub==='all'?base:base.filter(p=>terms.some(term=>[p.name,p.subcategory,p.category].filter(Boolean).join(' ').toLowerCase().includes(term)));
+        const products=sub==='all'?base:base.filter(p=>terms.some(term=>
+            [p.name,p.subcategory,p.category,p.description,p.gender].filter(Boolean).join(' ').toLowerCase().includes(term)
+        ));
         const grid=document.querySelector('#categoryProducts .category-result-grid');
         if(!grid) return;
+
         const current=grid.querySelectorAll('.product').length;
-        grid.insertAdjacentHTML('beforeend',products.slice(current,current+48).map(productCard).join(''));
+        const next=products.slice(current,current+100);
+        if(next.length) grid.insertAdjacentHTML('beforeend',next.map(productCard).join(''));
+        updateCategoryLoadMoreButton(products.length,current+next.length);
+    }
+
+    function updateCategoryLoadMoreButton(total,shown){
+        const button=document.querySelector('#categoryProducts .gw-load-more');
+        if(!button) return;
+        button.style.display = shown < total ? 'block' : 'none';
+        button.textContent = shown < total
+            ? `Load more products · ${Math.min(100,total-shown).toLocaleString()} more →`
+            : '';
     }
 
 
@@ -5036,30 +5064,11 @@
 
     function renderFastResults(container, products, rawQuery, firstPaint){
         if(!container) return;
-
-        const safeQuery=escapeHtml(rawQuery);
-        const items=products || [];
-
-        container.innerHTML = `
-            <div class="gw-category-toolbar fast-search-toolbar">
-                <div>
-                    <b>${items.length.toLocaleString()} ${items.length===1?'product':'products'}</b>
-                    <span>${firstPaint && items.length===0 ? 'Checking live marketplace…' : 'Matching products only'}</span>
-                </div>
-            </div>
-            <div class="products category-result-grid">
-                ${items.length
-                    ? items.map(productCard).join('')
-                    : `<div class="empty-category"><h3>${firstPaint?'Searching GLOBIRA…':'No products found'}</h3><p>${firstPaint?'Live matching products are being checked now.':'Try a more specific product name.'}</p></div>`}
-            </div>`;
-
-        /* Do not lazy-load the first screen of results. */
-        container.querySelectorAll('.category-result-grid img').forEach((img,i)=>{
-            if(i<12){
-                img.loading='eager';
-                img.setAttribute('fetchpriority','high');
-            }
-        });
+        const items=Array.isArray(products)?products:[];
+        const shown=items.slice(0,Math.max(120,globiraSearchVisible||120));
+        const safeQuery=escapeHtml(rawQuery||'');
+        container.innerHTML=`<div class="gw-category-toolbar fast-search-toolbar"><div><b>${items.length.toLocaleString()} ${items.length===1?'product':'products'}</b><span>${firstPaint?'Checking live marketplace…':'Matching products only'}</span></div></div><div class="products category-result-grid">${shown.length?shown.map(productCard).join(''):`<div class="empty-category"><h3>${firstPaint?'Searching GLOBIRA…':'No products found'}</h3><p>${firstPaint?'Live matching products are being checked now.':'Try a more specific product name.'}</p></div>`}</div>${items.length>shown.length?'<button class="gw-load-more" onclick="loadMoreSearchResults()">Load more products →</button>':''}`;
+        container.querySelectorAll('.category-result-grid img').forEach((img,i)=>{if(i<12){img.loading='eager';img.setAttribute('fetchpriority','high');}});
     }
 
     /* =========================================================
@@ -6531,138 +6540,112 @@
         const subcategory = String(source.subcategory || '').toLowerCase();
         const gender = String(source.gender || '').toLowerCase();
         const description = String(source.description || '').toLowerCase();
+        const text = [name, category, subcategory, gender, description].filter(Boolean).join(' ');
+        const paddedText = ` ${text.replace(/[^a-z0-9'&]+/g,' ')} `;
+        const hasAny = words => words.some(word => paddedText.includes(` ${String(word).trim()} `));
 
-        const text = [name, category, subcategory, gender, description]
-            .filter(Boolean).join(' ');
+        const womenStrong = /\b(women|womens|women's|female|woman|ladies|lady|girls?|femme|womenswear|womenwear)\b/.test(paddedText);
+        const menStrong = /\b(men|mens|men's|male|man|gentlemen|gentleman|boys?|masculine|menswear|menwear)\b/.test(paddedText);
 
-        const hasAny = words => words.some(word => text.includes(word));
+        const bagWords=['bag','handbag','backpack','purse','tote','clutch','crossbody','shoulder bag','wallet','luggage','suitcase'];
+        const shoeWords=['shoe','shoes','sneaker','sneakers','sandal','sandals','boot','boots','heel','heels','loafer','loafers','slipper','slippers','moccasin','footwear'];
+        const accessoryWords=['watch','watches','jewelry','jewellery','necklace','bracelet','ring','earring','belt','sunglasses','glasses','scarf','hat','cap','accessory','accessories'];
 
-        const bagWords = [
-            'bag','handbag','backpack','purse','tote','clutch',
-            'crossbody','shoulder bag','wallet','luggage','suitcase'
-        ];
-        const shoeWords = [
-            'shoe','shoes','sneaker','sneakers','sandal','sandals',
-            'boot','boots','heel','heels','loafer','loafers',
-            'slipper','slippers','moccasin','footwear'
-        ];
-        const accessoryWords = [
-            'watch','watches','jewelry','jewellery','necklace',
-            'bracelet','ring','earring','belt','sunglasses',
-            'glasses','scarf','hat','cap','accessory','accessories'
-        ];
-        const menWords = [
-            'men','mens',"men's",'male','man',
-            'men clothing','mens clothing','menswear'
-        ];
-        const womenWords = [
-            'women','womens',"women's",'female','woman',
-            'women clothing','womens clothing','womenswear',
-            'dress','skirt','blouse','lingerie','bra'
-        ];
+        let finalCategory = String(source.category || '').trim().toLowerCase();
+        let finalGender = String(source.gender || '').trim().toLowerCase();
 
-        let finalCategory = String(source.category || '').trim();
-        let finalGender = String(source.gender || '').trim();
-
-        if(hasAny(bagWords)){
-            finalCategory = 'bags';
-        }else if(hasAny(shoeWords)){
-            finalCategory = 'shoes';
-        }else if(hasAny(accessoryWords)){
-            finalCategory = 'accessories';
-        }else if(hasAny(menWords)){
-            finalCategory = 'men';
-            finalGender = 'men';
-        }else if(hasAny(womenWords)){
-            finalCategory = 'women';
-            finalGender = 'women';
-        }else if(!finalCategory){
-            finalCategory = finalGender === 'men' ? 'men' : 'women';
+        // Gender is determined first and with word boundaries so WOMEN can never become MEN.
+        if(womenStrong && !/\bmen's?\b/.test(paddedText)){
+            finalGender='women';
+            if(!finalCategory || /^(men|mens|male)$/i.test(finalCategory)) finalCategory='women';
+        }else if(menStrong && !womenStrong){
+            finalGender='men';
+            if(!finalCategory || /^(women|womens|female)$/i.test(finalCategory)) finalCategory='men';
+        }else if(/^(women|woman|womens|female|ladies|lady)$/i.test(gender)){
+            finalGender='women';
+            if(!finalCategory) finalCategory='women';
+        }else if(/^(men|man|mens|male|gentlemen|gentleman)$/i.test(gender)){
+            finalGender='men';
+            if(!finalCategory) finalCategory='men';
         }
 
-        return {
-            ...source,
-            category: finalCategory,
-            gender: finalGender
-        };
+        // Generic product families are only assigned when they are not gender-specific.
+        if(!finalGender){
+            if(hasAny(bagWords)) finalCategory='bags';
+            else if(hasAny(shoeWords)) finalCategory='shoes';
+            else if(hasAny(accessoryWords)) finalCategory='accessories';
+        }
+
+        if(!finalCategory) finalCategory = finalGender || 'other';
+
+        return {...source,category:finalCategory,gender:finalGender};
     }
 
+    let globiraCatalogReady = null;
+
     async function loadCJFeaturedProduct(){
+        if(globiraCatalogReady) return globiraCatalogReady;
 
-        if(catalogLoading) return;
-        catalogLoading = true;
+        globiraCatalogReady = (async()=>{
+            const PAGE_SIZE=100;
+            const BATCH_SIZE=20;
+            const status=document.getElementById('homeCatalogStatus');
+            const normalize=payload=>(Array.isArray(payload?.products)?payload.products:[]).map(product=>{
+                if(!product?.id) return null;
+                const p=classifyCJProduct(product);
+                const selling=Number(p.sellingPrice ?? p.customerPrice ?? p.sellingPriceMin ?? p.price ?? 0);
+                if(Number.isFinite(selling)) p.price=selling;
+                if(!p.name && p.title) p.name=p.title;
+                return p;
+            }).filter(Boolean);
+            const merge=list=>{
+                const map=new Map((Array.isArray(cjProducts)?cjProducts:[]).map(p=>[String(p.id),p]));
+                list.forEach(p=>map.set(String(p.id),p));
+                cjProducts=Array.from(map.values());
+            };
+            const getPage=async page=>{
+                try{
+                    const r=await fetch(`/api/cj-products?page=${page}&size=${PAGE_SIZE}`,{cache:'no-store',headers:{Accept:'application/json'}});
+                    if(!r.ok) return null;
+                    return await r.json();
+                }catch(e){ console.warn('CJ page failed',page,e); return null; }
+            };
 
-        try{
-            const status = document.getElementById('homeCatalogStatus');
-            if(status) status.textContent = 'Loading GLOBIRA catalog…';
+            catalogLoading=true;
+            try{
+                if(status) status.textContent='Loading GLOBIRA products…';
+                const first=await getPage(1);
+                if(!first?.success) throw new Error('CJ catalog first page failed');
+                globiraCatalogCurrency=String(first.currency||'USD').toUpperCase();
+                merge(normalize(first));
+                renderFeatured(); updateGWLiveStatus();
 
-            /* The browser reads the stored GLOBIRA catalog. server.js syncs CJ in the background. */
-            const response = await fetch('/api/products',{
-                method:'GET',
-                cache:'no-store',
-                headers:{'Accept':'application/json'}
-            });
+                const totalRecords=Number(first.totalRecords || first?.data?.totalRecords || 0);
+                const totalPages=Math.max(1,Number(first.totalPages || first?.data?.totalPages || Math.ceil(totalRecords/PAGE_SIZE)));
+                if(status) status.textContent=`Loading GLOBIRA catalog… ${cjProducts.length.toLocaleString()} / ${totalRecords.toLocaleString()}`;
 
-            if(!response.ok) throw new Error(`GLOBIRA catalog returned ${response.status}`);
+                for(let startPage=2; startPage<=totalPages; startPage+=BATCH_SIZE){
+                    const pages=[];
+                    for(let p=startPage;p<=Math.min(totalPages,startPage+BATCH_SIZE-1);p++) pages.push(p);
+                    const payloads=await Promise.all(pages.map(getPage));
+                    const batch=[];
+                    payloads.forEach(x=>{if(x?.success) batch.push(...normalize(x));});
+                    merge(batch);
+                    updateGWLiveStatus();
+                    renderFeatured();
+                    if(status) status.textContent=`Loading GLOBIRA catalog… ${cjProducts.length.toLocaleString()} / ${totalRecords.toLocaleString()}`;
+                    await new Promise(r=>setTimeout(r,0));
+                }
 
-            const payload = await response.json();
-            if(!payload || !payload.success){
-                throw new Error(payload?.message || payload?.error || 'Catalog request failed.');
+                renderFeatured(); renderHomepageLiveSections(); refreshCurrentCategoryInPlace(); updateGWLiveStatus();
+                console.log(`GLOBIRA: FULL CJ CATALOG READY: ${cjProducts.length} / ${totalRecords}`);
+                return cjProducts;
+            }finally{
+                catalogLoading=false;
+                renderFeatured(); updateGWLiveStatus();
             }
-
-            globiraCatalogCurrency = String(payload.currency || 'USD').toUpperCase();
-
-            const unique = new Map();
-            (Array.isArray(payload.products) ? payload.products : []).forEach(product=>{
-                if(!product || !product.id) return;
-                const normalized = classifyCJProduct(product);
-
-                /*
-                 * GLOBIRA catalog price bridge:
-                 * The backend stores the customer selling price as
-                 * sellingPrice/customerPrice. Older frontend/cart code
-                 * still reads product.price, so keep both in sync.
-                 */
-                const sellingPrice = Number(
-                    normalized.sellingPrice ??
-                    normalized.customerPrice ??
-                    normalized.sellingPriceMin ??
-                    normalized.price ??
-                    0
-                );
-
-                if(Number.isFinite(sellingPrice)) {
-                    normalized.price = sellingPrice;
-                }
-
-                if(!normalized.name && normalized.title) {
-                    normalized.name = normalized.title;
-                }
-
-                unique.set(String(normalized.id),normalized);
-            });
-
-            cjProducts = Array.from(unique.values());
-
-            renderFeatured();
-            renderHomepageLiveSections();
-            refreshCurrentCategoryInPlace();
-            updateGWLiveStatus();
-
-            console.log(`GLOBIRA STOREFRONT: loaded ${cjProducts.length} stored products from /api/products.`);
-
-        }catch(error){
-            console.error('GLOBIRA STOREFRONT CATALOG ERROR:',error);
-            if(!Array.isArray(cjProducts)) cjProducts=[];
-            renderFeatured();
-            renderHomepageLiveSections();
-            updateGWLiveStatus();
-        }finally{
-            catalogLoading=false;
-            renderFeatured();
-            renderHomepageLiveSections();
-            updateGWLiveStatus();
-        }
+        })();
+        try{return await globiraCatalogReady;}catch(e){globiraCatalogReady=null;throw e;}
     }
 
     /* =========================================================
@@ -6885,10 +6868,14 @@
 
     function globiraGender(product){
         const p=product||{};
-        const text=[p.name,p.category,p.subcategory,p.gender,p.description].filter(Boolean).join(' ').toLowerCase();
-        if(/\b(women|womens|women's|female|woman|ladies|lady|girl|girls)\b/.test(text)) return 'women';
-        if(/\b(men|mens|men's|male|man|gentlemen|gentleman's|boy|boys)\b/.test(text)) return 'men';
-        return String(p.gender||'').toLowerCase();
+        const explicit=String(p.gender||'').toLowerCase().trim();
+        if(/^(women|woman|womens|female|ladies|lady|girls?|femme)$/.test(explicit)) return 'women';
+        if(/^(men|man|mens|male|gentlemen|gentleman|boys?|masculine)$/.test(explicit)) return 'men';
+
+        const text=[p.name,p.category,p.subcategory,p.description].filter(Boolean).join(' ').toLowerCase();
+        if(/\b(women|womens|women's|female|woman|ladies|lady|girl|girls|womenswear|womenwear)\b/.test(text)) return 'women';
+        if(/\b(men|mens|men's|male|man|gentlemen|gentleman's|boy|boys|menswear|menwear)\b/.test(text)) return 'men';
+        return explicit;
     }
 
     function productFallbackImage(product){
@@ -7966,66 +7953,90 @@
         document.getElementById('categoryPage').classList.add('active');
 
         const d=GLOBIRA_MENU_DATA[category];
-        const products=getCategoryProducts(category);
         const title=d?.title||({women:'Women',men:'Men',bags:'Bags',electronics:'Electronics',home:'Home & Living',beauty:'Beauty & Personal Care',tools:'Tools & DIY',sports:'Sports & Fitness',automotive:'Automotive',pets:'Pet Supplies',office:'Office & School',baby:'Baby & Kids',health:'Health & Wellness',more:'All Products'}[category]||'Collection');
 
         document.getElementById('categoryTitle').textContent=title;
         document.getElementById('categoryEyebrow').textContent='GLOBIRA / '+title.toUpperCase();
 
-        const c=document.getElementById('categoryProducts');
+        const products=getCategoryProducts(category);
         const safeCat=String(category).replace(/'/g,"\\'");
-        c.innerHTML=`
+        const initial=products.slice(0,100);
+
+        document.getElementById('categoryProducts').innerHTML=`
         <div class="gw-category-toolbar">
             <div><b>${products.length.toLocaleString()} products</b><span>Live marketplace</span></div>
             <select onchange="sortCategoryProducts(this.value)">
-            <option value="featured">Featured</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
-            <option value="name">Name</option>
+                <option value="featured">Featured</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="name">Name</option>
             </select>
         </div>
         <div class="products category-result-grid">
-            ${products.length ? products.slice(0,48).map(productCard).join('') : '<div class="empty-category"><h3>No products available yet</h3><p>Live matching products will appear automatically.</p></div>'}
+            ${initial.length ? initial.map(productCard).join('') : '<div class="empty-category"><h3>Loading live products…</h3><p>Connecting to the CJ catalog.</p></div>'}
         </div>
-        ${products.length>48 ? `<button class="gw-load-more" onclick="loadMoreCategory('${safeCat}')">Load more products →</button>` : ''}`;
+        <button class="gw-load-more" style="display:${products.length>100?'block':'none'}" onclick="loadMoreCategory('${safeCat}')">
+            Load more products · ${Math.min(100,Math.max(0,products.length-100)).toLocaleString()} more →
+        </button>`;
 
         makeCategoryProductsVisible();
         window.scrollTo({top:0,behavior:'instant'});
+
+        /* The first 100 appear immediately. The full CJ catalog continues loading in background. */
+        if(typeof loadCJFeaturedProduct==='function') loadCJFeaturedProduct().catch(()=>{});
     };
 
     window.showSubcategory=function(category,sub){
         currentCategory=category;
         document.getElementById('homePage').style.display='none';
         document.getElementById('categoryPage').classList.add('active');
+
         const d=GLOBIRA_MENU_DATA[category];
         const found=(d?.groups||[]).find(([t])=>slugify(t)===sub);
         const title=found?found[0]:sub.replace(/-/g,' ');
         const base=getCategoryProducts(category);
         const terms=title.toLowerCase().split(/\s+|&/).filter(x=>x.length>2);
-        const products=sub==='all'?base:base.filter(p=>terms.some(term=>[p.name,p.subcategory,p.description,p.category].filter(Boolean).join(' ').toLowerCase().includes(term)));
+        const products=sub==='all'?base:base.filter(p=>terms.some(term=>
+            [p.name,p.subcategory,p.category,p.description,p.gender].filter(Boolean).join(' ').toLowerCase().includes(term)
+        ));
 
         document.getElementById('categoryTitle').textContent=title.replace(/\b\w/g,c=>c.toUpperCase());
         document.getElementById('categoryEyebrow').textContent='GLOBIRA / '+String(d?.title||category).toUpperCase()+' / '+title.toUpperCase();
+
         const c=document.getElementById('categoryProducts');
+        const safeCat=String(category).replace(/'/g,"\\'");
+        const safeSub=String(sub).replace(/'/g,"\\'");
+
         c.innerHTML=`
-        <div class="products category-result-grid">
-            ${products.length ? products.slice(0,48).map(productCard).join('') : '<div class="empty-category"><h3>No matching products yet</h3><p>Try another variety.</p></div>'}
+        <div class="gw-category-toolbar">
+            <div><b>${products.length.toLocaleString()} products</b><span>Live marketplace</span></div>
         </div>
-        ${products.length>48 ? `<button class="gw-load-more" onclick="loadMoreSubcategory('${String(category).replace(/'/g,"\\'")}','${String(sub).replace(/'/g,"\\'")}')">Load more products →</button>` : ''}`;
+        <div class="products category-result-grid">
+            ${products.length ? products.slice(0,100).map(productCard).join('') : '<div class="empty-category"><h3>Loading matching products…</h3><p>Connecting to the CJ catalog.</p></div>'}
+        </div>
+        <button class="gw-load-more" style="display:${products.length>100?'block':'none'}" onclick="loadMoreSubcategory('${safeCat}','${safeSub}')">
+            Load more products · ${Math.min(100,Math.max(0,products.length-100)).toLocaleString()} more →
+        </button>`;
+
         makeCategoryProductsVisible();
         window.scrollTo({top:0,behavior:'instant'});
+        if(typeof loadCJFeaturedProduct==='function') loadCJFeaturedProduct().catch(()=>{});
     };
+
 
     const oldRefresh=window.refreshCurrentCategoryInPlace;
     window.refreshCurrentCategoryInPlace=function(){
         if(!currentCategory) return;
         const grid=document.querySelector('#categoryProducts .category-result-grid');
         if(!grid) return;
-        const oldCount=grid.querySelectorAll('.product').length;
+
+        const oldCount=grid.querySelectorAll('.product').length || 100;
         const products=getCategoryProducts(currentCategory);
-        const visible=products.slice(0,Math.max(48,oldCount));
+        const visible=products.slice(0,Math.max(100,oldCount));
         const y=window.scrollY||document.documentElement.scrollTop||0;
+
         grid.innerHTML=visible.map(productCard).join('');
+        updateCategoryLoadMoreButton(products.length,visible.length);
         makeCategoryProductsVisible();
         requestAnimationFrame(()=>window.scrollTo(0,y));
     };
@@ -8517,9 +8528,9 @@
         const c = String(category||'').toLowerCase();
         if(c === 'more') return true;
         if(c === 'women' || c === 'men'){
-        return globiraGender(product) === c ||
-            String(product.gender||'').toLowerCase() === c ||
-            String(product.category||'').toLowerCase() === c;
+            /* Men/Women are gender-exclusive. Never let a product containing
+               words such as "women" accidentally enter Men. */
+            return globiraGender(product) === c;
         }
         return String(product.category||'').toLowerCase() === c;
     }
@@ -8617,60 +8628,41 @@
     }
 
     async function fetchLiveCategory(category, subcategory){
-        const requestId = ++categoryRequest;
-        const keyword = subcategory ? String(subcategory).replace(/-/g,' ') : categoryKeyword(category);
-        const pages = keyword ? [1,2,3] : [1];
-        const base = getCategoryProducts(category);
-        const local = subcategory
-        ? base.filter(p=>globiraCriterionMatch(p, subcategory.replace(/-/g,' ')))
-        : base;
-        let merged = Array.from(new Map(local.map(p=>[p.id,p])).values());
-
-        renderCategoryInstant(category, merged, 'Checking live CJ products…');
-
+        const requestId=++categoryRequest;
         try{
-        const results = await Promise.all(pages.map(page =>
-            fetch(`/api/cj-products?page=${page}&size=100&keyword=${encodeURIComponent(keyword)}`)
-            .then(r=>r.ok ? r.json() : null)
-            .catch(()=>null)
-        ));
-        if(requestId !== categoryRequest) return;
+            // Men/Women must search the COMPLETE CJ catalog, not only the first 300 results.
+            if(category==='men' || category==='women' || category==='more'){
+                await loadCJFeaturedProduct();
+                if(requestId!==categoryRequest) return;
+                const all=allProducts().map(classifyCJProduct);
+                const exact=all.filter(p=>categoryMatches(p,category) && (!subcategory || globiraCriterionMatch(p,subcategory.replace(/-/g,' '))));
+                renderCategoryInstant(category,exact,category==='more'?'All live CJ products':'Matching products only');
+                return;
+            }
 
-        const live=[];
-        results.forEach(payload=>{
-            if(payload && payload.success && Array.isArray(payload.products)){
-            payload.products.map(classifyCJProduct).forEach(p=>{
-                if(categoryMatches(p,category) &&
-                (!subcategory || globiraCriterionMatch(p, subcategory.replace(/-/g,' ')))){
-                live.push(p);
-                }
+            const keyword=subcategory ? String(subcategory).replace(/-/g,' ') : categoryKeyword(category);
+            const first=await fetch(`/api/cj-products?page=1&size=100&keyword=${encodeURIComponent(keyword)}`).then(r=>r.ok?r.json():null).catch(()=>null);
+            if(!first?.success) return;
+            const totalPages=Math.max(1,Number(first.totalPages || first?.data?.totalPages || 1));
+            const payloads=[first];
+            const batchSize=12;
+            for(let start=2;start<=totalPages;start+=batchSize){
+                const pages=[]; for(let p=start;p<=Math.min(totalPages,start+batchSize-1);p++) pages.push(p);
+                const more=await Promise.all(pages.map(p=>fetch(`/api/cj-products?page=${p}&size=100&keyword=${encodeURIComponent(keyword)}`).then(r=>r.ok?r.json():null).catch(()=>null)));
+                payloads.push(...more);
+            }
+            if(requestId!==categoryRequest) return;
+            const live=[];
+            payloads.forEach(payload=>{
+                if(payload?.success && Array.isArray(payload.products)) payload.products.map(classifyCJProduct).forEach(p=>{if(categoryMatches(p,category) && (!subcategory || globiraCriterionMatch(p,subcategory.replace(/-/g,' ')))) live.push(p);});
             });
-            }
-        });
-
-        const map = new Map(merged.map(p=>[p.id,p]));
-        live.forEach(p=>{if(p && p.id) map.set(p.id,p);});
-        const finalProducts=Array.from(map.values());
-
-        live.forEach(p=>{
-            if(p && p.id){
-            const i=cjProducts.findIndex(x=>x.id===p.id);
-            if(i>=0) cjProducts[i]=p; else cjProducts.push(p);
-            }
-        });
-
-        // IMPORTANT: render the exact criterion only. Never fall back to the full category.
-        const exactFinal = subcategory
-            ? finalProducts.filter(p=>globiraCriterionMatch(p, subcategory.replace(/-/g,' ')))
-            : finalProducts;
-        renderCategoryInstant(category, exactFinal, 'Matching products only');
-        if(typeof updateGWLiveStatus==='function') updateGWLiveStatus();
-        }catch(error){
-        console.warn('GLOBIRA LIVE CATEGORY:',error);
-        if(requestId===categoryRequest){
-            renderCategoryInstant(category, merged, subcategory ? 'Matching products only' : 'Live CJ connection pending…');
-        }
-        }
+            const map=new Map(allProducts().map(p=>[String(p.id),p]));
+            live.forEach(p=>map.set(String(p.id),p));
+            cjProducts=Array.from(new Map([...cjProducts,...live].map(p=>[String(p.id),p])).values());
+            const finalProducts=Array.from(map.values()).filter(p=>categoryMatches(p,category) && (!subcategory || globiraCriterionMatch(p,subcategory.replace(/-/g,' '))));
+            renderCategoryInstant(category,finalProducts,'Matching products only');
+            updateGWLiveStatus();
+        }catch(error){console.warn('GLOBIRA LIVE CATEGORY:',error);}
     }
 
     /* ---------- Final category page handler ---------- */
@@ -8734,70 +8726,33 @@
 
     /* Search result page uses the same compact cards and touch-safe scrolling. */
     const oldSearchProducts = window.searchProducts;
+    let globiraSearchResults=[];
+    let globiraSearchVisible=120;
+
+    window.loadMoreSearchResults=function(){
+        globiraSearchVisible+=120;
+        renderFastResults(document.getElementById('categoryProducts'),globiraSearchResults,document.getElementById('categoryTitle')?.textContent?.replace(/^Search:\s*/i,'')||'',false);
+    };
+
     window.searchProducts = async function(){
-        const heroInput = document.getElementById('globiraHeroSearchInput');
-        const topInput = document.getElementById('globiraSearchInput');
-        const input = heroInput || topInput;
-        const rawQuery = input ? input.value.trim() : '';
-
-        if(heroInput && topInput) topInput.value = rawQuery;
-        if(!rawQuery){ showHome(); return; }
-
-        const query = normalizeGlobiraSearch(rawQuery);
-        const home = document.getElementById('homePage');
-        const page = document.getElementById('categoryPage');
-        if(home) home.style.display='none';
-        if(page) page.classList.add('active');
-        document.body.classList.add('no-scroll');
-
+        const heroInput=document.getElementById('globiraHeroSearchInput');
+        const topInput=document.getElementById('globiraSearchInput');
+        const input=heroInput||topInput;
+        const rawQuery=input?input.value.trim():'';
+        if(heroInput&&topInput) topInput.value=rawQuery;
+        if(!rawQuery){showHome();return;}
+        const query=normalizeGlobiraSearch(rawQuery);
+        const home=document.getElementById('homePage'), page=document.getElementById('categoryPage');
+        if(home) home.style.display='none'; if(page) page.classList.add('active'); document.body.classList.add('no-scroll');
         document.getElementById('categoryTitle').textContent='Search: '+rawQuery;
         document.getElementById('categoryEyebrow').textContent='GLOBIRA / SEARCH RESULTS';
+        globiraSearchVisible=120;
 
-        let products = allProducts().filter(p=>globiraStrictSearchMatch(p,query));
-        renderFastResults(document.getElementById('categoryProducts'),products,rawQuery,true);
-        const grid = document.querySelector('#categoryProducts .category-result-grid');
-        if(grid){
-        grid.querySelectorAll('.gw-card-main-image').forEach((img,i)=>{
-            if(i<12){ img.loading='eager'; img.setAttribute('fetchpriority','high'); }
-        });
-        }
+        // If the full catalog is not ready yet, finish loading it first. This guarantees search scans all CJ products.
+        try{ await loadCJFeaturedProduct(); }catch(e){}
+        globiraSearchResults=allProducts().map(classifyCJProduct).filter(p=>globiraStrictSearchMatch(p,query));
+        renderFastResults(document.getElementById('categoryProducts'),globiraSearchResults,rawQuery,false);
         if(page) page.scrollTop=0;
-        window.scrollTo(0,0);
-
-        try{
-        /* Three requests run together instead of waiting page-by-page. */
-        const responses = await Promise.all([1,2,3].map(pageNo =>
-            fetch(`/api/cj-products?page=${pageNo}&size=100&keyword=${encodeURIComponent(rawQuery)}`)
-            .then(r=>r.ok?r.json():null).catch(()=>null)
-        ));
-
-        const liveMatches=[];
-        responses.forEach(payload=>{
-            if(payload && payload.success && Array.isArray(payload.products)){
-            payload.products.map(classifyCJProduct)
-                .filter(p=>globiraStrictSearchMatch(p,query))
-                .forEach(p=>liveMatches.push(p));
-            }
-        });
-
-        const map = new Map(products.map(p=>[p.id,p]));
-        liveMatches.forEach(p=>{if(p?.id) map.set(p.id,p);});
-        products = Array.from(map.values());
-
-        liveMatches.forEach(p=>{
-            if(p?.id){
-            const i=cjProducts.findIndex(x=>x.id===p.id);
-            if(i>=0) cjProducts[i]=p; else cjProducts.push(p);
-            }
-        });
-
-        renderFastResults(document.getElementById('categoryProducts'),products,rawQuery,false);
-        document.querySelectorAll('#categoryProducts .gw-card-main-image').forEach((img,i)=>{
-            if(i<12){img.loading='eager';img.setAttribute('fetchpriority','high');}
-        });
-        }catch(error){
-        console.warn('GLOBIRA LIVE SEARCH V2:',error);
-        }
     };
 
     /* Keep category scrolling usable on iOS even while the background is locked. */
@@ -10754,6 +10709,65 @@ body{font-size:14px!important}
 </script>
 <!-- END GLOBIRA FINAL CART REMOVE + PRODUCT PHOTO GALLERY FIX -->
 
+
+<!-- GLOBIRA FINAL CATALOG + PRODUCT POPUP + CART FIX -->
+<script>
+(function(){
+    /* ===== GUARANTEE GLOBAL PRODUCT/CART ACTIONS ===== */
+    try{
+        if(typeof openProduct === 'function') window.openProduct = openProduct;
+        if(typeof closeProduct === 'function') window.closeProduct = closeProduct;
+        if(typeof addToCart === 'function') window.addToCart = addToCart;
+        if(typeof changeQuantity === 'function') window.changeQuantity = changeQuantity;
+        if(typeof removeItem === 'function') window.removeItem = removeItem;
+        if(typeof renderCart === 'function') window.renderCart = renderCart;
+        if(typeof openCart === 'function') window.openCart = openCart;
+        if(typeof closeCart === 'function') window.closeCart = closeCart;
+    }catch(e){}
+
+    /* Some earlier wrappers can hide the original function. Re-expose a reliable
+       click handler so every live CJ card opens the existing product modal. */
+    document.addEventListener('click',function(e){
+        const card=e.target.closest && e.target.closest('.gw-product-card');
+        if(card && !e.target.closest('button,a,input,select')){
+            const onclick=card.getAttribute('onclick')||'';
+            const m=onclick.match(/openProduct\(['"]([^'"]+)['"]/);
+            if(m && typeof window.openProduct==='function'){
+                e.preventDefault();
+                try{ window.openProduct(m[1]); }catch(err){ console.error('GLOBIRA product popup:',err); }
+            }
+        }
+    },true);
+
+    /* Ensure REMOVE always updates the drawer immediately. */
+    document.addEventListener('click',function(e){
+        const btn=e.target.closest && e.target.closest('#cartDrawer .remove');
+        if(!btn) return;
+        e.preventDefault();
+        const onclick=btn.getAttribute('onclick')||'';
+        const m=onclick.match(/removeItem\(['"]([^'"]+)['"],['"]([^'"]*)['"]\)/);
+        if(m && typeof window.removeItem==='function'){
+            try{
+                window.removeItem(m[1],m[2]);
+                if(typeof window.renderCart==='function') window.renderCart();
+            }catch(err){ console.error('GLOBIRA cart remove:',err); }
+        }
+    },true);
+
+    /* Initial category feed: always 100 immediately; more becomes available
+       automatically as the full CJ catalog finishes downloading. */
+    window.addEventListener('load',function(){
+        setTimeout(function(){
+            if(typeof window.loadCJFeaturedProduct==='function'){
+                window.loadCJFeaturedProduct().catch(function(e){
+                    console.warn('GLOBIRA catalog load:',e);
+                });
+            }
+        },0);
+    });
+})();
+</script>
+<!-- END GLOBIRA FINAL CATALOG + PRODUCT POPUP + CART FIX -->
 </body>
     
 
@@ -12772,244 +12786,5 @@ body{font-size:15px!important}
     };
     window.renderReview.__globiraReviewRemoveV5=true;
   }
-})();
-</script>
-<!-- GLOBIRA PRICING ENGINE v2: USD cost -> protected USD margin -> selected currency -->
-<script id="globira-pricing-engine-v2">
-(function(){
-    'use strict';
-
-    const PRICING = {
-        PAYMENT_FEE_RATE: 0.0354,
-        MIN_MARKUP_USD: 5,
-        MID_MARKUP_USD: 6,
-        HIGH_MARKUP_USD: 8,
-        PREMIUM_MARKUP_USD: 12,
-        ROUND_USD: 0.01
-    };
-
-    let liveUSDRates = {USD:1};
-
-    function n(v){
-        const x=Number(v);
-        return Number.isFinite(x) ? x : 0;
-    }
-
-    function supplierCostUSD(product){
-        if(!product) return 0;
-        const values=[
-            product.supplierCostUSD,
-            product.cjSupplierCostUSD,
-            product.rawCJPriceUSD,
-            product.supplierCost,
-            product.costUSD,
-            product.cjCostUSD
-        ];
-        for(const v of values){
-            const x=n(v);
-            if(x>0) return x;
-        }
-        /* Current CJ backend identifies supplier currency as USD. */
-        if(String(product.supplierCurrency||product.currency||'').toUpperCase()==='USD'){
-            const x=n(product.price || product.sellingPrice || product.customerPrice);
-            if(x>0) return x;
-        }
-        return 0;
-    }
-
-    function markupUSD(cost){
-        if(cost <= 10) return PRICING.MIN_MARKUP_USD;
-        if(cost <= 25) return PRICING.MID_MARKUP_USD;
-        if(cost <= 50) return PRICING.HIGH_MARKUP_USD;
-        if(cost <= 100) return PRICING.PREMIUM_MARKUP_USD;
-        return Math.max(PRICING.PREMIUM_MARKUP_USD, cost * 0.12);
-    }
-
-    function protectedSellingUSD(cost){
-        cost=n(cost);
-        if(cost<=0) return 0;
-        const profit=markupUSD(cost);
-        /*
-         * Gross up the customer price so the payment fee is paid first.
-         * Therefore:
-         *   selling - payment fee - supplier cost = protected markup
-         */
-        const gross=(cost + profit) / (1-PRICING.PAYMENT_FEE_RATE);
-        return Math.ceil(gross / PRICING.ROUND_USD) * PRICING.ROUND_USD;
-    }
-
-    function usdToCurrency(code){
-        code=String(code||'USD').toUpperCase();
-        if(code==='USD') return 1;
-        const direct=n(liveUSDRates[code]);
-        if(direct>0) return direct;
-        /* Fallback to the index's live/fallback INR rates as a cross-rate. */
-        const meta=(typeof GLOBIRA_CURRENCIES!=='undefined') ? GLOBIRA_CURRENCIES[code] : null;
-        const usdInINR=(typeof GLOBIRA_CURRENCIES!=='undefined') ? n(GLOBIRA_CURRENCIES.USD?.inr) : 0;
-        const targetInINR=n(meta?.inr);
-        if(usdInINR>0 && targetInINR>0) return usdInINR/targetInINR;
-        return 1;
-    }
-
-    function currencyDecimals(code){
-        const meta=(typeof GLOBIRA_CURRENCIES!=='undefined') ? GLOBIRA_CURRENCIES[code] : null;
-        return Number.isFinite(Number(meta?.decimals)) ? Number(meta.decimals) : 2;
-    }
-
-    function roundCustomerAmount(value,code){
-        const decimals=currencyDecimals(code);
-        const step=(decimals===0) ? 1 : 0.01;
-        return Math.ceil(n(value)/step)*step;
-    }
-
-    function finalCustomerPrice(product,code){
-        const cost=supplierCostUSD(product);
-        if(cost<=0) return n(product?.sellingPrice ?? product?.customerPrice ?? product?.price);
-        const usd=protectedSellingUSD(cost);
-        return roundCustomerAmount(usd*usdToCurrency(code),code);
-    }
-
-    function priceForDisplay(product){
-        const code=(typeof globiraCurrency!=='undefined' ? globiraCurrency : 'USD');
-        return finalCustomerPrice(product,code);
-    }
-
-    /* Keep supplier cost and protected USD selling price on every CJ product. */
-    function prepareProduct(product){
-        if(!product || String(product.source||'').toLowerCase()!=='cjdropshipping') return product;
-        const cost=supplierCostUSD(product);
-        if(cost>0){
-            product.supplierCostUSD=cost;
-            product.rawCJPriceUSD=cost;
-            product.globiraSellingPriceUSD=protectedSellingUSD(cost);
-            product.globiraMarkupUSD=markupUSD(cost);
-            product.globiraPaymentFeeReserveUSD=product.globiraSellingPriceUSD*(1-1/(1+0.0354));
-        }
-        return product;
-    }
-
-    function formatProductPrice(product){
-        const amount=priceForDisplay(product);
-        const code=(typeof globiraCurrency!=='undefined' ? globiraCurrency : 'USD');
-        const meta=(typeof GLOBIRA_CURRENCIES!=='undefined') ? GLOBIRA_CURRENCIES[code] : null;
-        try{
-            return new Intl.NumberFormat(undefined,{
-                style:'currency',
-                currency:code,
-                minimumFractionDigits:currencyDecimals(code),
-                maximumFractionDigits:currencyDecimals(code)
-            }).format(amount);
-        }catch(e){
-            return (meta?.symbol||code)+' '+amount.toLocaleString(undefined,{minimumFractionDigits:currencyDecimals(code),maximumFractionDigits:currencyDecimals(code)});
-        }
-    }
-
-    /* Override the site's price formatter only. Nothing else is changed. */
-    window.formatPrice=function(value){
-        /* For product objects, calculate from supplier cost. */
-        if(value && typeof value==='object') return formatProductPrice(value);
-        const amount=n(value);
-        const code=(typeof globiraCurrency!=='undefined' ? globiraCurrency : 'USD');
-        try{
-            return new Intl.NumberFormat(undefined,{style:'currency',currency:code,minimumFractionDigits:currencyDecimals(code),maximumFractionDigits:currencyDecimals(code)}).format(amount);
-        }catch(e){ return code+' '+amount.toLocaleString(); }
-    };
-
-    /* Patch product cards so they use the protected customer price. */
-    const oldProductCard=window.productCard;
-    if(typeof oldProductCard==='function' && !oldProductCard.__globiraPricingWrapped){
-        window.productCard=function(product){
-            if(product) repriceProduct(product);
-            return oldProductCard(product);
-        };
-        window.productCard.__globiraPricingWrapped=true;
-    }
-
-    /* Patch visible price calculation used by the existing renderer. */
-    function repriceProduct(product){
-        if(!product || String(product.source||'').toLowerCase()!=='cjdropshipping') return product;
-        prepareProduct(product);
-        const display=finalCustomerPrice(product,(typeof globiraCurrency!=='undefined'?globiraCurrency:'USD'));
-        if(display>0){
-            product.price=display;
-            product.sellingPrice=display;
-            product.customerPrice=display;
-            product.salePrice=display;
-            product.customerPriceLocalized=display;
-            product.currency=(typeof globiraCurrency!=='undefined'?globiraCurrency:'USD');
-        }
-        return product;
-    }
-
-    function patchProductPriceFields(){
-        try{
-            if(Array.isArray(window.cjProducts)) window.cjProducts.forEach(repriceProduct);
-        }catch(e){}
-        try{
-            if(Array.isArray(window.womenProducts)) window.womenProducts.forEach(repriceProduct);
-            if(Array.isArray(window.menProducts)) window.menProducts.forEach(repriceProduct);
-        }catch(e){}
-    }
-
-    async function loadLiveUSDRates(){
-        try{
-            const response=await fetch('https://open.er-api.com/v6/latest/USD',{cache:'no-store'});
-            if(!response.ok) throw new Error('rate request failed');
-            const data=await response.json();
-            if(data && data.rates){
-                const rates={USD:1};
-                Object.keys(data.rates).forEach(k=>{
-                    const v=n(data.rates[k]);
-                    if(v>0) rates[k]=v;
-                });
-                liveUSDRates=rates;
-            }
-        }catch(e){
-            /* Existing currency values remain the safe fallback. */
-        }
-        patchProductPriceFields();
-        try{ if(typeof refreshPriceViews==='function') refreshPriceViews(); }catch(e){}
-    }
-
-    /* Make the pricing calculation available for checkout/order code. */
-    window.GLOBIRA_PRICE_ENGINE={
-        supplierCostUSD,
-        markupUSD,
-        protectedSellingUSD,
-        usdToCurrency,
-        finalCustomerPrice,
-        formatProductPrice,
-        prepareProduct,
-        getRates:()=>({...liveUSDRates}),
-        paymentFeeRate:PRICING.PAYMENT_FEE_RATE
-    };
-
-    patchProductPriceFields();
-
-    /* The existing currency layer assumes numeric product prices are INR.
-       Our product.price is now already in the selected customer currency, so
-       make its formatter display that amount directly. */
-    window.formatCurrencyValue=function(value){
-        const amount=n(value);
-        const code=(typeof globiraCurrency!=='undefined'?globiraCurrency:'USD');
-        const decimals=currencyDecimals(code);
-        try{
-            return new Intl.NumberFormat(undefined,{style:'currency',currency:code,minimumFractionDigits:decimals,maximumFractionDigits:decimals}).format(amount);
-        }catch(e){
-            return code+' '+amount.toLocaleString(undefined,{minimumFractionDigits:decimals,maximumFractionDigits:decimals});
-        }
-    };
-
-    /* Recalculate every visible/cart price whenever the customer changes currency. */
-    const oldRefreshPriceViews=window.refreshPriceViews;
-    if(typeof oldRefreshPriceViews==='function' && !oldRefreshPriceViews.__globiraPricingWrapped){
-        window.refreshPriceViews=function(){
-            patchProductPriceFields();
-            return oldRefreshPriceViews.apply(this,arguments);
-        };
-        window.refreshPriceViews.__globiraPricingWrapped=true;
-    }
-
-    loadLiveUSDRates();
 })();
 </script>
