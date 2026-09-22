@@ -4543,11 +4543,17 @@
     PRICE
     ========================================================= */
 
+    let globiraCatalogCurrency = 'USD';
+
     function formatPrice(price){
-
-        return '₹' +
-            Number(price).toLocaleString('en-IN');
-
+        const amount = Number(price);
+        if(!Number.isFinite(amount)) return '';
+        const currency = String(globiraCatalogCurrency || 'USD').toUpperCase();
+        try{
+            return new Intl.NumberFormat(undefined,{style:'currency',currency,maximumFractionDigits:2}).format(amount);
+        }catch(error){
+            return `${currency} ${amount.toLocaleString(undefined,{maximumFractionDigits:2})}`;
+        }
     }
 
 
@@ -4606,8 +4612,8 @@
     ========================================================= */
 
     /* Show a large home feed, then reveal more with Load more. */
-    let homeVisibleCount = 70;
-    const HOME_LOAD_STEP = 30;
+    let homeVisibleCount = 20;
+    const HOME_LOAD_STEP = 20;
 
     function renderFeatured(){
         const container = document.getElementById('featuredProducts');
@@ -4640,8 +4646,8 @@
 
         if(status){
             status.textContent = totalLoaded
-                ? `Showing ${Math.min(homeVisibleCount,totalLoaded).toLocaleString()} of ${totalLoaded.toLocaleString()} live products`
-                : 'Connecting to the live catalog…';
+                ? `Showing ${Math.min(homeVisibleCount,totalLoaded).toLocaleString()} of ${totalLoaded.toLocaleString()} GLOBIRA products`
+                : 'Loading the GLOBIRA catalog…';
         }
     }
 
@@ -4656,7 +4662,7 @@
         const newContainer = document.getElementById('newHomepageProducts');
         if(newContainer){
             /* Keep this section unique from the main 70-product home feed. */
-            const start = Math.max(homeVisibleCount, 70);
+            const start = homeVisibleCount;
             const products = Array.isArray(cjProducts) && cjProducts.length ? cjProducts.slice(start, start + 12) : [];
             newContainer.innerHTML = products.map(productCard).join('');
         }
@@ -4666,8 +4672,8 @@
         const count = Array.isArray(cjProducts) ? cjProducts.length : 0;
         const text = document.getElementById('gwLiveStatusText');
         const countEl = document.getElementById('gwLiveCount');
-        if(text) text.textContent = count ? 'Live CJ catalog connected' : 'Connecting to the live catalog…';
-        if(countEl) countEl.textContent = count ? `${count.toLocaleString()} products loaded so far` : '';
+        if(text) text.textContent = count ? 'GLOBIRA catalog connected' : 'Loading the GLOBIRA catalog…';
+        if(countEl) countEl.textContent = count ? `${count.toLocaleString()} products available` : '';
     }
 
     function refreshCurrentCategoryInPlace(){
@@ -6587,83 +6593,52 @@
         catalogLoading = true;
 
         try{
-            cjProducts = [];
+            const status = document.getElementById('homeCatalogStatus');
+            if(status) status.textContent = 'Loading GLOBIRA catalog…';
 
-            /*
-            * Load more than 1,000 live CJ products while keeping the existing
-            * GLOBIRA design unchanged. CJ allows up to 100 products per request.
-            * The first page is rendered immediately; later pages are added in
-            * the background to keep the homepage usable.
-            */
-            const targetProducts = 6000;
-            const pageSize = 100;
-            const maxPages = Math.ceil(targetProducts / pageSize);
+            /* The browser reads the stored GLOBIRA catalog. server.js syncs CJ in the background. */
+            const response = await fetch('/api/products',{
+                method:'GET',
+                cache:'no-store',
+                headers:{'Accept':'application/json'}
+            });
 
-            const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+            if(!response.ok) throw new Error(`GLOBIRA catalog returned ${response.status}`);
 
-            async function loadCatalogPage(page){
-                try{
-                    console.log(`GLOBIRA: Loading live CJ catalog page ${page}/${maxPages}...`);
-
-                    const response = await fetch(
-                        `/api/cj-products?page=${page}&size=${pageSize}`
-                    );
-
-                    if(!response.ok){
-                        throw new Error(`CJ API returned ${response.status}`);
-                    }
-
-                    const payload = await response.json();
-
-                    if(!payload.success){
-                        throw new Error(payload.error || 'CJ catalog request failed.');
-                    }
-
-                    return Array.isArray(payload.products)
-                        ? payload.products.map(classifyCJProduct)
-                        : [];
-                }catch(error){
-                    console.error(`GLOBIRA CJ CATALOG PAGE ERROR (${page}):`, error);
-                    return [];
-                }
+            const payload = await response.json();
+            if(!payload || !payload.success){
+                throw new Error(payload?.message || payload?.error || 'Catalog request failed.');
             }
 
-            function addUniqueCJProducts(products){
-                const unique = new Map(cjProducts.map(product => [product.id, product]));
-                products.forEach(product => {
-                    if(product && product.id) unique.set(product.id, product);
-                });
-                cjProducts = Array.from(unique.values());
-            }
+            globiraCatalogCurrency = String(payload.currency || 'USD').toUpperCase();
 
-            for(let page = 1; page <= maxPages && cjProducts.length < targetProducts; page++){
-                const products = await loadCatalogPage(page);
-                addUniqueCJProducts(products);
+            const unique = new Map();
+            (Array.isArray(payload.products) ? payload.products : []).forEach(product=>{
+                if(!product || !product.id) return;
+                const normalized = classifyCJProduct(product);
+                unique.set(String(normalized.id),normalized);
+            });
 
-                console.log(`GLOBIRA: ${cjProducts.length} unique live CJ products loaded.`);
+            cjProducts = Array.from(unique.values());
 
-                /* Refresh visible content after every successful page. */
-                renderFeatured();
-                renderCart();
-                updateGWLiveStatus();
-                renderHomepageLiveSections();
-                /* Never call showCategory() during background loading.
-                Re-rendering the category page used to jump the user to the top. */
-                if(currentCategory){
-                    refreshCurrentCategoryInPlace();
-                }
+            renderFeatured();
+            renderHomepageLiveSections();
+            refreshCurrentCategoryInPlace();
+            updateGWLiveStatus();
 
-                if(page < maxPages && cjProducts.length < targetProducts){
-                    await wait(1200);
-                }
-            }
-
-            console.log(`GLOBIRA: Live CJ catalog ready with ${cjProducts.length} unique products.`);
+            console.log(`GLOBIRA STOREFRONT: loaded ${cjProducts.length} stored products from /api/products.`);
 
         }catch(error){
-            console.error('GLOBIRA CJ CATALOG LOAD:', error);
+            console.error('GLOBIRA STOREFRONT CATALOG ERROR:',error);
+            if(!Array.isArray(cjProducts)) cjProducts=[];
+            renderFeatured();
+            renderHomepageLiveSections();
+            updateGWLiveStatus();
         }finally{
-            catalogLoading = false;
+            catalogLoading=false;
+            renderFeatured();
+            renderHomepageLiveSections();
+            updateGWLiveStatus();
         }
     }
 
