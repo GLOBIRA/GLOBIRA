@@ -4652,9 +4652,17 @@
     }
 
     function loadMoreHomeProducts(){
-        homeVisibleCount += HOME_LOAD_STEP;
+        const sourceProducts = Array.isArray(cjProducts) ? cjProducts : [];
+        const current = homeVisibleCount;
         const y = window.scrollY || document.documentElement.scrollTop || 0;
-        renderFeatured();
+
+        /* Always show products immediately from the catalog already downloaded. */
+        if(current < sourceProducts.length){
+            homeVisibleCount += HOME_LOAD_STEP;
+            renderFeatured();
+            renderHomepageLiveSections();
+        }
+
         requestAnimationFrame(() => window.scrollTo(0, y));
     }
 
@@ -4831,9 +4839,15 @@
         const products = getCategoryProducts(category);
         const grid = document.querySelector('#categoryProducts .category-result-grid');
         if(!grid) return;
+
         const current = grid.querySelectorAll('.product').length;
-        const next = products.slice(current,current+48);
-        grid.insertAdjacentHTML('beforeend',next.map(productCard).join(''));
+        const next = products.slice(current,current+100);
+
+        if(next.length){
+            grid.insertAdjacentHTML('beforeend',next.map(productCard).join(''));
+        }
+
+        updateCategoryLoadMoreButton(products.length, current + next.length);
     }
 
     function loadMoreSubcategory(category,sub){
@@ -4842,11 +4856,25 @@
         const title=found?found[0]:sub.replace(/-/g,' ');
         const base=getCategoryProducts(category);
         const terms=title.toLowerCase().split(/\s+|&/).filter(x=>x.length>2);
-        const products=sub==='all'?base:base.filter(p=>terms.some(term=>[p.name,p.subcategory,p.category].filter(Boolean).join(' ').toLowerCase().includes(term)));
+        const products=sub==='all'?base:base.filter(p=>terms.some(term=>
+            [p.name,p.subcategory,p.category,p.description,p.gender].filter(Boolean).join(' ').toLowerCase().includes(term)
+        ));
         const grid=document.querySelector('#categoryProducts .category-result-grid');
         if(!grid) return;
+
         const current=grid.querySelectorAll('.product').length;
-        grid.insertAdjacentHTML('beforeend',products.slice(current,current+48).map(productCard).join(''));
+        const next=products.slice(current,current+100);
+        if(next.length) grid.insertAdjacentHTML('beforeend',next.map(productCard).join(''));
+        updateCategoryLoadMoreButton(products.length,current+next.length);
+    }
+
+    function updateCategoryLoadMoreButton(total,shown){
+        const button=document.querySelector('#categoryProducts .gw-load-more');
+        if(!button) return;
+        button.style.display = shown < total ? 'block' : 'none';
+        button.textContent = shown < total
+            ? `Load more products · ${Math.min(100,total-shown).toLocaleString()} more →`
+            : '';
     }
 
 
@@ -6560,7 +6588,7 @@
 
         globiraCatalogReady = (async()=>{
             const PAGE_SIZE=100;
-            const BATCH_SIZE=12;
+            const BATCH_SIZE=20;
             const status=document.getElementById('homeCatalogStatus');
             const normalize=payload=>(Array.isArray(payload?.products)?payload.products:[]).map(product=>{
                 if(!product?.id) return null;
@@ -7925,66 +7953,90 @@
         document.getElementById('categoryPage').classList.add('active');
 
         const d=GLOBIRA_MENU_DATA[category];
-        const products=getCategoryProducts(category);
         const title=d?.title||({women:'Women',men:'Men',bags:'Bags',electronics:'Electronics',home:'Home & Living',beauty:'Beauty & Personal Care',tools:'Tools & DIY',sports:'Sports & Fitness',automotive:'Automotive',pets:'Pet Supplies',office:'Office & School',baby:'Baby & Kids',health:'Health & Wellness',more:'All Products'}[category]||'Collection');
 
         document.getElementById('categoryTitle').textContent=title;
         document.getElementById('categoryEyebrow').textContent='GLOBIRA / '+title.toUpperCase();
 
-        const c=document.getElementById('categoryProducts');
+        const products=getCategoryProducts(category);
         const safeCat=String(category).replace(/'/g,"\\'");
-        c.innerHTML=`
+        const initial=products.slice(0,100);
+
+        document.getElementById('categoryProducts').innerHTML=`
         <div class="gw-category-toolbar">
             <div><b>${products.length.toLocaleString()} products</b><span>Live marketplace</span></div>
             <select onchange="sortCategoryProducts(this.value)">
-            <option value="featured">Featured</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
-            <option value="name">Name</option>
+                <option value="featured">Featured</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="name">Name</option>
             </select>
         </div>
         <div class="products category-result-grid">
-            ${products.length ? products.slice(0,48).map(productCard).join('') : '<div class="empty-category"><h3>No products available yet</h3><p>Live matching products will appear automatically.</p></div>'}
+            ${initial.length ? initial.map(productCard).join('') : '<div class="empty-category"><h3>Loading live products…</h3><p>Connecting to the CJ catalog.</p></div>'}
         </div>
-        ${products.length>48 ? `<button class="gw-load-more" onclick="loadMoreCategory('${safeCat}')">Load more products →</button>` : ''}`;
+        <button class="gw-load-more" style="display:${products.length>100?'block':'none'}" onclick="loadMoreCategory('${safeCat}')">
+            Load more products · ${Math.min(100,Math.max(0,products.length-100)).toLocaleString()} more →
+        </button>`;
 
         makeCategoryProductsVisible();
         window.scrollTo({top:0,behavior:'instant'});
+
+        /* The first 100 appear immediately. The full CJ catalog continues loading in background. */
+        if(typeof loadCJFeaturedProduct==='function') loadCJFeaturedProduct().catch(()=>{});
     };
 
     window.showSubcategory=function(category,sub){
         currentCategory=category;
         document.getElementById('homePage').style.display='none';
         document.getElementById('categoryPage').classList.add('active');
+
         const d=GLOBIRA_MENU_DATA[category];
         const found=(d?.groups||[]).find(([t])=>slugify(t)===sub);
         const title=found?found[0]:sub.replace(/-/g,' ');
         const base=getCategoryProducts(category);
         const terms=title.toLowerCase().split(/\s+|&/).filter(x=>x.length>2);
-        const products=sub==='all'?base:base.filter(p=>terms.some(term=>[p.name,p.subcategory,p.description,p.category].filter(Boolean).join(' ').toLowerCase().includes(term)));
+        const products=sub==='all'?base:base.filter(p=>terms.some(term=>
+            [p.name,p.subcategory,p.category,p.description,p.gender].filter(Boolean).join(' ').toLowerCase().includes(term)
+        ));
 
         document.getElementById('categoryTitle').textContent=title.replace(/\b\w/g,c=>c.toUpperCase());
         document.getElementById('categoryEyebrow').textContent='GLOBIRA / '+String(d?.title||category).toUpperCase()+' / '+title.toUpperCase();
+
         const c=document.getElementById('categoryProducts');
+        const safeCat=String(category).replace(/'/g,"\\'");
+        const safeSub=String(sub).replace(/'/g,"\\'");
+
         c.innerHTML=`
-        <div class="products category-result-grid">
-            ${products.length ? products.slice(0,48).map(productCard).join('') : '<div class="empty-category"><h3>No matching products yet</h3><p>Try another variety.</p></div>'}
+        <div class="gw-category-toolbar">
+            <div><b>${products.length.toLocaleString()} products</b><span>Live marketplace</span></div>
         </div>
-        ${products.length>48 ? `<button class="gw-load-more" onclick="loadMoreSubcategory('${String(category).replace(/'/g,"\\'")}','${String(sub).replace(/'/g,"\\'")}')">Load more products →</button>` : ''}`;
+        <div class="products category-result-grid">
+            ${products.length ? products.slice(0,100).map(productCard).join('') : '<div class="empty-category"><h3>Loading matching products…</h3><p>Connecting to the CJ catalog.</p></div>'}
+        </div>
+        <button class="gw-load-more" style="display:${products.length>100?'block':'none'}" onclick="loadMoreSubcategory('${safeCat}','${safeSub}')">
+            Load more products · ${Math.min(100,Math.max(0,products.length-100)).toLocaleString()} more →
+        </button>`;
+
         makeCategoryProductsVisible();
         window.scrollTo({top:0,behavior:'instant'});
+        if(typeof loadCJFeaturedProduct==='function') loadCJFeaturedProduct().catch(()=>{});
     };
+
 
     const oldRefresh=window.refreshCurrentCategoryInPlace;
     window.refreshCurrentCategoryInPlace=function(){
         if(!currentCategory) return;
         const grid=document.querySelector('#categoryProducts .category-result-grid');
         if(!grid) return;
-        const oldCount=grid.querySelectorAll('.product').length;
+
+        const oldCount=grid.querySelectorAll('.product').length || 100;
         const products=getCategoryProducts(currentCategory);
-        const visible=products.slice(0,Math.max(48,oldCount));
+        const visible=products.slice(0,Math.max(100,oldCount));
         const y=window.scrollY||document.documentElement.scrollTop||0;
+
         grid.innerHTML=visible.map(productCard).join('');
+        updateCategoryLoadMoreButton(products.length,visible.length);
         makeCategoryProductsVisible();
         requestAnimationFrame(()=>window.scrollTo(0,y));
     };
@@ -10657,6 +10709,65 @@ body{font-size:14px!important}
 </script>
 <!-- END GLOBIRA FINAL CART REMOVE + PRODUCT PHOTO GALLERY FIX -->
 
+
+<!-- GLOBIRA FINAL CATALOG + PRODUCT POPUP + CART FIX -->
+<script>
+(function(){
+    /* ===== GUARANTEE GLOBAL PRODUCT/CART ACTIONS ===== */
+    try{
+        if(typeof openProduct === 'function') window.openProduct = openProduct;
+        if(typeof closeProduct === 'function') window.closeProduct = closeProduct;
+        if(typeof addToCart === 'function') window.addToCart = addToCart;
+        if(typeof changeQuantity === 'function') window.changeQuantity = changeQuantity;
+        if(typeof removeItem === 'function') window.removeItem = removeItem;
+        if(typeof renderCart === 'function') window.renderCart = renderCart;
+        if(typeof openCart === 'function') window.openCart = openCart;
+        if(typeof closeCart === 'function') window.closeCart = closeCart;
+    }catch(e){}
+
+    /* Some earlier wrappers can hide the original function. Re-expose a reliable
+       click handler so every live CJ card opens the existing product modal. */
+    document.addEventListener('click',function(e){
+        const card=e.target.closest && e.target.closest('.gw-product-card');
+        if(card && !e.target.closest('button,a,input,select')){
+            const onclick=card.getAttribute('onclick')||'';
+            const m=onclick.match(/openProduct\(['"]([^'"]+)['"]/);
+            if(m && typeof window.openProduct==='function'){
+                e.preventDefault();
+                try{ window.openProduct(m[1]); }catch(err){ console.error('GLOBIRA product popup:',err); }
+            }
+        }
+    },true);
+
+    /* Ensure REMOVE always updates the drawer immediately. */
+    document.addEventListener('click',function(e){
+        const btn=e.target.closest && e.target.closest('#cartDrawer .remove');
+        if(!btn) return;
+        e.preventDefault();
+        const onclick=btn.getAttribute('onclick')||'';
+        const m=onclick.match(/removeItem\(['"]([^'"]+)['"],['"]([^'"]*)['"]\)/);
+        if(m && typeof window.removeItem==='function'){
+            try{
+                window.removeItem(m[1],m[2]);
+                if(typeof window.renderCart==='function') window.renderCart();
+            }catch(err){ console.error('GLOBIRA cart remove:',err); }
+        }
+    },true);
+
+    /* Initial category feed: always 100 immediately; more becomes available
+       automatically as the full CJ catalog finishes downloading. */
+    window.addEventListener('load',function(){
+        setTimeout(function(){
+            if(typeof window.loadCJFeaturedProduct==='function'){
+                window.loadCJFeaturedProduct().catch(function(e){
+                    console.warn('GLOBIRA catalog load:',e);
+                });
+            }
+        },0);
+    });
+})();
+</script>
+<!-- END GLOBIRA FINAL CATALOG + PRODUCT POPUP + CART FIX -->
 </body>
     
 
