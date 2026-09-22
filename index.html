@@ -5036,30 +5036,11 @@
 
     function renderFastResults(container, products, rawQuery, firstPaint){
         if(!container) return;
-
-        const safeQuery=escapeHtml(rawQuery);
-        const items=products || [];
-
-        container.innerHTML = `
-            <div class="gw-category-toolbar fast-search-toolbar">
-                <div>
-                    <b>${items.length.toLocaleString()} ${items.length===1?'product':'products'}</b>
-                    <span>${firstPaint && items.length===0 ? 'Checking live marketplace…' : 'Matching products only'}</span>
-                </div>
-            </div>
-            <div class="products category-result-grid">
-                ${items.length
-                    ? items.map(productCard).join('')
-                    : `<div class="empty-category"><h3>${firstPaint?'Searching GLOBIRA…':'No products found'}</h3><p>${firstPaint?'Live matching products are being checked now.':'Try a more specific product name.'}</p></div>`}
-            </div>`;
-
-        /* Do not lazy-load the first screen of results. */
-        container.querySelectorAll('.category-result-grid img').forEach((img,i)=>{
-            if(i<12){
-                img.loading='eager';
-                img.setAttribute('fetchpriority','high');
-            }
-        });
+        const items=Array.isArray(products)?products:[];
+        const shown=items.slice(0,Math.max(120,globiraSearchVisible||120));
+        const safeQuery=escapeHtml(rawQuery||'');
+        container.innerHTML=`<div class="gw-category-toolbar fast-search-toolbar"><div><b>${items.length.toLocaleString()} ${items.length===1?'product':'products'}</b><span>${firstPaint?'Checking live marketplace…':'Matching products only'}</span></div></div><div class="products category-result-grid">${shown.length?shown.map(productCard).join(''):`<div class="empty-category"><h3>${firstPaint?'Searching GLOBIRA…':'No products found'}</h3><p>${firstPaint?'Live matching products are being checked now.':'Try a more specific product name.'}</p></div>`}</div>${items.length>shown.length?'<button class="gw-load-more" onclick="loadMoreSearchResults()">Load more products →</button>':''}`;
+        container.querySelectorAll('.category-result-grid img').forEach((img,i)=>{if(i<12){img.loading='eager';img.setAttribute('fetchpriority','high');}});
     }
 
     /* =========================================================
@@ -6531,189 +6512,112 @@
         const subcategory = String(source.subcategory || '').toLowerCase();
         const gender = String(source.gender || '').toLowerCase();
         const description = String(source.description || '').toLowerCase();
-
-        const text = [name, category, subcategory, gender, description]
-            .filter(Boolean).join(' ');
-
-        const hasAny = words => words.some(word => paddedText.includes(word));
-
-        const bagWords = [
-            'bag','handbag','backpack','purse','tote','clutch',
-            'crossbody','shoulder bag','wallet','luggage','suitcase'
-        ];
-        const shoeWords = [
-            'shoe','shoes','sneaker','sneakers','sandal','sandals',
-            'boot','boots','heel','heels','loafer','loafers',
-            'slipper','slippers','moccasin','footwear'
-        ];
-        const accessoryWords = [
-            'watch','watches','jewelry','jewellery','necklace',
-            'bracelet','ring','earring','belt','sunglasses',
-            'glasses','scarf','hat','cap','accessory','accessories'
-        ];
-        const menWords = [
-            ' men ',' mens ',' men\'s ',' male ',' man ',
-            ' men clothing ',' mens clothing ',' menswear '
-        ];
-        const womenWords = [
-            ' women ',' womens ',' women\'s ',' female ',' woman ',
-            ' women clothing ',' womens clothing ',' womenswear ',
-            ' dress ',' skirt ',' blouse ',' lingerie ',' bra '
-        ];
+        const text = [name, category, subcategory, gender, description].filter(Boolean).join(' ');
         const paddedText = ` ${text.replace(/[^a-z0-9'&]+/g,' ')} `;
+        const hasAny = words => words.some(word => paddedText.includes(` ${String(word).trim()} `));
 
-        let finalCategory = String(source.category || '').trim();
-        let finalGender = String(source.gender || '').trim();
+        const womenStrong = /\b(women|womens|women's|female|woman|ladies|lady|girls?|femme|womenswear|womenwear)\b/.test(paddedText);
+        const menStrong = /\b(men|mens|men's|male|man|gentlemen|gentleman|boys?|masculine|menswear|menwear)\b/.test(paddedText);
 
-        if(hasAny(bagWords)){
-            finalCategory = 'bags';
-        }else if(hasAny(shoeWords)){
-            finalCategory = 'shoes';
-        }else if(hasAny(accessoryWords)){
-            finalCategory = 'accessories';
-        }else if(hasAny(menWords)){
-            finalCategory = 'men';
-            finalGender = 'men';
-        }else if(hasAny(womenWords)){
-            finalCategory = 'women';
-            finalGender = 'women';
-        }else if(!finalCategory){
-            finalCategory = finalGender === 'men' ? 'men' : 'women';
+        const bagWords=['bag','handbag','backpack','purse','tote','clutch','crossbody','shoulder bag','wallet','luggage','suitcase'];
+        const shoeWords=['shoe','shoes','sneaker','sneakers','sandal','sandals','boot','boots','heel','heels','loafer','loafers','slipper','slippers','moccasin','footwear'];
+        const accessoryWords=['watch','watches','jewelry','jewellery','necklace','bracelet','ring','earring','belt','sunglasses','glasses','scarf','hat','cap','accessory','accessories'];
+
+        let finalCategory = String(source.category || '').trim().toLowerCase();
+        let finalGender = String(source.gender || '').trim().toLowerCase();
+
+        // Gender is determined first and with word boundaries so WOMEN can never become MEN.
+        if(womenStrong && !/\bmen's?\b/.test(paddedText)){
+            finalGender='women';
+            if(!finalCategory || /^(men|mens|male)$/i.test(finalCategory)) finalCategory='women';
+        }else if(menStrong && !womenStrong){
+            finalGender='men';
+            if(!finalCategory || /^(women|womens|female)$/i.test(finalCategory)) finalCategory='men';
+        }else if(/^(women|woman|womens|female|ladies|lady)$/i.test(gender)){
+            finalGender='women';
+            if(!finalCategory) finalCategory='women';
+        }else if(/^(men|man|mens|male|gentlemen|gentleman)$/i.test(gender)){
+            finalGender='men';
+            if(!finalCategory) finalCategory='men';
         }
 
-        return {
-            ...source,
-            category: finalCategory,
-            gender: finalGender
-        };
+        // Generic product families are only assigned when they are not gender-specific.
+        if(!finalGender){
+            if(hasAny(bagWords)) finalCategory='bags';
+            else if(hasAny(shoeWords)) finalCategory='shoes';
+            else if(hasAny(accessoryWords)) finalCategory='accessories';
+        }
+
+        if(!finalCategory) finalCategory = finalGender || 'other';
+
+        return {...source,category:finalCategory,gender:finalGender};
     }
 
+    let globiraCatalogReady = null;
+
     async function loadCJFeaturedProduct(){
+        if(globiraCatalogReady) return globiraCatalogReady;
 
-        if(catalogLoading) return;
-        catalogLoading = true;
-
-        /*
-         * FAST + COMPLETE CJ CATALOG LOADER
-         * --------------------------------
-         * First 3 pages (300 products) are painted quickly.
-         * The remaining CJ pages are then downloaded in small parallel
-         * batches until the full catalog (currently about 6,000 products)
-         * is available in cjProducts. We never render all 6,000 DOM cards
-         * at once because that would make the browser slow; cards are
-         * revealed through the existing Load more control.
-         */
-        const FIRST_PAGES = 3;
-        const PAGE_SIZE = 100;
-        const BATCH_SIZE = 8;
-
-        const normalizePayloadProducts = payload => {
-            const list = Array.isArray(payload?.products) ? payload.products : [];
-            return list.map(product => {
-                if(!product || !product.id) return null;
-                const normalized = classifyCJProduct(product);
-                const sellingPrice = Number(
-                    normalized.sellingPrice ??
-                    normalized.customerPrice ??
-                    normalized.sellingPriceMin ??
-                    normalized.price ?? 0
-                );
-                if(Number.isFinite(sellingPrice)) normalized.price = sellingPrice;
-                if(!normalized.name && normalized.title) normalized.name = normalized.title;
-                return normalized;
+        globiraCatalogReady = (async()=>{
+            const PAGE_SIZE=100;
+            const BATCH_SIZE=12;
+            const status=document.getElementById('homeCatalogStatus');
+            const normalize=payload=>(Array.isArray(payload?.products)?payload.products:[]).map(product=>{
+                if(!product?.id) return null;
+                const p=classifyCJProduct(product);
+                const selling=Number(p.sellingPrice ?? p.customerPrice ?? p.sellingPriceMin ?? p.price ?? 0);
+                if(Number.isFinite(selling)) p.price=selling;
+                if(!p.name && p.title) p.name=p.title;
+                return p;
             }).filter(Boolean);
-        };
+            const merge=list=>{
+                const map=new Map((Array.isArray(cjProducts)?cjProducts:[]).map(p=>[String(p.id),p]));
+                list.forEach(p=>map.set(String(p.id),p));
+                cjProducts=Array.from(map.values());
+            };
+            const getPage=async page=>{
+                try{
+                    const r=await fetch(`/api/cj-products?page=${page}&size=${PAGE_SIZE}`,{cache:'no-store',headers:{Accept:'application/json'}});
+                    if(!r.ok) return null;
+                    return await r.json();
+                }catch(e){ console.warn('CJ page failed',page,e); return null; }
+            };
 
-        const mergeProducts = list => {
-            const map = new Map(Array.isArray(cjProducts) ? cjProducts.map(p=>[String(p.id),p]) : []);
-            list.forEach(p=>{
-                if(p && p.id) map.set(String(p.id),p);
-            });
-            cjProducts = Array.from(map.values());
-        };
-
-        const fetchPage = async page => {
+            catalogLoading=true;
             try{
-                const response = await fetch(`/api/cj-products?page=${page}&size=${PAGE_SIZE}`,{
-                    method:'GET',
-                    cache:'no-store',
-                    headers:{'Accept':'application/json'}
-                });
-                if(!response.ok) throw new Error(`CJ page ${page}: ${response.status}`);
-                return await response.json();
-            }catch(error){
-                console.warn('GLOBIRA CJ page failed:',page,error);
-                return null;
-            }
-        };
+                if(status) status.textContent='Loading GLOBIRA products…';
+                const first=await getPage(1);
+                if(!first?.success) throw new Error('CJ catalog first page failed');
+                globiraCatalogCurrency=String(first.currency||'USD').toUpperCase();
+                merge(normalize(first));
+                renderFeatured(); updateGWLiveStatus();
 
-        try{
-            const status = document.getElementById('homeCatalogStatus');
-            if(status) status.textContent = 'Loading GLOBIRA products…';
+                const totalRecords=Number(first.totalRecords || first?.data?.totalRecords || 0);
+                const totalPages=Math.max(1,Number(first.totalPages || first?.data?.totalPages || Math.ceil(totalRecords/PAGE_SIZE)));
+                if(status) status.textContent=`Loading GLOBIRA catalog… ${cjProducts.length.toLocaleString()} / ${totalRecords.toLocaleString()}`;
 
-            /* Get the first page immediately so the storefront becomes useful fast. */
-            const first = await fetchPage(1);
-            if(!first || !first.success) throw new Error('CJ catalog first page failed.');
-
-            globiraCatalogCurrency = String(first.currency || 'USD').toUpperCase();
-            mergeProducts(normalizePayloadProducts(first));
-
-            renderFeatured();
-            renderHomepageLiveSections();
-            refreshCurrentCategoryInPlace();
-            updateGWLiveStatus();
-
-            const totalPages = Math.max(
-                1,
-                Number(first.totalPages || first?.data?.totalPages || Math.ceil(Number(first.totalRecords || first?.data?.totalRecords || 0) / PAGE_SIZE))
-            );
-
-            console.log(`GLOBIRA STOREFRONT: first CJ page loaded. Total pages: ${totalPages}`);
-
-            /* Fetch pages 2..N in parallel batches. */
-            for(let startPage=2; startPage<=totalPages; startPage += BATCH_SIZE){
-                const pages=[];
-                for(let page=startPage; page<=Math.min(totalPages,startPage+BATCH_SIZE-1); page++) pages.push(page);
-
-                const payloads = await Promise.all(pages.map(fetchPage));
-                const batchProducts=[];
-                payloads.forEach(payload=>{
-                    if(payload?.success) batchProducts.push(...normalizePayloadProducts(payload));
-                });
-
-                mergeProducts(batchProducts);
-
-                /* Update the count without rebuilding 6,000 cards. */
-                updateGWLiveStatus();
-                renderFeatured();
-
-                if(status){
-                    status.textContent = `Loading GLOBIRA products… ${cjProducts.length.toLocaleString()} / ${Number(first.totalRecords || first?.data?.totalRecords || cjProducts.length).toLocaleString()}`;
+                for(let startPage=2; startPage<=totalPages; startPage+=BATCH_SIZE){
+                    const pages=[];
+                    for(let p=startPage;p<=Math.min(totalPages,startPage+BATCH_SIZE-1);p++) pages.push(p);
+                    const payloads=await Promise.all(pages.map(getPage));
+                    const batch=[];
+                    payloads.forEach(x=>{if(x?.success) batch.push(...normalize(x));});
+                    merge(batch);
+                    updateGWLiveStatus();
+                    renderFeatured();
+                    if(status) status.textContent=`Loading GLOBIRA catalog… ${cjProducts.length.toLocaleString()} / ${totalRecords.toLocaleString()}`;
+                    await new Promise(r=>setTimeout(r,0));
                 }
 
-                /* Let the browser paint between batches. */
-                await new Promise(resolve => requestAnimationFrame(resolve));
+                renderFeatured(); renderHomepageLiveSections(); refreshCurrentCategoryInPlace(); updateGWLiveStatus();
+                console.log(`GLOBIRA: FULL CJ CATALOG READY: ${cjProducts.length} / ${totalRecords}`);
+                return cjProducts;
+            }finally{
+                catalogLoading=false;
+                renderFeatured(); updateGWLiveStatus();
             }
-
-            console.log(`GLOBIRA STOREFRONT: FULL CJ CATALOG LOADED: ${cjProducts.length} products.`);
-
-            renderFeatured();
-            renderHomepageLiveSections();
-            refreshCurrentCategoryInPlace();
-            updateGWLiveStatus();
-
-        }catch(error){
-            console.error('GLOBIRA STOREFRONT CATALOG ERROR:',error);
-            if(!Array.isArray(cjProducts)) cjProducts=[];
-            renderFeatured();
-            renderHomepageLiveSections();
-            updateGWLiveStatus();
-        }finally{
-            catalogLoading=false;
-            renderFeatured();
-            renderHomepageLiveSections();
-            updateGWLiveStatus();
-        }
+        })();
+        try{return await globiraCatalogReady;}catch(e){globiraCatalogReady=null;throw e;}
     }
 
     /* =========================================================
@@ -8672,60 +8576,41 @@
     }
 
     async function fetchLiveCategory(category, subcategory){
-        const requestId = ++categoryRequest;
-        const keyword = subcategory ? String(subcategory).replace(/-/g,' ') : categoryKeyword(category);
-        const pages = keyword ? [1,2,3] : [1];
-        const base = getCategoryProducts(category);
-        const local = subcategory
-        ? base.filter(p=>globiraCriterionMatch(p, subcategory.replace(/-/g,' ')))
-        : base;
-        let merged = Array.from(new Map(local.map(p=>[p.id,p])).values());
-
-        renderCategoryInstant(category, merged, 'Checking live CJ products…');
-
+        const requestId=++categoryRequest;
         try{
-        const results = await Promise.all(pages.map(page =>
-            fetch(`/api/cj-products?page=${page}&size=100&keyword=${encodeURIComponent(keyword)}`)
-            .then(r=>r.ok ? r.json() : null)
-            .catch(()=>null)
-        ));
-        if(requestId !== categoryRequest) return;
+            // Men/Women must search the COMPLETE CJ catalog, not only the first 300 results.
+            if(category==='men' || category==='women' || category==='more'){
+                await loadCJFeaturedProduct();
+                if(requestId!==categoryRequest) return;
+                const all=allProducts().map(classifyCJProduct);
+                const exact=all.filter(p=>categoryMatches(p,category) && (!subcategory || globiraCriterionMatch(p,subcategory.replace(/-/g,' '))));
+                renderCategoryInstant(category,exact,category==='more'?'All live CJ products':'Matching products only');
+                return;
+            }
 
-        const live=[];
-        results.forEach(payload=>{
-            if(payload && payload.success && Array.isArray(payload.products)){
-            payload.products.map(classifyCJProduct).forEach(p=>{
-                if(categoryMatches(p,category) &&
-                (!subcategory || globiraCriterionMatch(p, subcategory.replace(/-/g,' ')))){
-                live.push(p);
-                }
+            const keyword=subcategory ? String(subcategory).replace(/-/g,' ') : categoryKeyword(category);
+            const first=await fetch(`/api/cj-products?page=1&size=100&keyword=${encodeURIComponent(keyword)}`).then(r=>r.ok?r.json():null).catch(()=>null);
+            if(!first?.success) return;
+            const totalPages=Math.max(1,Number(first.totalPages || first?.data?.totalPages || 1));
+            const payloads=[first];
+            const batchSize=12;
+            for(let start=2;start<=totalPages;start+=batchSize){
+                const pages=[]; for(let p=start;p<=Math.min(totalPages,start+batchSize-1);p++) pages.push(p);
+                const more=await Promise.all(pages.map(p=>fetch(`/api/cj-products?page=${p}&size=100&keyword=${encodeURIComponent(keyword)}`).then(r=>r.ok?r.json():null).catch(()=>null)));
+                payloads.push(...more);
+            }
+            if(requestId!==categoryRequest) return;
+            const live=[];
+            payloads.forEach(payload=>{
+                if(payload?.success && Array.isArray(payload.products)) payload.products.map(classifyCJProduct).forEach(p=>{if(categoryMatches(p,category) && (!subcategory || globiraCriterionMatch(p,subcategory.replace(/-/g,' ')))) live.push(p);});
             });
-            }
-        });
-
-        const map = new Map(merged.map(p=>[p.id,p]));
-        live.forEach(p=>{if(p && p.id) map.set(p.id,p);});
-        const finalProducts=Array.from(map.values());
-
-        live.forEach(p=>{
-            if(p && p.id){
-            const i=cjProducts.findIndex(x=>x.id===p.id);
-            if(i>=0) cjProducts[i]=p; else cjProducts.push(p);
-            }
-        });
-
-        // IMPORTANT: render the exact criterion only. Never fall back to the full category.
-        const exactFinal = subcategory
-            ? finalProducts.filter(p=>globiraCriterionMatch(p, subcategory.replace(/-/g,' ')))
-            : finalProducts;
-        renderCategoryInstant(category, exactFinal, 'Matching products only');
-        if(typeof updateGWLiveStatus==='function') updateGWLiveStatus();
-        }catch(error){
-        console.warn('GLOBIRA LIVE CATEGORY:',error);
-        if(requestId===categoryRequest){
-            renderCategoryInstant(category, merged, subcategory ? 'Matching products only' : 'Live CJ connection pending…');
-        }
-        }
+            const map=new Map(allProducts().map(p=>[String(p.id),p]));
+            live.forEach(p=>map.set(String(p.id),p));
+            cjProducts=Array.from(new Map([...cjProducts,...live].map(p=>[String(p.id),p])).values());
+            const finalProducts=Array.from(map.values()).filter(p=>categoryMatches(p,category) && (!subcategory || globiraCriterionMatch(p,subcategory.replace(/-/g,' '))));
+            renderCategoryInstant(category,finalProducts,'Matching products only');
+            updateGWLiveStatus();
+        }catch(error){console.warn('GLOBIRA LIVE CATEGORY:',error);}
     }
 
     /* ---------- Final category page handler ---------- */
@@ -8789,70 +8674,33 @@
 
     /* Search result page uses the same compact cards and touch-safe scrolling. */
     const oldSearchProducts = window.searchProducts;
+    let globiraSearchResults=[];
+    let globiraSearchVisible=120;
+
+    window.loadMoreSearchResults=function(){
+        globiraSearchVisible+=120;
+        renderFastResults(document.getElementById('categoryProducts'),globiraSearchResults,document.getElementById('categoryTitle')?.textContent?.replace(/^Search:\s*/i,'')||'',false);
+    };
+
     window.searchProducts = async function(){
-        const heroInput = document.getElementById('globiraHeroSearchInput');
-        const topInput = document.getElementById('globiraSearchInput');
-        const input = heroInput || topInput;
-        const rawQuery = input ? input.value.trim() : '';
-
-        if(heroInput && topInput) topInput.value = rawQuery;
-        if(!rawQuery){ showHome(); return; }
-
-        const query = normalizeGlobiraSearch(rawQuery);
-        const home = document.getElementById('homePage');
-        const page = document.getElementById('categoryPage');
-        if(home) home.style.display='none';
-        if(page) page.classList.add('active');
-        document.body.classList.add('no-scroll');
-
+        const heroInput=document.getElementById('globiraHeroSearchInput');
+        const topInput=document.getElementById('globiraSearchInput');
+        const input=heroInput||topInput;
+        const rawQuery=input?input.value.trim():'';
+        if(heroInput&&topInput) topInput.value=rawQuery;
+        if(!rawQuery){showHome();return;}
+        const query=normalizeGlobiraSearch(rawQuery);
+        const home=document.getElementById('homePage'), page=document.getElementById('categoryPage');
+        if(home) home.style.display='none'; if(page) page.classList.add('active'); document.body.classList.add('no-scroll');
         document.getElementById('categoryTitle').textContent='Search: '+rawQuery;
         document.getElementById('categoryEyebrow').textContent='GLOBIRA / SEARCH RESULTS';
+        globiraSearchVisible=120;
 
-        let products = allProducts().filter(p=>globiraStrictSearchMatch(p,query));
-        renderFastResults(document.getElementById('categoryProducts'),products,rawQuery,true);
-        const grid = document.querySelector('#categoryProducts .category-result-grid');
-        if(grid){
-        grid.querySelectorAll('.gw-card-main-image').forEach((img,i)=>{
-            if(i<12){ img.loading='eager'; img.setAttribute('fetchpriority','high'); }
-        });
-        }
+        // If the full catalog is not ready yet, finish loading it first. This guarantees search scans all CJ products.
+        try{ await loadCJFeaturedProduct(); }catch(e){}
+        globiraSearchResults=allProducts().map(classifyCJProduct).filter(p=>globiraStrictSearchMatch(p,query));
+        renderFastResults(document.getElementById('categoryProducts'),globiraSearchResults,rawQuery,false);
         if(page) page.scrollTop=0;
-        window.scrollTo(0,0);
-
-        try{
-        /* Three requests run together instead of waiting page-by-page. */
-        const responses = await Promise.all([1,2,3].map(pageNo =>
-            fetch(`/api/cj-products?page=${pageNo}&size=100&keyword=${encodeURIComponent(rawQuery)}`)
-            .then(r=>r.ok?r.json():null).catch(()=>null)
-        ));
-
-        const liveMatches=[];
-        responses.forEach(payload=>{
-            if(payload && payload.success && Array.isArray(payload.products)){
-            payload.products.map(classifyCJProduct)
-                .filter(p=>globiraStrictSearchMatch(p,query))
-                .forEach(p=>liveMatches.push(p));
-            }
-        });
-
-        const map = new Map(products.map(p=>[p.id,p]));
-        liveMatches.forEach(p=>{if(p?.id) map.set(p.id,p);});
-        products = Array.from(map.values());
-
-        liveMatches.forEach(p=>{
-            if(p?.id){
-            const i=cjProducts.findIndex(x=>x.id===p.id);
-            if(i>=0) cjProducts[i]=p; else cjProducts.push(p);
-            }
-        });
-
-        renderFastResults(document.getElementById('categoryProducts'),products,rawQuery,false);
-        document.querySelectorAll('#categoryProducts .gw-card-main-image').forEach((img,i)=>{
-            if(i<12){img.loading='eager';img.setAttribute('fetchpriority','high');}
-        });
-        }catch(error){
-        console.warn('GLOBIRA LIVE SEARCH V2:',error);
-        }
     };
 
     /* Keep category scrolling usable on iOS even while the background is locked. */
