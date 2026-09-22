@@ -4612,8 +4612,8 @@
     ========================================================= */
 
     /* Show a large home feed, then reveal more with Load more. */
-    let homeVisibleCount = 48;
-    const HOME_LOAD_STEP = 20;
+    let homeVisibleCount = 100;
+    const HOME_LOAD_STEP = 100;
 
     function renderFeatured(){
         const container = document.getElementById('featuredProducts');
@@ -6535,7 +6535,7 @@
         const text = [name, category, subcategory, gender, description]
             .filter(Boolean).join(' ');
 
-        const hasAny = words => words.some(word => text.includes(word));
+        const hasAny = words => words.some(word => paddedText.includes(word));
 
         const bagWords = [
             'bag','handbag','backpack','purse','tote','clutch',
@@ -6552,14 +6552,15 @@
             'glasses','scarf','hat','cap','accessory','accessories'
         ];
         const menWords = [
-            'men','mens',"men's",'male','man',
-            'men clothing','mens clothing','menswear'
+            ' men ',' mens ',' men\'s ',' male ',' man ',
+            ' men clothing ',' mens clothing ',' menswear '
         ];
         const womenWords = [
-            'women','womens',"women's",'female','woman',
-            'women clothing','womens clothing','womenswear',
-            'dress','skirt','blouse','lingerie','bra'
+            ' women ',' womens ',' women\'s ',' female ',' woman ',
+            ' women clothing ',' womens clothing ',' womenswear ',
+            ' dress ',' skirt ',' blouse ',' lingerie ',' bra '
         ];
+        const paddedText = ` ${text.replace(/[^a-z0-9'&]+/g,' ')} `;
 
         let finalCategory = String(source.category || '').trim();
         let finalGender = String(source.gender || '').trim();
@@ -6592,80 +6593,114 @@
         if(catalogLoading) return;
         catalogLoading = true;
 
+        /*
+         * FAST + COMPLETE CJ CATALOG LOADER
+         * --------------------------------
+         * First 3 pages (300 products) are painted quickly.
+         * The remaining CJ pages are then downloaded in small parallel
+         * batches until the full catalog (currently about 6,000 products)
+         * is available in cjProducts. We never render all 6,000 DOM cards
+         * at once because that would make the browser slow; cards are
+         * revealed through the existing Load more control.
+         */
+        const FIRST_PAGES = 3;
+        const PAGE_SIZE = 100;
+        const BATCH_SIZE = 8;
+
+        const normalizePayloadProducts = payload => {
+            const list = Array.isArray(payload?.products) ? payload.products : [];
+            return list.map(product => {
+                if(!product || !product.id) return null;
+                const normalized = classifyCJProduct(product);
+                const sellingPrice = Number(
+                    normalized.sellingPrice ??
+                    normalized.customerPrice ??
+                    normalized.sellingPriceMin ??
+                    normalized.price ?? 0
+                );
+                if(Number.isFinite(sellingPrice)) normalized.price = sellingPrice;
+                if(!normalized.name && normalized.title) normalized.name = normalized.title;
+                return normalized;
+            }).filter(Boolean);
+        };
+
+        const mergeProducts = list => {
+            const map = new Map(Array.isArray(cjProducts) ? cjProducts.map(p=>[String(p.id),p]) : []);
+            list.forEach(p=>{
+                if(p && p.id) map.set(String(p.id),p);
+            });
+            cjProducts = Array.from(map.values());
+        };
+
+        const fetchPage = async page => {
+            try{
+                const response = await fetch(`/api/cj-products?page=${page}&size=${PAGE_SIZE}`,{
+                    method:'GET',
+                    cache:'no-store',
+                    headers:{'Accept':'application/json'}
+                });
+                if(!response.ok) throw new Error(`CJ page ${page}: ${response.status}`);
+                return await response.json();
+            }catch(error){
+                console.warn('GLOBIRA CJ page failed:',page,error);
+                return null;
+            }
+        };
+
         try{
             const status = document.getElementById('homeCatalogStatus');
-            if(status) status.textContent = 'Loading GLOBIRA catalog…';
+            if(status) status.textContent = 'Loading GLOBIRA products…';
 
-            /*
-             * Load the first 3 live CJ pages.
-             * CJ returns up to 100 products per page, so the homepage
-             * now receives up to 300 live products instead of only 24.
-             */
-            const pages = [1,2,3];
+            /* Get the first page immediately so the storefront becomes useful fast. */
+            const first = await fetchPage(1);
+            if(!first || !first.success) throw new Error('CJ catalog first page failed.');
 
-            const responses = await Promise.all(
-                pages.map(page =>
-                    fetch(`/api/products?page=${page}&size=100`,{
-                        method:'GET',
-                        cache:'no-store',
-                        headers:{'Accept':'application/json'}
-                    })
-                    .then(response=>{
-                        if(!response.ok){
-                            throw new Error(`GLOBIRA catalog returned ${response.status}`);
-                        }
-                        return response.json();
-                    })
-                    .catch(error=>{
-                        console.warn(`GLOBIRA catalog page ${page} failed:`,error);
-                        return null;
-                    })
-                )
-            );
-
-            globiraCatalogCurrency = 'USD';
-
-            const unique = new Map();
-
-            responses.forEach(payload=>{
-                if(!payload || !payload.success || !Array.isArray(payload.products)) return;
-
-                globiraCatalogCurrency = String(payload.currency || globiraCatalogCurrency || 'USD').toUpperCase();
-
-                payload.products.forEach(product=>{
-                    if(!product || !product.id) return;
-
-                    const normalized = classifyCJProduct(product);
-
-                    /* Keep the existing frontend/cart price bridge. */
-                    const sellingPrice = Number(
-                        normalized.sellingPrice ??
-                        normalized.customerPrice ??
-                        normalized.sellingPriceMin ??
-                        normalized.price ??
-                        0
-                    );
-
-                    if(Number.isFinite(sellingPrice)) {
-                        normalized.price = sellingPrice;
-                    }
-
-                    if(!normalized.name && normalized.title) {
-                        normalized.name = normalized.title;
-                    }
-
-                    unique.set(String(normalized.id),normalized);
-                });
-            });
-
-            cjProducts = Array.from(unique.values());
+            globiraCatalogCurrency = String(first.currency || 'USD').toUpperCase();
+            mergeProducts(normalizePayloadProducts(first));
 
             renderFeatured();
             renderHomepageLiveSections();
             refreshCurrentCategoryInPlace();
             updateGWLiveStatus();
 
-            console.log(`GLOBIRA STOREFRONT: loaded ${cjProducts.length} live CJ products from 3 pages.`);
+            const totalPages = Math.max(
+                1,
+                Number(first.totalPages || first?.data?.totalPages || Math.ceil(Number(first.totalRecords || first?.data?.totalRecords || 0) / PAGE_SIZE))
+            );
+
+            console.log(`GLOBIRA STOREFRONT: first CJ page loaded. Total pages: ${totalPages}`);
+
+            /* Fetch pages 2..N in parallel batches. */
+            for(let startPage=2; startPage<=totalPages; startPage += BATCH_SIZE){
+                const pages=[];
+                for(let page=startPage; page<=Math.min(totalPages,startPage+BATCH_SIZE-1); page++) pages.push(page);
+
+                const payloads = await Promise.all(pages.map(fetchPage));
+                const batchProducts=[];
+                payloads.forEach(payload=>{
+                    if(payload?.success) batchProducts.push(...normalizePayloadProducts(payload));
+                });
+
+                mergeProducts(batchProducts);
+
+                /* Update the count without rebuilding 6,000 cards. */
+                updateGWLiveStatus();
+                renderFeatured();
+
+                if(status){
+                    status.textContent = `Loading GLOBIRA products… ${cjProducts.length.toLocaleString()} / ${Number(first.totalRecords || first?.data?.totalRecords || cjProducts.length).toLocaleString()}`;
+                }
+
+                /* Let the browser paint between batches. */
+                await new Promise(resolve => requestAnimationFrame(resolve));
+            }
+
+            console.log(`GLOBIRA STOREFRONT: FULL CJ CATALOG LOADED: ${cjProducts.length} products.`);
+
+            renderFeatured();
+            renderHomepageLiveSections();
+            refreshCurrentCategoryInPlace();
+            updateGWLiveStatus();
 
         }catch(error){
             console.error('GLOBIRA STOREFRONT CATALOG ERROR:',error);
@@ -6901,10 +6936,14 @@
 
     function globiraGender(product){
         const p=product||{};
-        const text=[p.name,p.category,p.subcategory,p.gender,p.description].filter(Boolean).join(' ').toLowerCase();
-        if(/\b(women|womens|women's|female|woman|ladies|lady|girl|girls)\b/.test(text)) return 'women';
-        if(/\b(men|mens|men's|male|man|gentlemen|gentleman's|boy|boys)\b/.test(text)) return 'men';
-        return String(p.gender||'').toLowerCase();
+        const explicit=String(p.gender||'').toLowerCase().trim();
+        if(/^(women|woman|womens|female|ladies|lady|girls?|femme)$/.test(explicit)) return 'women';
+        if(/^(men|man|mens|male|gentlemen|gentleman|boys?|masculine)$/.test(explicit)) return 'men';
+
+        const text=[p.name,p.category,p.subcategory,p.description].filter(Boolean).join(' ').toLowerCase();
+        if(/\b(women|womens|women's|female|woman|ladies|lady|girl|girls|womenswear|womenwear)\b/.test(text)) return 'women';
+        if(/\b(men|mens|men's|male|man|gentlemen|gentleman's|boy|boys|menswear|menwear)\b/.test(text)) return 'men';
+        return explicit;
     }
 
     function productFallbackImage(product){
@@ -8533,9 +8572,9 @@
         const c = String(category||'').toLowerCase();
         if(c === 'more') return true;
         if(c === 'women' || c === 'men'){
-        return globiraGender(product) === c ||
-            String(product.gender||'').toLowerCase() === c ||
-            String(product.category||'').toLowerCase() === c;
+            /* Men/Women are gender-exclusive. Never let a product containing
+               words such as "women" accidentally enter Men. */
+            return globiraGender(product) === c;
         }
         return String(product.category||'').toLowerCase() === c;
     }
