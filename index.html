@@ -3077,6 +3077,7 @@
 #cartItems .cart-size{letter-spacing:.8px}
 </style>
 
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 
     <body>
@@ -3794,10 +3795,9 @@
 
                                 <strong>PAYMENT NOTE</strong><br>
 
-                                Online payment methods are currently shown
-                                as checkout options. Actual online payment
-                                collection will require connecting GLOBIRA
-                                to a payment gateway.
+                                Online payments are securely processed by Razorpay.
+                                GLOBIRA does not store your card or UPI credentials.
+                                Domestic INR payments only.
 
                             </div>
 
@@ -4612,8 +4612,8 @@
     ========================================================= */
 
     /* Show a large home feed, then reveal more with Load more. */
-    let homeVisibleCount = 100;
-    const HOME_LOAD_STEP = 100;
+    let homeVisibleCount = 20;
+    const HOME_LOAD_STEP = 20;
 
     function renderFeatured(){
         const container = document.getElementById('featuredProducts');
@@ -4652,17 +4652,9 @@
     }
 
     function loadMoreHomeProducts(){
-        const sourceProducts = Array.isArray(cjProducts) ? cjProducts : [];
-        const current = homeVisibleCount;
+        homeVisibleCount += HOME_LOAD_STEP;
         const y = window.scrollY || document.documentElement.scrollTop || 0;
-
-        /* Always show products immediately from the catalog already downloaded. */
-        if(current < sourceProducts.length){
-            homeVisibleCount += HOME_LOAD_STEP;
-            renderFeatured();
-            renderHomepageLiveSections();
-        }
-
+        renderFeatured();
         requestAnimationFrame(() => window.scrollTo(0, y));
     }
 
@@ -4839,15 +4831,9 @@
         const products = getCategoryProducts(category);
         const grid = document.querySelector('#categoryProducts .category-result-grid');
         if(!grid) return;
-
         const current = grid.querySelectorAll('.product').length;
-        const next = products.slice(current,current+100);
-
-        if(next.length){
-            grid.insertAdjacentHTML('beforeend',next.map(productCard).join(''));
-        }
-
-        updateCategoryLoadMoreButton(products.length, current + next.length);
+        const next = products.slice(current,current+48);
+        grid.insertAdjacentHTML('beforeend',next.map(productCard).join(''));
     }
 
     function loadMoreSubcategory(category,sub){
@@ -4856,25 +4842,11 @@
         const title=found?found[0]:sub.replace(/-/g,' ');
         const base=getCategoryProducts(category);
         const terms=title.toLowerCase().split(/\s+|&/).filter(x=>x.length>2);
-        const products=sub==='all'?base:base.filter(p=>terms.some(term=>
-            [p.name,p.subcategory,p.category,p.description,p.gender].filter(Boolean).join(' ').toLowerCase().includes(term)
-        ));
+        const products=sub==='all'?base:base.filter(p=>terms.some(term=>[p.name,p.subcategory,p.category].filter(Boolean).join(' ').toLowerCase().includes(term)));
         const grid=document.querySelector('#categoryProducts .category-result-grid');
         if(!grid) return;
-
         const current=grid.querySelectorAll('.product').length;
-        const next=products.slice(current,current+100);
-        if(next.length) grid.insertAdjacentHTML('beforeend',next.map(productCard).join(''));
-        updateCategoryLoadMoreButton(products.length,current+next.length);
-    }
-
-    function updateCategoryLoadMoreButton(total,shown){
-        const button=document.querySelector('#categoryProducts .gw-load-more');
-        if(!button) return;
-        button.style.display = shown < total ? 'block' : 'none';
-        button.textContent = shown < total
-            ? `Load more products · ${Math.min(100,total-shown).toLocaleString()} more →`
-            : '';
+        grid.insertAdjacentHTML('beforeend',products.slice(current,current+48).map(productCard).join(''));
     }
 
 
@@ -5064,11 +5036,30 @@
 
     function renderFastResults(container, products, rawQuery, firstPaint){
         if(!container) return;
-        const items=Array.isArray(products)?products:[];
-        const shown=items.slice(0,Math.max(120,globiraSearchVisible||120));
-        const safeQuery=escapeHtml(rawQuery||'');
-        container.innerHTML=`<div class="gw-category-toolbar fast-search-toolbar"><div><b>${items.length.toLocaleString()} ${items.length===1?'product':'products'}</b><span>${firstPaint?'Checking live marketplace…':'Matching products only'}</span></div></div><div class="products category-result-grid">${shown.length?shown.map(productCard).join(''):`<div class="empty-category"><h3>${firstPaint?'Searching GLOBIRA…':'No products found'}</h3><p>${firstPaint?'Live matching products are being checked now.':'Try a more specific product name.'}</p></div>`}</div>${items.length>shown.length?'<button class="gw-load-more" onclick="loadMoreSearchResults()">Load more products →</button>':''}`;
-        container.querySelectorAll('.category-result-grid img').forEach((img,i)=>{if(i<12){img.loading='eager';img.setAttribute('fetchpriority','high');}});
+
+        const safeQuery=escapeHtml(rawQuery);
+        const items=products || [];
+
+        container.innerHTML = `
+            <div class="gw-category-toolbar fast-search-toolbar">
+                <div>
+                    <b>${items.length.toLocaleString()} ${items.length===1?'product':'products'}</b>
+                    <span>${firstPaint && items.length===0 ? 'Checking live marketplace…' : 'Matching products only'}</span>
+                </div>
+            </div>
+            <div class="products category-result-grid">
+                ${items.length
+                    ? items.map(productCard).join('')
+                    : `<div class="empty-category"><h3>${firstPaint?'Searching GLOBIRA…':'No products found'}</h3><p>${firstPaint?'Live matching products are being checked now.':'Try a more specific product name.'}</p></div>`}
+            </div>`;
+
+        /* Do not lazy-load the first screen of results. */
+        container.querySelectorAll('.category-result-grid img').forEach((img,i)=>{
+            if(i<12){
+                img.loading='eager';
+                img.setAttribute('fetchpriority','high');
+            }
+        });
     }
 
     /* =========================================================
@@ -6035,84 +6026,35 @@
 
     function goToPayment(){
 
-        const name =
-            document.getElementById(
-                'customerName'
-            ).value.trim();
+        const name = document.getElementById('customerName').value.trim();
+        const email = document.getElementById('customerEmail').value.trim();
+        const mobile = document.getElementById('customerMobile').value.trim();
+        const address = document.getElementById('customerAddress').value.trim();
+        const city = document.getElementById('customerCity').value.trim();
+        const state = document.getElementById('customerState').value.trim();
+        const pin = document.getElementById('customerPin').value.trim();
 
-
-        const mobile =
-            document.getElementById(
-                'customerMobile'
-            ).value.trim();
-
-
-        const address =
-            document.getElementById(
-                'customerAddress'
-            ).value.trim();
-
-
-        const city =
-            document.getElementById(
-                'customerCity'
-            ).value.trim();
-
-
-        const state =
-            document.getElementById(
-                'customerState'
-            ).value.trim();
-
-
-        const pin =
-            document.getElementById(
-                'customerPin'
-            ).value.trim();
-
-
-        if(
-            !name ||
-            !mobile ||
-            !address ||
-            !city ||
-            !state ||
-            !pin
-        ){
-
-            alert(
-                'Please complete all delivery details.'
-            );
-
+        if(!name || !email || !mobile || !address || !city || !state || !pin){
+            alert('Please complete all delivery details.');
             return;
-
         }
 
-
-        if(!/^[0-9]{10}$/.test(mobile)){
-
-            alert(
-                'Please enter a valid 10 digit mobile number.'
-            );
-
+        if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+            alert('Please enter a valid email address.');
             return;
-
         }
 
-
-        if(!/^[0-9]{6}$/.test(pin)){
-
-            alert(
-                'Please enter a valid 6 digit PIN code.'
-            );
-
+        if(!/^[0-9+()\- ]{7,20}$/.test(mobile)){
+            alert('Please enter a valid mobile number.');
             return;
-
         }
 
+        if(!/^[0-9]{4,10}$/.test(pin)){
+            alert('Please enter a valid postal / ZIP code.');
+            return;
+        }
 
         showStep(3);
-
     }
 
 
@@ -6241,205 +6183,247 @@
     PLACE ORDER
     ========================================================= */
 
-    function placeOrder(){
+    async function placeOrder(){
 
         if(!selectedPayment){
-
-            alert(
-                'Please select a payment method.'
-            );
-
+            alert('Please select a payment method.');
             return;
-
         }
-
 
         if(cart.length === 0){
-
-            alert(
-                'Your cart is empty.'
-            );
-
+            alert('Your cart is empty.');
             return;
-
         }
 
+        const name = document.getElementById('customerName').value.trim();
+        const email = document.getElementById('customerEmail').value.trim();
+        const mobile = document.getElementById('customerMobile').value.trim();
+        const altMobile = document.getElementById('customerAltMobile')?.value.trim() || '';
+        const countrySelect = document.getElementById('customerCountry');
+        const countryCode = countrySelect?.value || 'IN';
+        const country = countrySelect?.options[countrySelect.selectedIndex]?.text || 'India';
+        const address = document.getElementById('customerAddress').value.trim();
+        const city = document.getElementById('customerCity').value.trim();
+        const state = document.getElementById('customerState').value.trim();
+        const pin = document.getElementById('customerPin').value.trim();
+        const landmark = document.getElementById('customerLandmark')?.value.trim() || '';
 
-        const name =
-            document.getElementById(
-                'customerName'
-            ).value.trim();
-
-
-        const mobile =
-            document.getElementById(
-                'customerMobile'
-            ).value.trim();
-
-
-        const address =
-            document.getElementById(
-                'customerAddress'
-            ).value.trim();
-
-
-        const city =
-            document.getElementById(
-                'customerCity'
-            ).value.trim();
-
-
-        const state =
-            document.getElementById(
-                'customerState'
-            ).value.trim();
-
-
-        const pin =
-            document.getElementById(
-                'customerPin'
-            ).value.trim();
-
-
-        if(
-            !name ||
-            !mobile ||
-            !address ||
-            !city ||
-            !state ||
-            !pin
-        ){
-
-            alert(
-                'Please complete your delivery details first.'
-            );
-
+        if(!name || !email || !mobile || !address || !city || !state || !pin){
+            alert('Please complete your delivery details first.');
             showStep(2);
-
             return;
-
         }
 
+        const orderDate = new Date();
+        const deliveryStart = addWorkingDays(orderDate,4);
+        const deliveryEnd = addWorkingDays(orderDate,7);
 
-        const orderID =
-            'YAD' +
-            Math.floor(
-                100000 +
-                Math.random() * 900000
-            );
+        const items = cart.map(item => {
+            const product = findProduct(item.id);
+            return {
+                id:item.id,
+                name:product?.name || item.id,
+                price:Number(product?.price || 0),
+                image:(Array.isArray(product?.images) && product.images[0]) || product?.image || '',
+                size:item.size,
+                quantity:Number(item.quantity) || 1,
+                cjProductId:product?.cjProductId || product?.pid || '',
+                sku:product?.sku || '',
+                vid:item.vid || item.cjVariantId || product?.vid || product?.variantId || ''
+            };
+        });
 
-
-        const orderDate =
-            new Date();
-
-
-        const deliveryStart =
-            addWorkingDays(
-                orderDate,
-                4
-            );
-
-
-        const deliveryEnd =
-            addWorkingDays(
-                orderDate,
-                7
-            );
-
-
-        const order = {
-
-            orderID:orderID,
-
-            date:orderDate.toISOString(),
-
+        const orderData = {
             customer:{
-
                 name:name,
-
-                mobile:mobile,
-
-                address:address,
-
+                email:email,
+                phone:mobile,
+                altPhone:altMobile,
+                countryCode:countryCode,
+                country:country,
+                province:state,
                 city:city,
-
-                state:state,
-
-                pin:pin
-
+                address:address,
+                address2:landmark,
+                zip:pin,
+                county:''
             },
-
-            items:cart.map(item => {
-
-                const product =
-                    findProduct(item.id);
-
-                return {
-
-                    id:item.id,
-
-                    name:product.name,
-
-                    price:product.price,
-
-                    image:(Array.isArray(product.images) && product.images[0]) || product.image || '',
-
-                    size:item.size,
-
-                    quantity:item.quantity
-
-                };
-
-            }),
-
-            total:getCartTotal(),
-
-            payment:selectedPayment,
-
+            items:items,
+            total:Number(getCartTotal()),
+            currency:'INR',
+            fromCountryCode:'CN',
+            paymentMethod:selectedPayment,
             delivery:{
-
                 start:deliveryStart.toISOString(),
-
                 end:deliveryEnd.toISOString()
-
             }
-
         };
 
+        const button = document.getElementById('placeOrderButton');
+        if(button){
+            button.disabled = true;
+            button.textContent = selectedPayment === 'COD' ? 'PLACING ORDER...' : 'OPENING PAYMENT...';
+        }
 
-        localStorage.setItem(
-            'globiraLastOrder',
-            JSON.stringify(order)
-        );
+        try{
 
+            if(selectedPayment === 'COD'){
 
-        document.getElementById(
-            'orderNumber'
-        ).textContent =
-            'ORDER ID: ' + orderID;
+                const response = await fetch('/api/orders',{
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body:JSON.stringify(orderData)
+                });
 
+                const result = await response.json();
 
-        document.getElementById(
-            'deliveryEstimate'
-        ).innerHTML =
+                if(!response.ok || !result.success){
+                    throw new Error(result.error || result.message || 'Unable to create order.');
+                }
 
-            'Estimated delivery: <strong>' +
+                const orderID = result.order?.orderNumber || ('GLB-' + Date.now());
 
-            formatDate(deliveryStart) +
+                localStorage.setItem('globiraLastOrder',JSON.stringify({
+                    ...orderData,
+                    orderID:orderID,
+                    date:orderDate.toISOString(),
+                    paymentStatus:'PENDING'
+                }));
 
-            ' – ' +
+                document.getElementById('orderNumber').textContent = 'ORDER ID: ' + orderID;
+                document.getElementById('deliveryEstimate').innerHTML =
+                    'Estimated delivery: <strong>' + formatDate(deliveryStart) + ' – ' +
+                    formatDate(deliveryEnd) + '</strong><br>Payment method: Cash on Delivery';
 
-            formatDate(deliveryEnd) +
+                showStep(4);
+                return;
+            }
 
-            '</strong><br>' +
+            if(String(countryCode).toUpperCase() !== 'IN'){
+                throw new Error('Domestic Razorpay payment is available for India only. Please select India.');
+            }
 
-            'Payment method: ' +
+            if(typeof Razorpay === 'undefined'){
+                throw new Error('Razorpay Checkout could not be loaded. Please refresh the page.');
+            }
 
-            selectedPayment;
+            const createResponse = await fetch('/api/payment/create-order',{
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({
+                    amount:orderData.total,
+                    currency:'INR',
+                    receipt:'GLOBIRA-' + Date.now(),
+                    notes:{paymentMethod:selectedPayment}
+                })
+            });
 
+            const createResult = await createResponse.json();
 
-        showStep(4);
+            if(!createResponse.ok || !createResult.success){
+                throw new Error(createResult.error || createResult.message || 'Could not create Razorpay order.');
+            }
 
+            const razorpayOptions = {
+                key:createResult.keyId,
+                amount:createResult.order.amount,
+                currency:'INR',
+                name:'GLOBIRA',
+                description:'GLOBIRA Order Payment',
+                order_id:createResult.order.id,
+                prefill:{name:name,email:email,contact:mobile},
+                notes:{globira_payment_method:selectedPayment},
+                theme:{color:'#7a5c3a'},
+
+                handler:async function(paymentResponse){
+
+                    try{
+
+                        const verifyResponse = await fetch('/api/payment/verify',{
+                            method:'POST',
+                            headers:{'Content-Type':'application/json'},
+                            body:JSON.stringify({
+                                razorpay_order_id:paymentResponse.razorpay_order_id,
+                                razorpay_payment_id:paymentResponse.razorpay_payment_id,
+                                razorpay_signature:paymentResponse.razorpay_signature,
+                                order:orderData
+                            })
+                        });
+
+                        const verifyResult = await verifyResponse.json();
+
+                        if(!verifyResponse.ok || !verifyResult.success){
+                            throw new Error(verifyResult.error || verifyResult.message || 'Payment verification failed.');
+                        }
+
+                        const orderID = verifyResult.order?.orderNumber || ('GLB-' + Date.now());
+
+                        localStorage.setItem('globiraLastOrder',JSON.stringify({
+                            ...orderData,
+                            orderID:orderID,
+                            date:orderDate.toISOString(),
+                            paymentStatus:'CONFIRMED',
+                            paymentGateway:'Razorpay',
+                            razorpayOrderId:paymentResponse.razorpay_order_id,
+                            razorpayPaymentId:paymentResponse.razorpay_payment_id
+                        }));
+
+                        document.getElementById('orderNumber').textContent = 'ORDER ID: ' + orderID;
+                        document.getElementById('deliveryEstimate').innerHTML =
+                            'Estimated delivery: <strong>' + formatDate(deliveryStart) + ' – ' +
+                            formatDate(deliveryEnd) + '</strong><br>Payment method: ' +
+                            selectedPayment + '<br>Payment status: PAID';
+
+                        showStep(4);
+
+                    }catch(error){
+
+                        console.error('Razorpay verification error:',error);
+                        alert(error.message || 'Payment verification failed.');
+
+                    }finally{
+
+                        if(button){
+                            button.disabled = false;
+                            button.textContent = 'CONTINUE & PLACE ORDER';
+                        }
+
+                    }
+                },
+
+                modal:{
+                    ondismiss:function(){
+                        if(button){
+                            button.disabled = false;
+                            button.textContent = 'CONTINUE & PLACE ORDER';
+                        }
+                    }
+                }
+            };
+
+            const razorpay = new Razorpay(razorpayOptions);
+
+            razorpay.on('payment.failed',function(response){
+                console.error('Razorpay payment failed:',response?.error);
+                alert(response?.error?.description || 'Payment failed. Please try again.');
+                if(button){
+                    button.disabled = false;
+                    button.textContent = 'CONTINUE & PLACE ORDER';
+                }
+            });
+
+            razorpay.open();
+
+        }catch(error){
+
+            console.error('GLOBIRA PAYMENT ERROR:',error);
+            alert(error.message || 'Unable to start payment.');
+
+            if(button){
+                button.disabled = false;
+                button.textContent = selectedPayment === 'COD' ? 'PLACE ORDER' : 'CONTINUE & PLACE ORDER';
+            }
+        }
     }
 
 
@@ -6540,112 +6524,115 @@
         const subcategory = String(source.subcategory || '').toLowerCase();
         const gender = String(source.gender || '').toLowerCase();
         const description = String(source.description || '').toLowerCase();
-        const text = [name, category, subcategory, gender, description].filter(Boolean).join(' ');
-        const paddedText = ` ${text.replace(/[^a-z0-9'&]+/g,' ')} `;
-        const hasAny = words => words.some(word => paddedText.includes(` ${String(word).trim()} `));
 
-        const womenStrong = /\b(women|womens|women's|female|woman|ladies|lady|girls?|femme|womenswear|womenwear)\b/.test(paddedText);
-        const menStrong = /\b(men|mens|men's|male|man|gentlemen|gentleman|boys?|masculine|menswear|menwear)\b/.test(paddedText);
+        const text = [name, category, subcategory, gender, description]
+            .filter(Boolean).join(' ');
 
-        const bagWords=['bag','handbag','backpack','purse','tote','clutch','crossbody','shoulder bag','wallet','luggage','suitcase'];
-        const shoeWords=['shoe','shoes','sneaker','sneakers','sandal','sandals','boot','boots','heel','heels','loafer','loafers','slipper','slippers','moccasin','footwear'];
-        const accessoryWords=['watch','watches','jewelry','jewellery','necklace','bracelet','ring','earring','belt','sunglasses','glasses','scarf','hat','cap','accessory','accessories'];
+        const hasAny = words => words.some(word => text.includes(word));
 
-        let finalCategory = String(source.category || '').trim().toLowerCase();
-        let finalGender = String(source.gender || '').trim().toLowerCase();
+        const bagWords = [
+            'bag','handbag','backpack','purse','tote','clutch',
+            'crossbody','shoulder bag','wallet','luggage','suitcase'
+        ];
+        const shoeWords = [
+            'shoe','shoes','sneaker','sneakers','sandal','sandals',
+            'boot','boots','heel','heels','loafer','loafers',
+            'slipper','slippers','moccasin','footwear'
+        ];
+        const accessoryWords = [
+            'watch','watches','jewelry','jewellery','necklace',
+            'bracelet','ring','earring','belt','sunglasses',
+            'glasses','scarf','hat','cap','accessory','accessories'
+        ];
+        const menWords = [
+            'men','mens',"men's",'male','man',
+            'men clothing','mens clothing','menswear'
+        ];
+        const womenWords = [
+            'women','womens',"women's",'female','woman',
+            'women clothing','womens clothing','womenswear',
+            'dress','skirt','blouse','lingerie','bra'
+        ];
 
-        // Gender is determined first and with word boundaries so WOMEN can never become MEN.
-        if(womenStrong && !/\bmen's?\b/.test(paddedText)){
-            finalGender='women';
-            if(!finalCategory || /^(men|mens|male)$/i.test(finalCategory)) finalCategory='women';
-        }else if(menStrong && !womenStrong){
-            finalGender='men';
-            if(!finalCategory || /^(women|womens|female)$/i.test(finalCategory)) finalCategory='men';
-        }else if(/^(women|woman|womens|female|ladies|lady)$/i.test(gender)){
-            finalGender='women';
-            if(!finalCategory) finalCategory='women';
-        }else if(/^(men|man|mens|male|gentlemen|gentleman)$/i.test(gender)){
-            finalGender='men';
-            if(!finalCategory) finalCategory='men';
+        let finalCategory = String(source.category || '').trim();
+        let finalGender = String(source.gender || '').trim();
+
+        if(hasAny(bagWords)){
+            finalCategory = 'bags';
+        }else if(hasAny(shoeWords)){
+            finalCategory = 'shoes';
+        }else if(hasAny(accessoryWords)){
+            finalCategory = 'accessories';
+        }else if(hasAny(menWords)){
+            finalCategory = 'men';
+            finalGender = 'men';
+        }else if(hasAny(womenWords)){
+            finalCategory = 'women';
+            finalGender = 'women';
+        }else if(!finalCategory){
+            finalCategory = finalGender === 'men' ? 'men' : 'women';
         }
 
-        // Generic product families are only assigned when they are not gender-specific.
-        if(!finalGender){
-            if(hasAny(bagWords)) finalCategory='bags';
-            else if(hasAny(shoeWords)) finalCategory='shoes';
-            else if(hasAny(accessoryWords)) finalCategory='accessories';
-        }
-
-        if(!finalCategory) finalCategory = finalGender || 'other';
-
-        return {...source,category:finalCategory,gender:finalGender};
+        return {
+            ...source,
+            category: finalCategory,
+            gender: finalGender
+        };
     }
 
-    let globiraCatalogReady = null;
-
     async function loadCJFeaturedProduct(){
-        if(globiraCatalogReady) return globiraCatalogReady;
 
-        globiraCatalogReady = (async()=>{
-            const PAGE_SIZE=100;
-            const BATCH_SIZE=20;
-            const status=document.getElementById('homeCatalogStatus');
-            const normalize=payload=>(Array.isArray(payload?.products)?payload.products:[]).map(product=>{
-                if(!product?.id) return null;
-                const p=classifyCJProduct(product);
-                const selling=Number(p.sellingPrice ?? p.customerPrice ?? p.sellingPriceMin ?? p.price ?? 0);
-                if(Number.isFinite(selling)) p.price=selling;
-                if(!p.name && p.title) p.name=p.title;
-                return p;
-            }).filter(Boolean);
-            const merge=list=>{
-                const map=new Map((Array.isArray(cjProducts)?cjProducts:[]).map(p=>[String(p.id),p]));
-                list.forEach(p=>map.set(String(p.id),p));
-                cjProducts=Array.from(map.values());
-            };
-            const getPage=async page=>{
-                try{
-                    const r=await fetch(`/api/cj-products?page=${page}&size=${PAGE_SIZE}`,{cache:'no-store',headers:{Accept:'application/json'}});
-                    if(!r.ok) return null;
-                    return await r.json();
-                }catch(e){ console.warn('CJ page failed',page,e); return null; }
-            };
+        if(catalogLoading) return;
+        catalogLoading = true;
 
-            catalogLoading=true;
-            try{
-                if(status) status.textContent='Loading GLOBIRA products…';
-                const first=await getPage(1);
-                if(!first?.success) throw new Error('CJ catalog first page failed');
-                globiraCatalogCurrency=String(first.currency||'USD').toUpperCase();
-                merge(normalize(first));
-                renderFeatured(); updateGWLiveStatus();
+        try{
+            const status = document.getElementById('homeCatalogStatus');
+            if(status) status.textContent = 'Loading GLOBIRA catalog…';
 
-                const totalRecords=Number(first.totalRecords || first?.data?.totalRecords || 0);
-                const totalPages=Math.max(1,Number(first.totalPages || first?.data?.totalPages || Math.ceil(totalRecords/PAGE_SIZE)));
-                if(status) status.textContent=`Loading GLOBIRA catalog… ${cjProducts.length.toLocaleString()} / ${totalRecords.toLocaleString()}`;
+            /* The browser reads the stored GLOBIRA catalog. server.js syncs CJ in the background. */
+            const response = await fetch('/api/products',{
+                method:'GET',
+                cache:'no-store',
+                headers:{'Accept':'application/json'}
+            });
 
-                for(let startPage=2; startPage<=totalPages; startPage+=BATCH_SIZE){
-                    const pages=[];
-                    for(let p=startPage;p<=Math.min(totalPages,startPage+BATCH_SIZE-1);p++) pages.push(p);
-                    const payloads=await Promise.all(pages.map(getPage));
-                    const batch=[];
-                    payloads.forEach(x=>{if(x?.success) batch.push(...normalize(x));});
-                    merge(batch);
-                    updateGWLiveStatus();
-                    renderFeatured();
-                    if(status) status.textContent=`Loading GLOBIRA catalog… ${cjProducts.length.toLocaleString()} / ${totalRecords.toLocaleString()}`;
-                    await new Promise(r=>setTimeout(r,0));
-                }
+            if(!response.ok) throw new Error(`GLOBIRA catalog returned ${response.status}`);
 
-                renderFeatured(); renderHomepageLiveSections(); refreshCurrentCategoryInPlace(); updateGWLiveStatus();
-                console.log(`GLOBIRA: FULL CJ CATALOG READY: ${cjProducts.length} / ${totalRecords}`);
-                return cjProducts;
-            }finally{
-                catalogLoading=false;
-                renderFeatured(); updateGWLiveStatus();
+            const payload = await response.json();
+            if(!payload || !payload.success){
+                throw new Error(payload?.message || payload?.error || 'Catalog request failed.');
             }
-        })();
-        try{return await globiraCatalogReady;}catch(e){globiraCatalogReady=null;throw e;}
+
+            globiraCatalogCurrency = String(payload.currency || 'USD').toUpperCase();
+
+            const unique = new Map();
+            (Array.isArray(payload.products) ? payload.products : []).forEach(product=>{
+                if(!product || !product.id) return;
+                const normalized = classifyCJProduct(product);
+                unique.set(String(normalized.id),normalized);
+            });
+
+            cjProducts = Array.from(unique.values());
+
+            renderFeatured();
+            renderHomepageLiveSections();
+            refreshCurrentCategoryInPlace();
+            updateGWLiveStatus();
+
+            console.log(`GLOBIRA STOREFRONT: loaded ${cjProducts.length} stored products from /api/products.`);
+
+        }catch(error){
+            console.error('GLOBIRA STOREFRONT CATALOG ERROR:',error);
+            if(!Array.isArray(cjProducts)) cjProducts=[];
+            renderFeatured();
+            renderHomepageLiveSections();
+            updateGWLiveStatus();
+        }finally{
+            catalogLoading=false;
+            renderFeatured();
+            renderHomepageLiveSections();
+            updateGWLiveStatus();
+        }
     }
 
     /* =========================================================
@@ -6868,14 +6855,10 @@
 
     function globiraGender(product){
         const p=product||{};
-        const explicit=String(p.gender||'').toLowerCase().trim();
-        if(/^(women|woman|womens|female|ladies|lady|girls?|femme)$/.test(explicit)) return 'women';
-        if(/^(men|man|mens|male|gentlemen|gentleman|boys?|masculine)$/.test(explicit)) return 'men';
-
-        const text=[p.name,p.category,p.subcategory,p.description].filter(Boolean).join(' ').toLowerCase();
-        if(/\b(women|womens|women's|female|woman|ladies|lady|girl|girls|womenswear|womenwear)\b/.test(text)) return 'women';
-        if(/\b(men|mens|men's|male|man|gentlemen|gentleman's|boy|boys|menswear|menwear)\b/.test(text)) return 'men';
-        return explicit;
+        const text=[p.name,p.category,p.subcategory,p.gender,p.description].filter(Boolean).join(' ').toLowerCase();
+        if(/\b(women|womens|women's|female|woman|ladies|lady|girl|girls)\b/.test(text)) return 'women';
+        if(/\b(men|mens|men's|male|man|gentlemen|gentleman's|boy|boys)\b/.test(text)) return 'men';
+        return String(p.gender||'').toLowerCase();
     }
 
     function productFallbackImage(product){
@@ -6905,18 +6888,8 @@
         const name=escapeHtml(product.name||'GLOBIRA Product');
         const images=normalizeProductImages(product);
         const image=images[0]||productFallbackImage(product);
-        const productPrice = Number(
-            product.sellingPrice ??
-            product.customerPrice ??
-            product.sellingPriceMin ??
-            product.price ??
-            0
-        );
-        const oldPriceValue = Number(product.oldPrice || 0);
-        const price = formatPrice(productPrice);
-        const oldPrice = oldPriceValue > productPrice
-            ? formatPrice(oldPriceValue)
-            : '';
+        const price=formatPrice(product.price);
+        const oldPrice=Number(product.oldPrice||0)>Number(product.price||0)?formatPrice(product.oldPrice):'';
         const live=String(product.source||'').toLowerCase()==='cjdropshipping';
         const cat=String(product.category||globiraGender(product)||'other').replace(/^\w/,c=>c.toUpperCase());
         const safeId=id.replace(/'/g,"\\'");
@@ -7953,90 +7926,66 @@
         document.getElementById('categoryPage').classList.add('active');
 
         const d=GLOBIRA_MENU_DATA[category];
+        const products=getCategoryProducts(category);
         const title=d?.title||({women:'Women',men:'Men',bags:'Bags',electronics:'Electronics',home:'Home & Living',beauty:'Beauty & Personal Care',tools:'Tools & DIY',sports:'Sports & Fitness',automotive:'Automotive',pets:'Pet Supplies',office:'Office & School',baby:'Baby & Kids',health:'Health & Wellness',more:'All Products'}[category]||'Collection');
 
         document.getElementById('categoryTitle').textContent=title;
         document.getElementById('categoryEyebrow').textContent='GLOBIRA / '+title.toUpperCase();
 
-        const products=getCategoryProducts(category);
+        const c=document.getElementById('categoryProducts');
         const safeCat=String(category).replace(/'/g,"\\'");
-        const initial=products.slice(0,100);
-
-        document.getElementById('categoryProducts').innerHTML=`
+        c.innerHTML=`
         <div class="gw-category-toolbar">
             <div><b>${products.length.toLocaleString()} products</b><span>Live marketplace</span></div>
             <select onchange="sortCategoryProducts(this.value)">
-                <option value="featured">Featured</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="name">Name</option>
+            <option value="featured">Featured</option>
+            <option value="price-low">Price: Low to High</option>
+            <option value="price-high">Price: High to Low</option>
+            <option value="name">Name</option>
             </select>
         </div>
         <div class="products category-result-grid">
-            ${initial.length ? initial.map(productCard).join('') : '<div class="empty-category"><h3>Loading live products…</h3><p>Connecting to the CJ catalog.</p></div>'}
+            ${products.length ? products.slice(0,48).map(productCard).join('') : '<div class="empty-category"><h3>No products available yet</h3><p>Live matching products will appear automatically.</p></div>'}
         </div>
-        <button class="gw-load-more" style="display:${products.length>100?'block':'none'}" onclick="loadMoreCategory('${safeCat}')">
-            Load more products · ${Math.min(100,Math.max(0,products.length-100)).toLocaleString()} more →
-        </button>`;
+        ${products.length>48 ? `<button class="gw-load-more" onclick="loadMoreCategory('${safeCat}')">Load more products →</button>` : ''}`;
 
         makeCategoryProductsVisible();
         window.scrollTo({top:0,behavior:'instant'});
-
-        /* The first 100 appear immediately. The full CJ catalog continues loading in background. */
-        if(typeof loadCJFeaturedProduct==='function') loadCJFeaturedProduct().catch(()=>{});
     };
 
     window.showSubcategory=function(category,sub){
         currentCategory=category;
         document.getElementById('homePage').style.display='none';
         document.getElementById('categoryPage').classList.add('active');
-
         const d=GLOBIRA_MENU_DATA[category];
         const found=(d?.groups||[]).find(([t])=>slugify(t)===sub);
         const title=found?found[0]:sub.replace(/-/g,' ');
         const base=getCategoryProducts(category);
         const terms=title.toLowerCase().split(/\s+|&/).filter(x=>x.length>2);
-        const products=sub==='all'?base:base.filter(p=>terms.some(term=>
-            [p.name,p.subcategory,p.category,p.description,p.gender].filter(Boolean).join(' ').toLowerCase().includes(term)
-        ));
+        const products=sub==='all'?base:base.filter(p=>terms.some(term=>[p.name,p.subcategory,p.description,p.category].filter(Boolean).join(' ').toLowerCase().includes(term)));
 
         document.getElementById('categoryTitle').textContent=title.replace(/\b\w/g,c=>c.toUpperCase());
         document.getElementById('categoryEyebrow').textContent='GLOBIRA / '+String(d?.title||category).toUpperCase()+' / '+title.toUpperCase();
-
         const c=document.getElementById('categoryProducts');
-        const safeCat=String(category).replace(/'/g,"\\'");
-        const safeSub=String(sub).replace(/'/g,"\\'");
-
         c.innerHTML=`
-        <div class="gw-category-toolbar">
-            <div><b>${products.length.toLocaleString()} products</b><span>Live marketplace</span></div>
-        </div>
         <div class="products category-result-grid">
-            ${products.length ? products.slice(0,100).map(productCard).join('') : '<div class="empty-category"><h3>Loading matching products…</h3><p>Connecting to the CJ catalog.</p></div>'}
+            ${products.length ? products.slice(0,48).map(productCard).join('') : '<div class="empty-category"><h3>No matching products yet</h3><p>Try another variety.</p></div>'}
         </div>
-        <button class="gw-load-more" style="display:${products.length>100?'block':'none'}" onclick="loadMoreSubcategory('${safeCat}','${safeSub}')">
-            Load more products · ${Math.min(100,Math.max(0,products.length-100)).toLocaleString()} more →
-        </button>`;
-
+        ${products.length>48 ? `<button class="gw-load-more" onclick="loadMoreSubcategory('${String(category).replace(/'/g,"\\'")}','${String(sub).replace(/'/g,"\\'")}')">Load more products →</button>` : ''}`;
         makeCategoryProductsVisible();
         window.scrollTo({top:0,behavior:'instant'});
-        if(typeof loadCJFeaturedProduct==='function') loadCJFeaturedProduct().catch(()=>{});
     };
-
 
     const oldRefresh=window.refreshCurrentCategoryInPlace;
     window.refreshCurrentCategoryInPlace=function(){
         if(!currentCategory) return;
         const grid=document.querySelector('#categoryProducts .category-result-grid');
         if(!grid) return;
-
-        const oldCount=grid.querySelectorAll('.product').length || 100;
+        const oldCount=grid.querySelectorAll('.product').length;
         const products=getCategoryProducts(currentCategory);
-        const visible=products.slice(0,Math.max(100,oldCount));
+        const visible=products.slice(0,Math.max(48,oldCount));
         const y=window.scrollY||document.documentElement.scrollTop||0;
-
         grid.innerHTML=visible.map(productCard).join('');
-        updateCategoryLoadMoreButton(products.length,visible.length);
         makeCategoryProductsVisible();
         requestAnimationFrame(()=>window.scrollTo(0,y));
     };
@@ -8452,15 +8401,8 @@
         const name = escapeHtml(product.name || 'GLOBIRA Product');
         const images = normalizeProductImages(product);
         const mainImage = images[0] || productFallbackImage(product);
-        const productPrice = Number(
-            product.sellingPrice ??
-            product.customerPrice ??
-            product.sellingPriceMin ??
-            product.price ??
-            0
-        );
-        const price = formatPrice(productPrice);
-        const oldPrice = Number(product.oldPrice || 0) > productPrice
+        const price = formatPrice(product.price);
+        const oldPrice = Number(product.oldPrice || 0) > Number(product.price || 0)
         ? formatPrice(product.oldPrice) : '';
         const live = String(product.source || '').toLowerCase() === 'cjdropshipping';
         const cat = String(product.category || globiraGender(product) || 'other')
@@ -8528,9 +8470,9 @@
         const c = String(category||'').toLowerCase();
         if(c === 'more') return true;
         if(c === 'women' || c === 'men'){
-            /* Men/Women are gender-exclusive. Never let a product containing
-               words such as "women" accidentally enter Men. */
-            return globiraGender(product) === c;
+        return globiraGender(product) === c ||
+            String(product.gender||'').toLowerCase() === c ||
+            String(product.category||'').toLowerCase() === c;
         }
         return String(product.category||'').toLowerCase() === c;
     }
@@ -8628,41 +8570,60 @@
     }
 
     async function fetchLiveCategory(category, subcategory){
-        const requestId=++categoryRequest;
-        try{
-            // Men/Women must search the COMPLETE CJ catalog, not only the first 300 results.
-            if(category==='men' || category==='women' || category==='more'){
-                await loadCJFeaturedProduct();
-                if(requestId!==categoryRequest) return;
-                const all=allProducts().map(classifyCJProduct);
-                const exact=all.filter(p=>categoryMatches(p,category) && (!subcategory || globiraCriterionMatch(p,subcategory.replace(/-/g,' '))));
-                renderCategoryInstant(category,exact,category==='more'?'All live CJ products':'Matching products only');
-                return;
-            }
+        const requestId = ++categoryRequest;
+        const keyword = subcategory ? String(subcategory).replace(/-/g,' ') : categoryKeyword(category);
+        const pages = keyword ? [1,2,3] : [1];
+        const base = getCategoryProducts(category);
+        const local = subcategory
+        ? base.filter(p=>globiraCriterionMatch(p, subcategory.replace(/-/g,' ')))
+        : base;
+        let merged = Array.from(new Map(local.map(p=>[p.id,p])).values());
 
-            const keyword=subcategory ? String(subcategory).replace(/-/g,' ') : categoryKeyword(category);
-            const first=await fetch(`/api/cj-products?page=1&size=100&keyword=${encodeURIComponent(keyword)}`).then(r=>r.ok?r.json():null).catch(()=>null);
-            if(!first?.success) return;
-            const totalPages=Math.max(1,Number(first.totalPages || first?.data?.totalPages || 1));
-            const payloads=[first];
-            const batchSize=12;
-            for(let start=2;start<=totalPages;start+=batchSize){
-                const pages=[]; for(let p=start;p<=Math.min(totalPages,start+batchSize-1);p++) pages.push(p);
-                const more=await Promise.all(pages.map(p=>fetch(`/api/cj-products?page=${p}&size=100&keyword=${encodeURIComponent(keyword)}`).then(r=>r.ok?r.json():null).catch(()=>null)));
-                payloads.push(...more);
-            }
-            if(requestId!==categoryRequest) return;
-            const live=[];
-            payloads.forEach(payload=>{
-                if(payload?.success && Array.isArray(payload.products)) payload.products.map(classifyCJProduct).forEach(p=>{if(categoryMatches(p,category) && (!subcategory || globiraCriterionMatch(p,subcategory.replace(/-/g,' ')))) live.push(p);});
+        renderCategoryInstant(category, merged, 'Checking live CJ products…');
+
+        try{
+        const results = await Promise.all(pages.map(page =>
+            fetch(`/api/cj-products?page=${page}&size=100&keyword=${encodeURIComponent(keyword)}`)
+            .then(r=>r.ok ? r.json() : null)
+            .catch(()=>null)
+        ));
+        if(requestId !== categoryRequest) return;
+
+        const live=[];
+        results.forEach(payload=>{
+            if(payload && payload.success && Array.isArray(payload.products)){
+            payload.products.map(classifyCJProduct).forEach(p=>{
+                if(categoryMatches(p,category) &&
+                (!subcategory || globiraCriterionMatch(p, subcategory.replace(/-/g,' ')))){
+                live.push(p);
+                }
             });
-            const map=new Map(allProducts().map(p=>[String(p.id),p]));
-            live.forEach(p=>map.set(String(p.id),p));
-            cjProducts=Array.from(new Map([...cjProducts,...live].map(p=>[String(p.id),p])).values());
-            const finalProducts=Array.from(map.values()).filter(p=>categoryMatches(p,category) && (!subcategory || globiraCriterionMatch(p,subcategory.replace(/-/g,' '))));
-            renderCategoryInstant(category,finalProducts,'Matching products only');
-            updateGWLiveStatus();
-        }catch(error){console.warn('GLOBIRA LIVE CATEGORY:',error);}
+            }
+        });
+
+        const map = new Map(merged.map(p=>[p.id,p]));
+        live.forEach(p=>{if(p && p.id) map.set(p.id,p);});
+        const finalProducts=Array.from(map.values());
+
+        live.forEach(p=>{
+            if(p && p.id){
+            const i=cjProducts.findIndex(x=>x.id===p.id);
+            if(i>=0) cjProducts[i]=p; else cjProducts.push(p);
+            }
+        });
+
+        // IMPORTANT: render the exact criterion only. Never fall back to the full category.
+        const exactFinal = subcategory
+            ? finalProducts.filter(p=>globiraCriterionMatch(p, subcategory.replace(/-/g,' ')))
+            : finalProducts;
+        renderCategoryInstant(category, exactFinal, 'Matching products only');
+        if(typeof updateGWLiveStatus==='function') updateGWLiveStatus();
+        }catch(error){
+        console.warn('GLOBIRA LIVE CATEGORY:',error);
+        if(requestId===categoryRequest){
+            renderCategoryInstant(category, merged, subcategory ? 'Matching products only' : 'Live CJ connection pending…');
+        }
+        }
     }
 
     /* ---------- Final category page handler ---------- */
@@ -8726,33 +8687,70 @@
 
     /* Search result page uses the same compact cards and touch-safe scrolling. */
     const oldSearchProducts = window.searchProducts;
-    let globiraSearchResults=[];
-    let globiraSearchVisible=120;
-
-    window.loadMoreSearchResults=function(){
-        globiraSearchVisible+=120;
-        renderFastResults(document.getElementById('categoryProducts'),globiraSearchResults,document.getElementById('categoryTitle')?.textContent?.replace(/^Search:\s*/i,'')||'',false);
-    };
-
     window.searchProducts = async function(){
-        const heroInput=document.getElementById('globiraHeroSearchInput');
-        const topInput=document.getElementById('globiraSearchInput');
-        const input=heroInput||topInput;
-        const rawQuery=input?input.value.trim():'';
-        if(heroInput&&topInput) topInput.value=rawQuery;
-        if(!rawQuery){showHome();return;}
-        const query=normalizeGlobiraSearch(rawQuery);
-        const home=document.getElementById('homePage'), page=document.getElementById('categoryPage');
-        if(home) home.style.display='none'; if(page) page.classList.add('active'); document.body.classList.add('no-scroll');
+        const heroInput = document.getElementById('globiraHeroSearchInput');
+        const topInput = document.getElementById('globiraSearchInput');
+        const input = heroInput || topInput;
+        const rawQuery = input ? input.value.trim() : '';
+
+        if(heroInput && topInput) topInput.value = rawQuery;
+        if(!rawQuery){ showHome(); return; }
+
+        const query = normalizeGlobiraSearch(rawQuery);
+        const home = document.getElementById('homePage');
+        const page = document.getElementById('categoryPage');
+        if(home) home.style.display='none';
+        if(page) page.classList.add('active');
+        document.body.classList.add('no-scroll');
+
         document.getElementById('categoryTitle').textContent='Search: '+rawQuery;
         document.getElementById('categoryEyebrow').textContent='GLOBIRA / SEARCH RESULTS';
-        globiraSearchVisible=120;
 
-        // If the full catalog is not ready yet, finish loading it first. This guarantees search scans all CJ products.
-        try{ await loadCJFeaturedProduct(); }catch(e){}
-        globiraSearchResults=allProducts().map(classifyCJProduct).filter(p=>globiraStrictSearchMatch(p,query));
-        renderFastResults(document.getElementById('categoryProducts'),globiraSearchResults,rawQuery,false);
+        let products = allProducts().filter(p=>globiraStrictSearchMatch(p,query));
+        renderFastResults(document.getElementById('categoryProducts'),products,rawQuery,true);
+        const grid = document.querySelector('#categoryProducts .category-result-grid');
+        if(grid){
+        grid.querySelectorAll('.gw-card-main-image').forEach((img,i)=>{
+            if(i<12){ img.loading='eager'; img.setAttribute('fetchpriority','high'); }
+        });
+        }
         if(page) page.scrollTop=0;
+        window.scrollTo(0,0);
+
+        try{
+        /* Three requests run together instead of waiting page-by-page. */
+        const responses = await Promise.all([1,2,3].map(pageNo =>
+            fetch(`/api/cj-products?page=${pageNo}&size=100&keyword=${encodeURIComponent(rawQuery)}`)
+            .then(r=>r.ok?r.json():null).catch(()=>null)
+        ));
+
+        const liveMatches=[];
+        responses.forEach(payload=>{
+            if(payload && payload.success && Array.isArray(payload.products)){
+            payload.products.map(classifyCJProduct)
+                .filter(p=>globiraStrictSearchMatch(p,query))
+                .forEach(p=>liveMatches.push(p));
+            }
+        });
+
+        const map = new Map(products.map(p=>[p.id,p]));
+        liveMatches.forEach(p=>{if(p?.id) map.set(p.id,p);});
+        products = Array.from(map.values());
+
+        liveMatches.forEach(p=>{
+            if(p?.id){
+            const i=cjProducts.findIndex(x=>x.id===p.id);
+            if(i>=0) cjProducts[i]=p; else cjProducts.push(p);
+            }
+        });
+
+        renderFastResults(document.getElementById('categoryProducts'),products,rawQuery,false);
+        document.querySelectorAll('#categoryProducts .gw-card-main-image').forEach((img,i)=>{
+            if(i<12){img.loading='eager';img.setAttribute('fetchpriority','high');}
+        });
+        }catch(error){
+        console.warn('GLOBIRA LIVE SEARCH V2:',error);
+        }
     };
 
     /* Keep category scrolling usable on iOS even while the background is locked. */
@@ -10709,65 +10707,6 @@ body{font-size:14px!important}
 </script>
 <!-- END GLOBIRA FINAL CART REMOVE + PRODUCT PHOTO GALLERY FIX -->
 
-
-<!-- GLOBIRA FINAL CATALOG + PRODUCT POPUP + CART FIX -->
-<script>
-(function(){
-    /* ===== GUARANTEE GLOBAL PRODUCT/CART ACTIONS ===== */
-    try{
-        if(typeof openProduct === 'function') window.openProduct = openProduct;
-        if(typeof closeProduct === 'function') window.closeProduct = closeProduct;
-        if(typeof addToCart === 'function') window.addToCart = addToCart;
-        if(typeof changeQuantity === 'function') window.changeQuantity = changeQuantity;
-        if(typeof removeItem === 'function') window.removeItem = removeItem;
-        if(typeof renderCart === 'function') window.renderCart = renderCart;
-        if(typeof openCart === 'function') window.openCart = openCart;
-        if(typeof closeCart === 'function') window.closeCart = closeCart;
-    }catch(e){}
-
-    /* Some earlier wrappers can hide the original function. Re-expose a reliable
-       click handler so every live CJ card opens the existing product modal. */
-    document.addEventListener('click',function(e){
-        const card=e.target.closest && e.target.closest('.gw-product-card');
-        if(card && !e.target.closest('button,a,input,select')){
-            const onclick=card.getAttribute('onclick')||'';
-            const m=onclick.match(/openProduct\(['"]([^'"]+)['"]/);
-            if(m && typeof window.openProduct==='function'){
-                e.preventDefault();
-                try{ window.openProduct(m[1]); }catch(err){ console.error('GLOBIRA product popup:',err); }
-            }
-        }
-    },true);
-
-    /* Ensure REMOVE always updates the drawer immediately. */
-    document.addEventListener('click',function(e){
-        const btn=e.target.closest && e.target.closest('#cartDrawer .remove');
-        if(!btn) return;
-        e.preventDefault();
-        const onclick=btn.getAttribute('onclick')||'';
-        const m=onclick.match(/removeItem\(['"]([^'"]+)['"],['"]([^'"]*)['"]\)/);
-        if(m && typeof window.removeItem==='function'){
-            try{
-                window.removeItem(m[1],m[2]);
-                if(typeof window.renderCart==='function') window.renderCart();
-            }catch(err){ console.error('GLOBIRA cart remove:',err); }
-        }
-    },true);
-
-    /* Initial category feed: always 100 immediately; more becomes available
-       automatically as the full CJ catalog finishes downloading. */
-    window.addEventListener('load',function(){
-        setTimeout(function(){
-            if(typeof window.loadCJFeaturedProduct==='function'){
-                window.loadCJFeaturedProduct().catch(function(e){
-                    console.warn('GLOBIRA catalog load:',e);
-                });
-            }
-        },0);
-    });
-})();
-</script>
-<!-- END GLOBIRA FINAL CATALOG + PRODUCT POPUP + CART FIX -->
 </body>
     
 
