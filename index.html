@@ -6324,13 +6324,20 @@
                 throw new Error(createResult.error || createResult.message || 'Could not create Razorpay order.');
             }
 
+            const razorpayKey = createResult.key || createResult.keyId || '';
+            const razorpayOrder = createResult.order || {};
+
+            if(!razorpayKey || !razorpayOrder.id || !razorpayOrder.amount){
+                throw new Error('Razorpay order response is incomplete. Please try again.');
+            }
+
             const razorpayOptions = {
-                key:createResult.keyId,
-                amount:createResult.order.amount,
+                key:razorpayKey,
+                amount:razorpayOrder.amount,
                 currency:'INR',
                 name:'GLOBIRA',
                 description:'GLOBIRA Order Payment',
-                order_id:createResult.order.id,
+                order_id:razorpayOrder.id,
                 prefill:{name:name,email:email,contact:mobile},
                 notes:{globira_payment_method:selectedPayment},
                 theme:{color:'#7a5c3a'},
