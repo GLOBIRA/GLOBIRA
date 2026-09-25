@@ -1,3 +1,4 @@
+```javascript
 require("dotenv").config();
 
 const express = require("express");
@@ -87,28 +88,44 @@ const SESSION_TIME =
 const sessions = new Map();
 
 /* =========================================================
-   CJ SETTINGS
+   RAZORPAY
 ========================================================= */
 
 /*
- * CJ access token.
- *
  * IMPORTANT:
- * Keep this in Vercel Environment Variables.
  *
- * CJ_ACCESS_TOKEN=xxxxxxxx
+ * Add these in Vercel Environment Variables:
+ *
+ *RAZORPAY_KEY_ID=rzp_test_TftkhIOXVno1bx
+RAZORPAY_KEY_SECRET=w1z3Dzx6omydhYxdudzmwc3O
+ *
+ * Never put RAZORPAY_KEY_SECRET in index.html.
  */
+
+const RAZORPAY_KEY_ID = String(
+    process.env.RAZORPAY_KEY_ID || ""
+).trim();
+
+const RAZORPAY_KEY_SECRET = String(
+    process.env.RAZORPAY_KEY_SECRET || ""
+).trim();
+
+const RAZORPAY_API_BASE =
+    "https://api.razorpay.com/v1";
+
+/*
+ * GLOBIRA is using INR for Razorpay for now.
+ */
+
+const PAYMENT_CURRENCY = "INR";
+
+/* =========================================================
+   CJ SETTINGS
+========================================================= */
 
 const CJ_ACCESS_TOKEN = String(
     process.env.CJ_ACCESS_TOKEN || ""
 ).trim();
-
-/*
- * Optional fallback name.
- *
- * If you already have CJ_ACCESS_TOKEN,
- * that remains the preferred value.
- */
 
 const CJ_API_KEY = String(
     process.env.CJ_API_KEY || ""
@@ -120,20 +137,7 @@ const CJ_API_BASE =
 const CJ_PRODUCT_LIST_URL =
     `${CJ_API_BASE}/product/listV2`;
 
-/*
- * CJ allows up to 100 products per request.
- */
-
 const CJ_PAGE_SIZE = 100;
-
-/*
- * GLOBIRA markup.
- *
- * Example:
- *
- * CJ cost = $10
- * 60% markup = $16
- */
 
 const GLOBIRA_MARKUP_PERCENT = Math.max(
     0,
@@ -251,8 +255,6 @@ function generateOrderNumber() {
 
 /* =========================================================
    LOCAL CATALOG
-   Used for local/manual sync and compatibility.
-   CUSTOMER API DOES NOT DEPEND ON THIS.
 ========================================================= */
 
 function emptyCatalog() {
@@ -407,14 +409,6 @@ function normalizeCJProduct(product) {
             "3"
         );
 
-    /*
-     * listV2 itself returns available CJ products.
-     *
-     * Do NOT require warehouseInventoryNum here,
-     * because that field is not guaranteed on every
-     * listV2 result.
-     */
-
     const available =
         supplierCost > 0 &&
         (
@@ -436,11 +430,6 @@ function normalizeCJProduct(product) {
         product.productImage ||
         product.image ||
         "";
-
-    /*
-     * CJ can return different image fields depending
-     * on endpoint/version.
-     */
 
     let images = [];
 
@@ -669,24 +658,10 @@ function normalizeCJProduct(product) {
    CJ TOKEN / REQUEST
 ========================================================= */
 
-/*
- * Existing CJ_ACCESS_TOKEN remains the primary method.
- *
- * CJ requires an access token for product API calls.
- */
-
 async function getCJAccessToken() {
     if (CJ_ACCESS_TOKEN) {
         return CJ_ACCESS_TOKEN;
     }
-
-    /*
-     * We intentionally do not expose CJ_API_KEY
-     * to the frontend.
-     *
-     * If only CJ_API_KEY is configured, try the
-     * CJ authentication endpoint.
-     */
 
     if (!CJ_API_KEY) {
         throw new Error(
@@ -756,9 +731,7 @@ async function getCJAccessToken() {
     return token;
 }
 
-async function cjGET(
-    url
-) {
+async function cjGET(url) {
     const token =
         await getCJAccessToken();
 
@@ -820,16 +793,6 @@ async function cjGET(
    LIVE CJ PRODUCT REQUEST
 ========================================================= */
 
-/*
- * THIS IS THE IMPORTANT FIX.
- *
- * Vercel no longer depends on:
- *
- * .globira-catalog.json
- *
- * /api/products talks directly to CJ.
- */
-
 async function fetchCJProductPage({
     page = 1,
     size = 100,
@@ -867,10 +830,6 @@ async function fetchCJProductPage({
             )
         )
     );
-
-    /*
-     * CJ uses keyWord with capital W.
-     */
 
     if (keyword) {
         url.searchParams.set(
@@ -910,11 +869,6 @@ async function fetchCJProductPage({
 
     let rawProducts = [];
 
-    /*
-     * CJ wraps products inside
-     * content[].productList.
-     */
-
     for (
         const group of content
     ) {
@@ -935,10 +889,6 @@ async function fetchCJProductPage({
                 normalizeCJProduct
             )
             .filter(Boolean);
-
-    /*
-     * Deduplicate.
-     */
 
     const unique =
         new Map();
@@ -1055,10 +1005,6 @@ async function syncCJProducts() {
                 ) {
                     break;
                 }
-
-                /*
-                 * Respect CJ request limits.
-                 */
 
                 if (
                     page < pages
@@ -1314,9 +1260,7 @@ function createAdminSession() {
     return token;
 }
 
-function isValidAdminSession(
-    req
-) {
+function isValidAdminSession(req) {
     const cookies =
         parseCookies(req);
 
@@ -1487,6 +1431,456 @@ app.get(
 );
 
 /* =========================================================
+   RAZORPAY CREATE ORDER
+========================================================= */
+
+app.post(
+    "/api/payment/create-order",
+    async (req, res) => {
+        try {
+            if (
+                !RAZORPAY_KEY_ID ||
+                !RAZORPAY_KEY_SECRET
+            ) {
+                console.error(
+                    "RAZORPAY KEYS ARE MISSING"
+                );
+
+                return res
+                    .status(500)
+                    .json({
+                        success: false,
+                        message:
+                            "Razorpay is not configured on the server."
+                    });
+            }
+
+            const body =
+                req.body || {};
+
+            const amount =
+                Number(
+                    body.amount ||
+                    body.total ||
+                    0
+                );
+
+            if (
+                !Number.isFinite(amount) ||
+                amount <= 0
+            ) {
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        message:
+                            "Invalid payment amount."
+                    });
+            }
+
+            /*
+             * Razorpay requires the amount
+             * in the smallest currency unit.
+             *
+             * INR 100 = 10000 paise.
+             */
+
+            const amountInPaise =
+                Math.round(
+                    amount * 100
+                );
+
+            const receipt =
+                String(
+                    body.receipt ||
+                    body.orderNumber ||
+                    generateOrderNumber()
+                ).slice(
+                    0,
+                    40
+                );
+
+            const razorpayResponse =
+                await fetch(
+                    `${RAZORPAY_API_BASE}/orders`,
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Authorization":
+                                "Basic " +
+                                Buffer
+                                    .from(
+                                        `${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`
+                                    )
+                                    .toString(
+                                        "base64"
+                                    ),
+
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+                                amount:
+                                    amountInPaise,
+
+                                currency:
+                                    PAYMENT_CURRENCY,
+
+                                receipt,
+
+                                notes: {
+                                    globira:
+                                        "GLOBIRA customer payment"
+                                }
+                            })
+                    }
+                );
+
+            const responseText =
+                await razorpayResponse.text();
+
+            let razorpayData;
+
+            try {
+                razorpayData =
+                    JSON.parse(
+                        responseText
+                    );
+            } catch {
+                console.error(
+                    "RAZORPAY INVALID RESPONSE:",
+                    responseText
+                );
+
+                return res
+                    .status(502)
+                    .json({
+                        success: false,
+                        message:
+                            "Razorpay returned an invalid response."
+                    });
+            }
+
+            if (
+                !razorpayResponse.ok
+            ) {
+                console.error(
+                    "RAZORPAY CREATE ORDER ERROR:",
+                    razorpayData
+                );
+
+                return res
+                    .status(
+                        razorpayResponse.status ||
+                        500
+                    )
+                    .json({
+                        success: false,
+                        message:
+                            razorpayData?.error?.description ||
+                            "Could not create Razorpay order."
+                    });
+            }
+
+            /*
+             * If the customer already created
+             * a GLOBIRA order, attach the Razorpay
+             * order ID to it.
+             */
+
+            const globiraOrderNumber =
+                String(
+                    body.orderNumber ||
+                    ""
+                ).trim();
+
+            if (
+                globiraOrderNumber
+            ) {
+                try {
+                    const orders =
+                        readOrders();
+
+                    const globiraOrder =
+                        orders.find(
+                            item =>
+                                item.orderNumber ===
+                                globiraOrderNumber
+                        );
+
+                    if (
+                        globiraOrder
+                    ) {
+                        globiraOrder.razorpayOrderId =
+                            razorpayData.id;
+
+                        globiraOrder.paymentProvider =
+                            "razorpay";
+
+                        globiraOrder.paymentCurrency =
+                            PAYMENT_CURRENCY;
+
+                        globiraOrder.paymentAmount =
+                            amount;
+
+                        saveOrders(
+                            orders
+                        );
+                    }
+                } catch (
+                    attachError
+                ) {
+                    console.error(
+                        "Could not attach Razorpay order to GLOBIRA order:",
+                        attachError
+                    );
+                }
+            }
+
+            return res.json({
+                success: true,
+
+                keyId:
+                    RAZORPAY_KEY_ID,
+
+                orderId:
+                    razorpayData.id,
+
+                amount:
+                    razorpayData.amount,
+
+                currency:
+                    razorpayData.currency,
+
+                receipt:
+                    razorpayData.receipt
+            });
+        } catch (error) {
+            console.error(
+                "CREATE RAZORPAY ORDER ERROR:",
+                error
+            );
+
+            return res
+                .status(500)
+                .json({
+                    success: false,
+
+                    message:
+                        "Could not create Razorpay payment order."
+                });
+        }
+    }
+);
+
+/* =========================================================
+   RAZORPAY PAYMENT VERIFY
+========================================================= */
+
+app.post(
+    "/api/payment/verify",
+    (req, res) => {
+        try {
+            if (
+                !RAZORPAY_KEY_SECRET
+            ) {
+                return res
+                    .status(500)
+                    .json({
+                        success: false,
+                        message:
+                            "Razorpay secret is not configured."
+                    });
+            }
+
+            const body =
+                req.body || {};
+
+            const razorpayOrderId =
+                String(
+                    body.razorpay_order_id ||
+                    body.orderId ||
+                    ""
+                ).trim();
+
+            const razorpayPaymentId =
+                String(
+                    body.razorpay_payment_id ||
+                    body.paymentId ||
+                    ""
+                ).trim();
+
+            const razorpaySignature =
+                String(
+                    body.razorpay_signature ||
+                    body.signature ||
+                    ""
+                ).trim();
+
+            if (
+                !razorpayOrderId ||
+                !razorpayPaymentId ||
+                !razorpaySignature
+            ) {
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        message:
+                            "Missing Razorpay payment verification data."
+                    });
+            }
+
+            const generatedSignature =
+                crypto
+                    .createHmac(
+                        "sha256",
+                        RAZORPAY_KEY_SECRET
+                    )
+                    .update(
+                        `${razorpayOrderId}|${razorpayPaymentId}`
+                    )
+                    .digest("hex");
+
+            const signaturesMatch =
+                crypto.timingSafeEqual(
+                    Buffer.from(
+                        generatedSignature,
+                        "utf8"
+                    ),
+                    Buffer.from(
+                        razorpaySignature,
+                        "utf8"
+                    )
+                );
+
+            if (
+                !signaturesMatch
+            ) {
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        message:
+                            "Razorpay payment verification failed."
+                    });
+            }
+
+            /*
+             * Signature is valid.
+             *
+             * Update the matching GLOBIRA order
+             * when an order number was supplied.
+             */
+
+            const orderNumber =
+                String(
+                    body.orderNumber ||
+                    body.globiraOrderNumber ||
+                    ""
+                ).trim();
+
+            let updatedOrder =
+                null;
+
+            if (
+                orderNumber
+            ) {
+                const orders =
+                    readOrders();
+
+                const order =
+                    orders.find(
+                        item =>
+                            item.orderNumber ===
+                            orderNumber
+                    );
+
+                if (
+                    order
+                ) {
+                    order.paymentStatus =
+                        "CONFIRMED";
+
+                    order.status =
+                        "PROCESSING";
+
+                    order.paymentProvider =
+                        "razorpay";
+
+                    order.razorpayOrderId =
+                        razorpayOrderId;
+
+                    order.razorpayPaymentId =
+                        razorpayPaymentId;
+
+                    order.razorpaySignature =
+                        razorpaySignature;
+
+                    order.paymentVerifiedAt =
+                        new Date().toISOString();
+
+                    order.notes =
+                        Array.isArray(
+                            order.notes
+                        )
+                            ? order.notes
+                            : [];
+
+                    order.notes.push({
+                        time:
+                            new Date().toISOString(),
+
+                        message:
+                            "Razorpay customer payment verified successfully."
+                    });
+
+                    saveOrders(
+                        orders
+                    );
+
+                    updatedOrder =
+                        order;
+                }
+            }
+
+            return res.json({
+                success: true,
+
+                verified: true,
+
+                message:
+                    "Payment verified successfully.",
+
+                razorpayOrderId,
+
+                razorpayPaymentId,
+
+                order:
+                    updatedOrder
+            });
+        } catch (error) {
+            console.error(
+                "RAZORPAY VERIFY ERROR:",
+                error
+            );
+
+            return res
+                .status(500)
+                .json({
+                    success: false,
+
+                    message:
+                        "Could not verify Razorpay payment."
+                });
+        }
+    }
+);
+
+/* =========================================================
    MAIN LIVE PRODUCT API
 ========================================================= */
 
@@ -1533,12 +1927,6 @@ app.get(
                     req.query.countryCode ||
                     ""
                 ).trim();
-
-            /*
-             * LIVE CJ REQUEST.
-             *
-             * This is the Vercel fix.
-             */
 
             const result =
                 await fetchCJProductPage({
@@ -1692,10 +2080,6 @@ app.get(
    CATALOG STATUS
 ========================================================= */
 
-/*
- * Keep the old endpoint.
- */
-
 app.get(
     "/api/products/status",
     async (req, res) => {
@@ -1748,12 +2132,6 @@ app.get(
         }
     }
 );
-
-/*
- * ADD THIS ENDPOINT TOO.
- *
- * This fixes the 404 you were seeing.
- */
 
 app.get(
     "/api/catalog-status",
@@ -1955,6 +2333,21 @@ app.post(
 
                 paymentStatus:
                     "PENDING",
+
+                paymentProvider:
+                    null,
+
+                paymentVerifiedAt:
+                    null,
+
+                razorpayOrderId:
+                    null,
+
+                razorpayPaymentId:
+                    null,
+
+                razorpaySignature:
+                    null,
 
                 cjPaymentStatus:
                     "NOT_CREATED",
@@ -2435,6 +2828,12 @@ app.get(
                     ? "CONFIGURED"
                     : "MISSING",
 
+            razorpay:
+                RAZORPAY_KEY_ID &&
+                RAZORPAY_KEY_SECRET
+                    ? "CONFIGURED"
+                    : "MISSING",
+
             catalog: {
                 products:
                     catalog.products.length,
@@ -2531,13 +2930,6 @@ app.use(
    LOCAL SERVER
 ========================================================= */
 
-/*
- * IMPORTANT:
- *
- * Vercel imports this file as a serverless function.
- * Therefore app.listen() is ONLY used locally.
- */
-
 if (
     require.main === module
 ) {
@@ -2581,11 +2973,24 @@ if (
             );
 
             console.log(
+                `RAZORPAY: ${
+                    RAZORPAY_KEY_ID &&
+                    RAZORPAY_KEY_SECRET
+                        ? "CONFIGURED"
+                        : "MISSING"
+                }`
+            );
+
+            console.log(
                 `MARKUP: ${GLOBIRA_MARKUP_PERCENT}%`
             );
 
             console.log(
                 "LIVE CJ PRODUCTS: ENABLED"
+            );
+
+            console.log(
+                "RAZORPAY CHECKOUT: ENABLED"
             );
 
             console.log(
@@ -2602,3 +3007,4 @@ if (
 ========================================================= */
 
 module.exports = app;
+```
