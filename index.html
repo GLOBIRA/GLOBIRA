@@ -13219,3 +13219,288 @@ body{font-size:15px!important}
 
 })();
 </script>
+
+
+<style id="globira-final-ux-v7">
+/* ===== FINAL READABILITY + CATEGORY CONTROLS ===== */
+html,body{font-size:15px!important}
+.gw-product-category{font-size:13px!important;line-height:1.4!important}
+.gw-product-info h3{font-size:18px!important;line-height:1.45!important;min-height:52px!important}
+.gw-product-bottom .price{font-size:17px!important}
+.gw-product-bottom .old-price{font-size:13px!important}
+.gw-view{font-size:14px!important}
+.gw-card-heart{width:36px!important;height:36px!important;font-size:21px!important;z-index:5!important}
+.gw-category-toolbar{font-size:15px!important}
+.gw-category-toolbar b{font-size:16px!important}
+.gw-category-toolbar span{font-size:14px!important}
+.gw-category-toolbar input,.gw-category-toolbar select{font-size:14px!important}
+.gw-category-filter-row{display:flex!important;flex-wrap:wrap!important;gap:10px!important;align-items:center!important;margin:0 0 20px!important;padding:14px!important;background:#fff!important;border:1px solid #e3dfd6!important}
+.gw-category-filter-row .gw-filter-search{flex:1 1 260px!important;min-width:220px!important}
+.gw-category-filter-row input,.gw-category-filter-row select{height:42px!important;border:1px solid #cfc9bd!important;background:#fff!important;padding:0 12px!important;outline:none!important;font-family:inherit!important;font-size:14px!important}
+.gw-category-filter-row input:focus,.gw-category-filter-row select:focus{border-color:#111!important}
+.gw-category-filter-row .gw-filter-price{width:130px!important}
+.gw-filter-clear{height:42px!important;padding:0 15px!important;border:1px solid #111!important;background:#111!important;color:#fff!important;font-size:13px!important;letter-spacing:.5px!important}
+.gw-load-more{font-size:14px!important}
+@media(max-width:650px){
+  .gw-product-info h3{font-size:16px!important;min-height:0!important}
+  .gw-product-bottom .price{font-size:16px!important}
+  .gw-product-category{font-size:12px!important}
+  .gw-category-filter-row{display:grid!important;grid-template-columns:1fr 1fr!important}
+  .gw-category-filter-row .gw-filter-search{grid-column:1/-1!important;width:100%!important}
+  .gw-category-filter-row .gw-filter-price{width:100%!important}
+}
+</style>
+
+<script id="globira-final-category-wishlist-cart-v7">
+(function(){
+'use strict';
+
+/* ---------------------------------------------------------
+   1. PRODUCT CLASSIFICATION
+   Do not turn unknown CJ products into Women.
+   Preserve real product families so every homepage criterion
+   can receive its own products.
+--------------------------------------------------------- */
+window.globiraFeedCategory=function(p){
+  const x=p||{};
+  const text=[x.name,x.category,x.subcategory,x.gender,x.description].filter(Boolean).join(' ').toLowerCase();
+  const has=(arr)=>arr.some(w=>text.includes(w));
+  const explicitWomen=has(['women','womens',"women's",'female','woman','ladies','lady','girls','girl','womenswear']);
+  const explicitMen=has(['men','mens',"men's",'male','man','gentlemen','menswear']);
+  if(explicitWomen && !explicitMen) return 'women';
+  if(explicitMen && !explicitWomen) return 'men';
+  if(has(['handbag','hand bags','backpack','purse','tote bag','clutch','crossbody','shoulder bag','wallet','luggage','suitcase','bag'])) return 'bags';
+  if(has(['shoe','shoes','sneaker','sneakers','trainer','trainers','sandal','sandals','boots','boot','heels','heel','loafer','loafers','slipper','slippers','footwear'])) return 'shoes';
+  if(has(['watch','watches','jewelry','jewellery','necklace','bracelet','earring','earrings','ring','rings','belt','sunglasses','glasses','scarf','hat','cap','tie','accessory','accessories'])) return 'accessories';
+  if(has(['phone','smartphone','tablet','laptop','computer','keyboard','mouse','headphone','earphone','speaker','camera','charger','usb','electronic','electronics','led','gaming'])) return 'electronics';
+  if(has(['screwdriver','hammer','drill','wrench','plier','pliers','cutter','tool','tools','hardware','diy'])) return 'tools';
+  if(has(['makeup','cosmetic','cosmetics','lipstick','foundation','mascara','skincare','skin care','serum','beauty','perfume'])) return 'beauty';
+  if(has(['sofa','furniture','kitchen','home','lamp','pillow','curtain','storage','decor','decoration','household'])) return 'home';
+  if(has(['dress','dresses','skirt','skirts','blouse','blouses','lingerie','bra','gown','gowns','women clothing','womens clothing'])) return 'women';
+  if(has(['shirt','shirts','trouser','trousers','pants','jeans','jacket','coat','hoodie','suit','men clothing','mens clothing'])) return explicitMen?'men':'men';
+  const cat=String(x.category||'').toLowerCase().trim();
+  if(cat) return cat;
+  return 'other';
+};
+
+/* Replace the old classifier so unknown products are not assigned to Women. */
+window.classifyCJProduct=function(product){
+  const s={...(product||{})};
+  const detected=globiraFeedCategory(s);
+  const rawCat=String(s.category||'').trim().toLowerCase();
+  if(!rawCat || rawCat==='other' || rawCat==='women' || rawCat==='men') s.category=detected;
+  else s.category=rawCat;
+  const g=String(s.gender||'').toLowerCase();
+  if(g==='women'||g==='men') s.gender=g;
+  else if(detected==='women'||detected==='men') s.gender=detected;
+  return s;
+};
+
+function categoryMatches(p,category){
+  const wanted=String(category||'').toLowerCase();
+  if(wanted==='more') return true;
+  const detected=window.globiraFeedCategory(p);
+  const rawCat=String(p?.category||'').toLowerCase();
+  const gender=String(p?.gender||'').toLowerCase();
+  if(wanted==='women') return detected==='women'||gender==='women'||rawCat==='women';
+  if(wanted==='men') return detected==='men'||gender==='men'||rawCat==='men';
+  return detected===wanted || rawCat===wanted;
+}
+
+/* ---------------------------------------------------------
+   2. CATEGORY TOOLBAR: SEARCH + PRICE + SIZE + COLOUR
+--------------------------------------------------------- */
+function variantText(p){
+  const vals=[];
+  const arr=Array.isArray(p?.variants)?p.variants:[];
+  arr.forEach(v=>{
+    if(typeof v==='string') vals.push(v);
+    else if(v&&typeof v==='object') vals.push(v.variantKey,v.variantNameEn,v.variantName,v.variantProperty,v.name,v.color,v.colour,v.size);
+  });
+  return vals.filter(Boolean).join(' | ');
+}
+function productSearchText(p){return [p?.name,p?.description,p?.category,p?.subcategory,p?.gender,variantText(p)].filter(Boolean).join(' ').toLowerCase();}
+function extractOptions(products,type){
+  const set=new Set();
+  (products||[]).forEach(p=>{
+    const vals=[];
+    const arr=Array.isArray(p?.variants)?p.variants:[];
+    arr.forEach(v=>{
+      if(typeof v==='string') vals.push(v);
+      else if(v&&typeof v==='object') vals.push(type==='size'?v.size:v.color||v.colour);
+    });
+    vals.filter(Boolean).forEach(v=>String(v).split(/[|,\/]/).map(s=>s.trim()).filter(Boolean).forEach(s=>set.add(s)));
+  });
+  return Array.from(set).sort((a,b)=>a.localeCompare(b)).slice(0,60);
+}
+function filteredProducts(products,key){
+  const q=(document.getElementById('gwCategorySearch')?.value||'').trim().toLowerCase();
+  const min=Number(document.getElementById('gwMinPrice')?.value||0);
+  const maxRaw=document.getElementById('gwMaxPrice')?.value||'';
+  const max=maxRaw===''?Infinity:Number(maxRaw);
+  const size=(document.getElementById('gwSizeFilter')?.value||'').toLowerCase();
+  const color=(document.getElementById('gwColorFilter')?.value||'').toLowerCase();
+  return (products||[]).filter(p=>{
+    const text=productSearchText(p);
+    if(q && !text.includes(q)) return false;
+    const price=Number(p?.price||0);
+    if(price<min || price>max) return false;
+    if(size && !text.includes(size)) return false;
+    if(color && !text.includes(color)) return false;
+    return true;
+  });
+}
+
+window.globiraApplyCategoryFilters=function(){
+  const state=feedState.category;
+  if(!state) return;
+  const products=filteredProducts(state.products,state.key);
+  const grid=document.querySelector('#categoryProducts .category-result-grid');
+  const count=document.getElementById('gwCategoryCount');
+  if(count) count.textContent=products.length.toLocaleString()+' products';
+  if(grid) grid.innerHTML=products.length?products.map(productCard).join(''):'<div class="empty-category"><h3>No products match these filters</h3><p>Change the search, price, size or colour filters.</p></div>';
+  updateWishlistHearts();
+};
+
+function buildCategoryToolbar(state){
+  const sizes=extractOptions(state.products,'size');
+  const colors=extractOptions(state.products,'color');
+  return `<div class="gw-category-filter-row">
+    <input id="gwCategorySearch" class="gw-filter-search" type="search" placeholder="Search in ${String(state.title||'this collection').replace(/</g,'&lt;')}..." oninput="globiraApplyCategoryFilters()">
+    <input id="gwMinPrice" class="gw-filter-price" type="number" min="0" placeholder="Min price" oninput="globiraApplyCategoryFilters()">
+    <input id="gwMaxPrice" class="gw-filter-price" type="number" min="0" placeholder="Max price" oninput="globiraApplyCategoryFilters()">
+    <select id="gwSizeFilter" onchange="globiraApplyCategoryFilters()"><option value="">All sizes</option>${sizes.map(x=>`<option value="${escapeHtml(x.toLowerCase())}">${escapeHtml(x)}</option>`).join('')}</select>
+    <select id="gwColorFilter" onchange="globiraApplyCategoryFilters()"><option value="">All colours</option>${colors.map(x=>`<option value="${escapeHtml(x.toLowerCase())}">${escapeHtml(x)}</option>`).join('')}</select>
+    <button type="button" class="gw-filter-clear" onclick="globiraClearCategoryFilters()">CLEAR FILTERS</button>
+  </div>`;
+}
+window.globiraClearCategoryFilters=function(){
+  ['gwCategorySearch','gwMinPrice','gwMaxPrice'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['gwSizeFilter','gwColorFilter'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  globiraApplyCategoryFilters();
+};
+
+/* Re-render the category page with the controls while retaining live pagination. */
+window.renderCategoryFeed=function(){
+  const container=document.getElementById('categoryProducts');
+  if(!container) return;
+  const state=feedState.category;
+  const products=state.products;
+  container.innerHTML=`${buildCategoryToolbar(state)}
+    <div class="gw-category-toolbar"><div><b id="gwCategoryCount">${products.length.toLocaleString()} products</b><span>Live marketplace</span></div>
+      <select onchange="sortCategoryProducts(this.value)"><option value="featured">Featured</option><option value="price-low">Price: Low to High</option><option value="price-high">Price: High to Low</option><option value="name">Name</option></select>
+    </div>
+    <div class="products category-result-grid">${products.length?products.map(productCard).join(''):'<div class="empty-category"><h3>No matching products yet</h3><p>Live matching products will appear automatically.</p></div>'}</div>
+    ${state.nextPage<=state.totalPages?'<button class="gw-load-more" id="globiraCategoryLoadMore">Load more products · 100 more →</button>':''}`;
+  const btn=document.getElementById('globiraCategoryLoadMore');
+  if(btn){btn.onclick=async()=>{
+    if(state.loading)return;
+    btn.disabled=true;btn.textContent='Loading more products…';
+    const cat=state.key;
+    await collectMatches(state,'',p=>categoryMatches(p,cat),state.products.length+FEED_BATCH);
+    renderCategoryFeed();
+  };}
+  updateWishlistHearts();
+};
+
+/* Override category loading: page through the complete CJ feed, then filter.
+   This avoids the previous keyword="women" behaviour that could starve other categories. */
+window.showCategory=function(category){
+  currentCategory=category;
+  const d=(typeof GLOBIRA_MENU_DATA!=='undefined')?GLOBIRA_MENU_DATA[category]:null;
+  const title=d?.title||({women:'Women',men:'Men',bags:'Bags',shoes:'Shoes',accessories:'Accessories',electronics:'Electronics',home:'Home & Living',beauty:'Beauty & Personal Care',tools:'Tools & DIY',sports:'Sports & Fitness',automotive:'Automotive',pets:'Pet Supplies',office:'Office & School',baby:'Baby & Kids',health:'Health & Wellness',more:'All Products'}[category]||'Collection');
+  const home=document.getElementById('homePage'),page=document.getElementById('categoryPage'),titleEl=document.getElementById('categoryTitle'),eyebrow=document.getElementById('categoryEyebrow'),container=document.getElementById('categoryProducts');
+  if(home)home.style.display='none';if(page)page.classList.add('active');if(titleEl)titleEl.textContent=title;if(eyebrow)eyebrow.textContent='GLOBIRA / '+title.toUpperCase();if(!container)return;
+  const state=feedState.category;state.key=String(category||'');state.title=title;state.products=[];state.nextPage=1;state.totalPages=Infinity;state.ready=false;
+  container.innerHTML='<div class="gw-category-toolbar"><div><b>Loading products…</b><span>Live CJ marketplace</span></div></div><div class="products category-result-grid"></div>';
+  (async()=>{
+    await collectMatches(state,'',p=>categoryMatches(p,category),FEED_BATCH);
+    if(currentCategory!==category)return;
+    renderCategoryFeed();
+  })();
+};
+
+/* Search should remain exact, but use the complete catalog rather than only keyword page 1. */
+window.searchProducts=window.searchProducts||function(){};
+const oldSearch=window.searchProducts;
+window.searchProducts=function(){
+  const hero=document.getElementById('globiraHeroSearchInput'),top=document.getElementById('globiraSearchInput');
+  const input=hero||top;const raw=input?input.value.trim():'';if(hero&&top)top.value=raw;
+  if(!raw){if(typeof showHome==='function')showHome();return;}
+  runSearch(raw);
+};
+
+/* ---------------------------------------------------------
+   3. WISHLIST HEART: make removal work even when another card
+   click handler catches the same event.
+--------------------------------------------------------- */
+document.addEventListener('click',function(e){
+  const heart=e.target.closest('.gw-card-heart');
+  if(!heart)return;
+  e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+  const id=heart.dataset.wishlistProduct;
+  if(id) window.toggleProductWishlist(id);
+},true);
+
+/* ---------------------------------------------------------
+   4. CART REMOVE: card-level click handlers must never swallow
+   the REMOVE button.
+--------------------------------------------------------- */
+document.addEventListener('click',function(e){
+  const remove=e.target.closest('#cartItems .remove, #cartItems .globira-remove-item');
+  if(!remove)return;
+  e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+  const row=remove.closest('.cart-item');
+  if(!row || typeof cart==='undefined' || !Array.isArray(cart))return;
+  const rows=[...document.querySelectorAll('#cartItems .cart-item')];
+  const index=rows.indexOf(row);
+  const item=cart[index];
+  if(item&&typeof window.removeItem==='function'){
+    window.removeItem(item.id,item.size);
+  }
+},true);
+
+/* Make wishlist lookup work for products loaded only inside a collection/search feed. */
+const originalWishlistToggle=window.toggleProductWishlist;
+if(typeof originalWishlistToggle==='function'){
+  window.toggleProductWishlist=function(id){
+    let found=null;
+    try{ found=typeof findProduct==='function' ? findProduct(id) : null; }catch(e){}
+    if(!found){
+      const pools=[feedState.home?.products,feedState.category?.products,feedState.search?.products];
+      for(const pool of pools){
+        if(Array.isArray(pool)){ found=pool.find(p=>String(p?.id)===String(id)); if(found) break; }
+      }
+    }
+    if(found){
+      try{
+        if(Array.isArray(window.cjProducts)){
+          const i=window.cjProducts.findIndex(p=>String(p?.id)===String(id));
+          if(i<0) window.cjProducts.push(found);
+        }
+      }catch(e){}
+    }
+    return originalWishlistToggle.call(this,id);
+  };
+}
+
+/* Also make removeItem globally callable and refresh totals/UI immediately. */
+if(typeof window.removeItem==='function'){
+  const oldRemove=window.removeItem;
+  window.removeItem=function(id,size){
+    oldRemove.apply(this,arguments);
+    try{if(typeof saveCart==='function')saveCart();}catch(e){}
+    try{if(typeof renderCart==='function')renderCart();}catch(e){}
+    try{if(typeof updateCartCount==='function')updateCartCount();}catch(e){}
+  };
+}
+
+/* Existing cart row click hooks must ignore the REMOVE button. */
+document.addEventListener('click',function(e){
+  if(e.target.closest('#cartItems .remove, #cartItems .globira-remove-item')){
+    e.stopImmediatePropagation();
+  }
+},true);
+
+})();
+</script>
