@@ -3078,11 +3078,14 @@
 </style>
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<style id="globira-mobile-all-options-fix">
+@media(max-width:650px){.globira-main-header{grid-template-columns:1fr!important;height:auto!important;padding:12px 12px 8px!important;gap:9px!important}.globira-main-header .logo-wrap{grid-column:1/-1!important;justify-self:center!important}.globira-main-header .modern-header-search{grid-column:1/-1!important;width:100%!important;max-width:none!important;order:2!important}.globira-main-header .header-actions{grid-column:1/-1!important;width:100%!important;justify-content:center!important;gap:12px!important;order:3!important;overflow-x:auto!important;padding-bottom:2px}.globira-reference-nav{width:100%!important;overflow-x:auto!important;overflow-y:hidden!important;justify-content:flex-start!important;white-space:nowrap!important;-webkit-overflow-scrolling:touch!important;scrollbar-width:none!important;padding:0 14px!important}.globira-reference-nav::-webkit-scrollbar{display:none}.globira-reference-nav a{flex:0 0 auto!important}.globira-mega{max-height:80vh!important;overflow-y:auto!important}.reference-live-products .products,.category-page .products{grid-template-columns:repeat(2,minmax(0,1fr))!important}.product-image{height:220px!important}.gw-category-toolbar{flex-wrap:wrap!important;gap:8px!important}}
+</style>
 </head>
 
     <body>
-
-    <!-- =========================
+<!-- =========================
     HEADER
     ========================= -->
 
@@ -4543,14 +4546,36 @@
     PRICE
     ========================================================= */
 
+    /*
+     * GLOBIRA product prices are stored as USD after the supplier-cost + 60%
+     * markup calculation. The customer's selected currency is display-only;
+     * conversion happens here from USD using the live FX table below.
+     */
     let globiraCatalogCurrency = 'USD';
 
+    function usdToSelectedCurrency(usdValue){
+        const usd = Number(usdValue);
+        if(!Number.isFinite(usd)) return 0;
+        const selected = String(globiraCurrency || 'INR').toUpperCase();
+        const currencies = (typeof GLOBIRA_CURRENCIES !== 'undefined') ? GLOBIRA_CURRENCIES : null;
+        if(!currencies || !currencies[selected]) return usd;
+        const usdInr = Number(currencies.USD?.inr || 0);
+        const targetInr = Number(currencies[selected]?.inr || 0);
+        if(usdInr <= 0 || targetInr <= 0) return usd;
+        return usd * (usdInr / targetInr);
+    }
+
     function formatPrice(price){
-        const amount = Number(price);
-        if(!Number.isFinite(amount)) return '';
-        const currency = String(globiraCatalogCurrency || 'USD').toUpperCase();
+        const amount = usdToSelectedCurrency(price);
+        const currency = String(globiraCurrency || 'INR').toUpperCase();
+        const meta = (typeof GLOBIRA_CURRENCIES !== 'undefined' && GLOBIRA_CURRENCIES[currency]) ? GLOBIRA_CURRENCIES[currency] : null;
         try{
-            return new Intl.NumberFormat(undefined,{style:'currency',currency,maximumFractionDigits:2}).format(amount);
+            return new Intl.NumberFormat(undefined,{
+                style:'currency',
+                currency,
+                minimumFractionDigits: meta?.decimals ?? 2,
+                maximumFractionDigits: meta?.decimals ?? 2
+            }).format(amount);
         }catch(error){
             return `${currency} ${amount.toLocaleString(undefined,{maximumFractionDigits:2})}`;
         }
@@ -4612,8 +4637,8 @@
     ========================================================= */
 
     /* Show a large home feed, then reveal more with Load more. */
-    let homeVisibleCount = 20;
-    const HOME_LOAD_STEP = 20;
+    let homeVisibleCount = 6000;
+    const HOME_LOAD_STEP = 100;
 
     function renderFeatured(){
         const container = document.getElementById('featuredProducts');
@@ -4623,7 +4648,7 @@
             ? cjProducts
             : [...womenProducts,...menProducts];
 
-        const products = sourceProducts.slice(0, homeVisibleCount);
+        const products = sourceProducts.slice(0, Math.min(homeVisibleCount, 6000));
         container.innerHTML = products.map(productCard).join('');
 
         const button = document.getElementById('homeLoadMoreBtn');
@@ -6218,12 +6243,19 @@
         const deliveryStart = addWorkingDays(orderDate,4);
         const deliveryEnd = addWorkingDays(orderDate,7);
 
+        const cartTotalUSD = Number(getCartTotal() || 0);
+        const usdInrRate = Number(GLOBIRA_CURRENCIES.USD?.inr || 0);
+        const safeCartTotalINR = Number((cartTotalUSD * usdInrRate).toFixed(2));
+
         const items = cart.map(item => {
             const product = findProduct(item.id);
+            const priceUSD = Number(product?.price || 0);
+            const priceINR = Number((priceUSD * usdInrRate).toFixed(2));
             return {
                 id:item.id,
                 name:product?.name || item.id,
-                price:Number(product?.price || 0),
+                price:priceINR,
+                priceUSD:priceUSD,
                 image:(Array.isArray(product?.images) && product.images[0]) || product?.image || '',
                 size:item.size,
                 quantity:Number(item.quantity) || 1,
@@ -6249,7 +6281,9 @@
                 county:''
             },
             items:items,
-            total:Number(getCartTotal()),
+            total:safeCartTotalINR,
+            totalUSD:Number(cartTotalUSD.toFixed(2)),
+            displayCurrency:globiraCurrency,
             currency:'INR',
             fromCountryCode:'CN',
             paymentMethod:selectedPayment,
@@ -6588,49 +6622,76 @@
     }
 
     async function loadCJFeaturedProduct(){
-
         if(catalogLoading) return;
         catalogLoading = true;
 
-        try{
-            const status = document.getElementById('homeCatalogStatus');
-            if(status) status.textContent = 'Loading GLOBIRA catalog…';
+        const status = document.getElementById('homeCatalogStatus');
+        const targetProducts = 6000;
+        const pageSize = 100;
+        const maxPages = Math.ceil(targetProducts / pageSize);
+        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-            /* The browser reads the stored GLOBIRA catalog. server.js syncs CJ in the background. */
-            const response = await fetch('/api/products',{
-                method:'GET',
-                cache:'no-store',
-                headers:{'Accept':'application/json'}
+        function updateProgress(count, page){
+            const text = `Loading GLOBIRA catalog · ${Math.min(count,targetProducts).toLocaleString()} / ${targetProducts.toLocaleString()}`;
+            if(status) status.textContent = text;
+            updateGWLiveStatus();
+        }
+
+        async function loadPage(page){
+            const response = await fetch(`/api/products?page=${page}&size=${pageSize}`,{
+                method:'GET', cache:'no-store', headers:{'Accept':'application/json'}
             });
-
             if(!response.ok) throw new Error(`GLOBIRA catalog returned ${response.status}`);
-
             const payload = await response.json();
-            if(!payload || !payload.success){
-                throw new Error(payload?.message || payload?.error || 'Catalog request failed.');
-            }
+            if(!payload || !payload.success) throw new Error(payload?.message || payload?.error || 'Catalog request failed.');
+            return Array.isArray(payload.products) ? payload.products.map(classifyCJProduct) : [];
+        }
 
-            globiraCatalogCurrency = String(payload.currency || 'USD').toUpperCase();
+        try{
+            cjProducts = [];
+            updateProgress(0,1);
 
+            /* First page gives the visitor a usable homepage quickly. */
+            const firstPage = await loadPage(1);
             const unique = new Map();
-            (Array.isArray(payload.products) ? payload.products : []).forEach(product=>{
-                if(!product || !product.id) return;
-                const normalized = classifyCJProduct(product);
-                unique.set(String(normalized.id),normalized);
-            });
-
+            firstPage.forEach(p=>{ if(p?.id) unique.set(String(p.id),p); });
             cjProducts = Array.from(unique.values());
-
             renderFeatured();
             renderHomepageLiveSections();
             refreshCurrentCategoryInPlace();
+            updateProgress(cjProducts.length,1);
+
+            /* Continue through every CJ page. The catalog becomes searchable across all loaded products. */
+            for(let page=2; page<=maxPages && cjProducts.length<targetProducts; page++){
+                try{
+                    const products = await loadPage(page);
+                    products.forEach(p=>{ if(p?.id) unique.set(String(p.id),p); });
+                    cjProducts = Array.from(unique.values()).slice(0,targetProducts);
+                    updateProgress(cjProducts.length,page);
+
+                    /* Keep the homepage feed synchronized without jumping the user. */
+                    const y = window.scrollY || document.documentElement.scrollTop || 0;
+                    renderFeatured();
+                    renderHomepageLiveSections();
+                    refreshCurrentCategoryInPlace();
+                    requestAnimationFrame(()=>window.scrollTo(0,y));
+
+                    if(page<maxPages && cjProducts.length<targetProducts) await wait(1100);
+                }catch(pageError){
+                    console.error(`GLOBIRA CJ catalog page ${page} failed:`,pageError);
+                    /* Do not discard products already loaded. */
+                    await wait(1200);
+                }
+            }
+
+            console.log(`GLOBIRA STOREFRONT: loaded ${cjProducts.length} live CJ products.`);
+            if(status) status.textContent = `${cjProducts.length.toLocaleString()} GLOBIRA products available`;
+            renderFeatured();
+            renderHomepageLiveSections();
             updateGWLiveStatus();
-
-            console.log(`GLOBIRA STOREFRONT: loaded ${cjProducts.length} stored products from /api/products.`);
-
         }catch(error){
             console.error('GLOBIRA STOREFRONT CATALOG ERROR:',error);
-            if(!Array.isArray(cjProducts)) cjProducts=[];
+            if(status) status.textContent = 'GLOBIRA catalog is temporarily loading…';
             renderFeatured();
             renderHomepageLiveSections();
             updateGWLiveStatus();
@@ -7586,6 +7647,17 @@
         return 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=300&q=80';
     }
 
+    function formatStoredOrderMoney(amount, currency){
+        const value=Number(amount||0);
+        const stored=String(currency||'USD').toUpperCase();
+        if(!Number.isFinite(value)) return '';
+        if(stored==='USD') return formatPrice(value);
+        const storedInr=Number(GLOBIRA_CURRENCIES[stored]?.inr || 0);
+        const usdInr=Number(GLOBIRA_CURRENCIES.USD?.inr || 0);
+        if(storedInr>0 && usdInr>0) return formatPrice(value * (storedInr/usdInr));
+        return formatPrice(value);
+    }
+
     function globiraRenderOrderCard(order){
         if(!order) return '';
         const number=order.orderNumber||order.orderID||'GLOBIRA ORDER';
@@ -7606,16 +7678,16 @@
                         <img src="${escapeHtml(image)}" alt="${escapeHtml(item.name||'Product')}" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=300&q=80';">
                         <div class="globira-order-item-name"><span>${escapeHtml(item.name||'Product')} × ${qty}${size}</span></div>
                     </div>
-                    <strong>${formatPrice(Number(item.price||0)*qty)}</strong>
+                    <strong>${formatStoredOrderMoney(Number(item.price||0)*qty, order.currency || 'INR')}</strong>
                 </div>`;
             }).join('')
-            : `<div class="globira-order-item"><span>Order details saved</span><strong>${formatPrice(order.total||0)}</strong></div>`;
+            : `<div class="globira-order-item"><span>Order details saved</span><strong>${formatStoredOrderMoney(order.total||0, order.currency || 'INR')}</strong></div>`;
 
         return `<article class="globira-order-card">
         <div class="globira-order-top"><div><div class="globira-order-number">${escapeHtml(String(number))}</div><div class="globira-order-date">${date?new Date(date).toLocaleString():''}</div></div><span class="globira-order-status">${escapeHtml(globiraOrderStatus(order))}</span></div>
         <div class="globira-order-items">${itemHtml}</div>
         <div class="globira-order-meta">
-            <div><small>Total</small><strong>${formatPrice(order.total||0)}</strong></div>
+            <div><small>Total</small><strong>${formatStoredOrderMoney(order.total||0, order.currency || 'INR')}</strong></div>
             <div><small>Payment</small><strong>${escapeHtml(String(payment).replace(/_/g,' '))}</strong></div>
             <div><small>Tracking</small><strong>${escapeHtml(String(tracking))}</strong></div>
             <div><small>GLOBIRA status</small><strong>${escapeHtml(globiraOrderStatus(order))}</strong></div>
@@ -11777,9 +11849,13 @@ body{font-size:14px!important}
         updateCurrencyUI();
     }
 
-    function formatCurrencyValue(inrValue){
+    /* Product prices are stored in USD (supplier cost + 60% markup). */
+    function formatCurrencyValue(usdValue){
+        const usd=Number(usdValue||0);
         const meta=GLOBIRA_CURRENCIES[globiraCurrency] || GLOBIRA_CURRENCIES.INR;
-        const value=Number(inrValue||0) / Number(meta.inr||1);
+        const usdInr=Number(GLOBIRA_CURRENCIES.USD?.inr || 0);
+        const targetInr=Number(meta.inr || 0);
+        const value=(usdInr>0 && targetInr>0) ? usd*(usdInr/targetInr) : usd;
         try{
             return new Intl.NumberFormat(undefined,{
                 style:'currency',currency:globiraCurrency,
@@ -11791,7 +11867,6 @@ body{font-size:14px!important}
         }
     }
 
-    /* Replace the original INR-only formatter without changing product prices. */
     window.formatPrice = formatCurrencyValue;
 
     function updateCurrencyUI(){
