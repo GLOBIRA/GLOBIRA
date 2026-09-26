@@ -1178,21 +1178,6 @@
         letter-spacing:1px;
     }
 
-    .review-home-btn{
-        width:100%;
-        padding:15px;
-        border:1px solid #111;
-        background:#fff;
-        color:#111;
-        margin-top:10px;
-        letter-spacing:1px;
-        cursor:pointer;
-    }
-    .review-home-btn:hover{
-        background:#111;
-        color:#fff;
-    }
-
     .payment-option{
         border:1px solid #ddd;
         padding:20px;
@@ -3077,15 +3062,11 @@
 #cartItems .cart-size{letter-spacing:.8px}
 </style>
 
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-
-<style id="globira-mobile-all-options-fix">
-@media(max-width:650px){.globira-main-header{grid-template-columns:1fr!important;height:auto!important;padding:12px 12px 8px!important;gap:9px!important}.globira-main-header .logo-wrap{grid-column:1/-1!important;justify-self:center!important}.globira-main-header .modern-header-search{grid-column:1/-1!important;width:100%!important;max-width:none!important;order:2!important}.globira-main-header .header-actions{grid-column:1/-1!important;width:100%!important;justify-content:center!important;gap:12px!important;order:3!important;overflow-x:auto!important;padding-bottom:2px}.globira-reference-nav{width:100%!important;overflow-x:auto!important;overflow-y:hidden!important;justify-content:flex-start!important;white-space:nowrap!important;-webkit-overflow-scrolling:touch!important;scrollbar-width:none!important;padding:0 14px!important}.globira-reference-nav::-webkit-scrollbar{display:none}.globira-reference-nav a{flex:0 0 auto!important}.globira-mega{max-height:80vh!important;overflow-y:auto!important}.reference-live-products .products,.category-page .products{grid-template-columns:repeat(2,minmax(0,1fr))!important}.product-image{height:220px!important}.gw-category-toolbar{flex-wrap:wrap!important;gap:8px!important}}
-</style>
 </head>
 
     <body>
-<!-- =========================
+
+    <!-- =========================
     HEADER
     ========================= -->
 
@@ -3115,6 +3096,10 @@
         <button class="header-icon-btn desktop-only-action" type="button" onclick="toggleWishlist?.()" aria-label="Wishlist">
         <svg viewBox="0 0 24 24"><path d="M20.8 8.9c0 5-8.8 10-8.8 10S3.2 13.9 3.2 8.9A4.6 4.6 0 0 1 12 6.3a4.6 4.6 0 0 1 8.8 2.6Z"></path></svg>
         <span class="action-label">Wishlist</span>
+        </button>
+        <button class="header-icon-btn desktop-only-action" type="button" onclick="openCompare?.()" aria-label="Compare">
+        <span class="header-mini-symbol">⇄</span>
+        <span class="action-label">Compare</span>
         </button>
         <button class="header-cart-btn" type="button" onclick="openCart()" aria-label="Cart">
         <svg viewBox="0 0 24 24"><path d="M5 8h14l-1 11H6L5 8Z"></path><path d="M9 8V6a3 3 0 0 1 6 0v2"></path></svg>
@@ -3548,12 +3533,6 @@
                                 CONTINUE TO ADDRESS
                             </button>
 
-                            <button type="button"
-                                    class="review-home-btn"
-                                    onclick="closeCheckout();showHome();">
-                                BACK TO HOME
-                            </button>
-
                         </div>
 
 
@@ -3798,9 +3777,10 @@
 
                                 <strong>PAYMENT NOTE</strong><br>
 
-                                Online payments are securely processed by Razorpay.
-                                GLOBIRA does not store your card or UPI credentials.
-                                Domestic INR payments only.
+                                Online payment methods are currently shown
+                                as checkout options. Actual online payment
+                                collection will require connecting GLOBIRA
+                                to a payment gateway.
 
                             </div>
 
@@ -4546,39 +4526,11 @@
     PRICE
     ========================================================= */
 
-    /*
-     * GLOBIRA product prices are stored as USD after the supplier-cost + 60%
-     * markup calculation. The customer's selected currency is display-only;
-     * conversion happens here from USD using the live FX table below.
-     */
-    let globiraCatalogCurrency = 'USD';
-
-    function usdToSelectedCurrency(usdValue){
-        const usd = Number(usdValue);
-        if(!Number.isFinite(usd)) return 0;
-        const selected = String(globiraCurrency || 'INR').toUpperCase();
-        const currencies = (typeof GLOBIRA_CURRENCIES !== 'undefined') ? GLOBIRA_CURRENCIES : null;
-        if(!currencies || !currencies[selected]) return usd;
-        const usdInr = Number(currencies.USD?.inr || 0);
-        const targetInr = Number(currencies[selected]?.inr || 0);
-        if(usdInr <= 0 || targetInr <= 0) return usd;
-        return usd * (usdInr / targetInr);
-    }
-
     function formatPrice(price){
-        const amount = usdToSelectedCurrency(price);
-        const currency = String(globiraCurrency || 'INR').toUpperCase();
-        const meta = (typeof GLOBIRA_CURRENCIES !== 'undefined' && GLOBIRA_CURRENCIES[currency]) ? GLOBIRA_CURRENCIES[currency] : null;
-        try{
-            return new Intl.NumberFormat(undefined,{
-                style:'currency',
-                currency,
-                minimumFractionDigits: meta?.decimals ?? 2,
-                maximumFractionDigits: meta?.decimals ?? 2
-            }).format(amount);
-        }catch(error){
-            return `${currency} ${amount.toLocaleString(undefined,{maximumFractionDigits:2})}`;
-        }
+
+        return '₹' +
+            Number(price).toLocaleString('en-IN');
+
     }
 
 
@@ -4637,8 +4589,8 @@
     ========================================================= */
 
     /* Show a large home feed, then reveal more with Load more. */
-    let homeVisibleCount = 6000;
-    const HOME_LOAD_STEP = 100;
+    let homeVisibleCount = 70;
+    const HOME_LOAD_STEP = 30;
 
     function renderFeatured(){
         const container = document.getElementById('featuredProducts');
@@ -4648,7 +4600,7 @@
             ? cjProducts
             : [...womenProducts,...menProducts];
 
-        const products = sourceProducts.slice(0, Math.min(homeVisibleCount, 6000));
+        const products = sourceProducts.slice(0, homeVisibleCount);
         container.innerHTML = products.map(productCard).join('');
 
         const button = document.getElementById('homeLoadMoreBtn');
@@ -4671,8 +4623,8 @@
 
         if(status){
             status.textContent = totalLoaded
-                ? `Showing ${Math.min(homeVisibleCount,totalLoaded).toLocaleString()} of ${totalLoaded.toLocaleString()} GLOBIRA products`
-                : 'Loading the GLOBIRA catalog…';
+                ? `Showing ${Math.min(homeVisibleCount,totalLoaded).toLocaleString()} of ${totalLoaded.toLocaleString()} live products`
+                : 'Connecting to the live catalog…';
         }
     }
 
@@ -4687,7 +4639,7 @@
         const newContainer = document.getElementById('newHomepageProducts');
         if(newContainer){
             /* Keep this section unique from the main 70-product home feed. */
-            const start = homeVisibleCount;
+            const start = Math.max(homeVisibleCount, 70);
             const products = Array.isArray(cjProducts) && cjProducts.length ? cjProducts.slice(start, start + 12) : [];
             newContainer.innerHTML = products.map(productCard).join('');
         }
@@ -4697,8 +4649,8 @@
         const count = Array.isArray(cjProducts) ? cjProducts.length : 0;
         const text = document.getElementById('gwLiveStatusText');
         const countEl = document.getElementById('gwLiveCount');
-        if(text) text.textContent = count ? 'GLOBIRA catalog connected' : 'Loading the GLOBIRA catalog…';
-        if(countEl) countEl.textContent = count ? `${count.toLocaleString()} products available` : '';
+        if(text) text.textContent = count ? 'Live CJ catalog connected' : 'Connecting to the live catalog…';
+        if(countEl) countEl.textContent = count ? `${count.toLocaleString()} products loaded so far` : '';
     }
 
     function refreshCurrentCategoryInPlace(){
@@ -6051,35 +6003,84 @@
 
     function goToPayment(){
 
-        const name = document.getElementById('customerName').value.trim();
-        const email = document.getElementById('customerEmail').value.trim();
-        const mobile = document.getElementById('customerMobile').value.trim();
-        const address = document.getElementById('customerAddress').value.trim();
-        const city = document.getElementById('customerCity').value.trim();
-        const state = document.getElementById('customerState').value.trim();
-        const pin = document.getElementById('customerPin').value.trim();
+        const name =
+            document.getElementById(
+                'customerName'
+            ).value.trim();
 
-        if(!name || !email || !mobile || !address || !city || !state || !pin){
-            alert('Please complete all delivery details.');
+
+        const mobile =
+            document.getElementById(
+                'customerMobile'
+            ).value.trim();
+
+
+        const address =
+            document.getElementById(
+                'customerAddress'
+            ).value.trim();
+
+
+        const city =
+            document.getElementById(
+                'customerCity'
+            ).value.trim();
+
+
+        const state =
+            document.getElementById(
+                'customerState'
+            ).value.trim();
+
+
+        const pin =
+            document.getElementById(
+                'customerPin'
+            ).value.trim();
+
+
+        if(
+            !name ||
+            !mobile ||
+            !address ||
+            !city ||
+            !state ||
+            !pin
+        ){
+
+            alert(
+                'Please complete all delivery details.'
+            );
+
             return;
+
         }
 
-        if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
-            alert('Please enter a valid email address.');
+
+        if(!/^[0-9]{10}$/.test(mobile)){
+
+            alert(
+                'Please enter a valid 10 digit mobile number.'
+            );
+
             return;
+
         }
 
-        if(!/^[0-9+()\- ]{7,20}$/.test(mobile)){
-            alert('Please enter a valid mobile number.');
+
+        if(!/^[0-9]{6}$/.test(pin)){
+
+            alert(
+                'Please enter a valid 6 digit PIN code.'
+            );
+
             return;
+
         }
 
-        if(!/^[0-9]{4,10}$/.test(pin)){
-            alert('Please enter a valid postal / ZIP code.');
-            return;
-        }
 
         showStep(3);
+
     }
 
 
@@ -6208,263 +6209,205 @@
     PLACE ORDER
     ========================================================= */
 
-    async function placeOrder(){
+    function placeOrder(){
 
         if(!selectedPayment){
-            alert('Please select a payment method.');
+
+            alert(
+                'Please select a payment method.'
+            );
+
             return;
+
         }
+
 
         if(cart.length === 0){
-            alert('Your cart is empty.');
+
+            alert(
+                'Your cart is empty.'
+            );
+
             return;
+
         }
 
-        const name = document.getElementById('customerName').value.trim();
-        const email = document.getElementById('customerEmail').value.trim();
-        const mobile = document.getElementById('customerMobile').value.trim();
-        const altMobile = document.getElementById('customerAltMobile')?.value.trim() || '';
-        const countrySelect = document.getElementById('customerCountry');
-        const countryCode = countrySelect?.value || 'IN';
-        const country = countrySelect?.options[countrySelect.selectedIndex]?.text || 'India';
-        const address = document.getElementById('customerAddress').value.trim();
-        const city = document.getElementById('customerCity').value.trim();
-        const state = document.getElementById('customerState').value.trim();
-        const pin = document.getElementById('customerPin').value.trim();
-        const landmark = document.getElementById('customerLandmark')?.value.trim() || '';
 
-        if(!name || !email || !mobile || !address || !city || !state || !pin){
-            alert('Please complete your delivery details first.');
+        const name =
+            document.getElementById(
+                'customerName'
+            ).value.trim();
+
+
+        const mobile =
+            document.getElementById(
+                'customerMobile'
+            ).value.trim();
+
+
+        const address =
+            document.getElementById(
+                'customerAddress'
+            ).value.trim();
+
+
+        const city =
+            document.getElementById(
+                'customerCity'
+            ).value.trim();
+
+
+        const state =
+            document.getElementById(
+                'customerState'
+            ).value.trim();
+
+
+        const pin =
+            document.getElementById(
+                'customerPin'
+            ).value.trim();
+
+
+        if(
+            !name ||
+            !mobile ||
+            !address ||
+            !city ||
+            !state ||
+            !pin
+        ){
+
+            alert(
+                'Please complete your delivery details first.'
+            );
+
             showStep(2);
+
             return;
+
         }
 
-        const orderDate = new Date();
-        const deliveryStart = addWorkingDays(orderDate,4);
-        const deliveryEnd = addWorkingDays(orderDate,7);
 
-        const cartTotalUSD = Number(getCartTotal() || 0);
-        const usdInrRate = Number(GLOBIRA_CURRENCIES.USD?.inr || 0);
-        const safeCartTotalINR = Number((cartTotalUSD * usdInrRate).toFixed(2));
+        const orderID =
+            'YAD' +
+            Math.floor(
+                100000 +
+                Math.random() * 900000
+            );
 
-        const items = cart.map(item => {
-            const product = findProduct(item.id);
-            const priceUSD = Number(product?.price || 0);
-            const priceINR = Number((priceUSD * usdInrRate).toFixed(2));
-            return {
-                id:item.id,
-                name:product?.name || item.id,
-                price:priceINR,
-                priceUSD:priceUSD,
-                image:(Array.isArray(product?.images) && product.images[0]) || product?.image || '',
-                size:item.size,
-                quantity:Number(item.quantity) || 1,
-                cjProductId:product?.cjProductId || product?.pid || '',
-                sku:product?.sku || '',
-                vid:item.vid || item.cjVariantId || product?.vid || product?.variantId || ''
-            };
-        });
 
-        const orderData = {
+        const orderDate =
+            new Date();
+
+
+        const deliveryStart =
+            addWorkingDays(
+                orderDate,
+                4
+            );
+
+
+        const deliveryEnd =
+            addWorkingDays(
+                orderDate,
+                7
+            );
+
+
+        const order = {
+
+            orderID:orderID,
+
+            date:orderDate.toISOString(),
+
             customer:{
+
                 name:name,
-                email:email,
-                phone:mobile,
-                altPhone:altMobile,
-                countryCode:countryCode,
-                country:country,
-                province:state,
-                city:city,
+
+                mobile:mobile,
+
                 address:address,
-                address2:landmark,
-                zip:pin,
-                county:''
+
+                city:city,
+
+                state:state,
+
+                pin:pin
+
             },
-            items:items,
-            total:safeCartTotalINR,
-            totalUSD:Number(cartTotalUSD.toFixed(2)),
-            displayCurrency:globiraCurrency,
-            currency:'INR',
-            fromCountryCode:'CN',
-            paymentMethod:selectedPayment,
+
+            items:cart.map(item => {
+
+                const product =
+                    findProduct(item.id);
+
+                return {
+
+                    id:item.id,
+
+                    name:product.name,
+
+                    price:product.price,
+
+                    image:(Array.isArray(product.images) && product.images[0]) || product.image || '',
+
+                    size:item.size,
+
+                    quantity:item.quantity
+
+                };
+
+            }),
+
+            total:getCartTotal(),
+
+            payment:selectedPayment,
+
             delivery:{
+
                 start:deliveryStart.toISOString(),
+
                 end:deliveryEnd.toISOString()
+
             }
+
         };
 
-        const button = document.getElementById('placeOrderButton');
-        if(button){
-            button.disabled = true;
-            button.textContent = selectedPayment === 'COD' ? 'PLACING ORDER...' : 'OPENING PAYMENT...';
-        }
 
-        try{
+        localStorage.setItem(
+            'globiraLastOrder',
+            JSON.stringify(order)
+        );
 
-            if(selectedPayment === 'COD'){
 
-                const response = await fetch('/api/orders',{
-                    method:'POST',
-                    headers:{'Content-Type':'application/json'},
-                    body:JSON.stringify(orderData)
-                });
+        document.getElementById(
+            'orderNumber'
+        ).textContent =
+            'ORDER ID: ' + orderID;
 
-                const result = await response.json();
 
-                if(!response.ok || !result.success){
-                    throw new Error(result.error || result.message || 'Unable to create order.');
-                }
+        document.getElementById(
+            'deliveryEstimate'
+        ).innerHTML =
 
-                const orderID = result.order?.orderNumber || ('GLB-' + Date.now());
+            'Estimated delivery: <strong>' +
 
-                localStorage.setItem('globiraLastOrder',JSON.stringify({
-                    ...orderData,
-                    orderID:orderID,
-                    date:orderDate.toISOString(),
-                    paymentStatus:'PENDING'
-                }));
+            formatDate(deliveryStart) +
 
-                document.getElementById('orderNumber').textContent = 'ORDER ID: ' + orderID;
-                document.getElementById('deliveryEstimate').innerHTML =
-                    'Estimated delivery: <strong>' + formatDate(deliveryStart) + ' – ' +
-                    formatDate(deliveryEnd) + '</strong><br>Payment method: Cash on Delivery';
+            ' – ' +
 
-                showStep(4);
-                return;
-            }
+            formatDate(deliveryEnd) +
 
-            if(String(countryCode).toUpperCase() !== 'IN'){
-                throw new Error('Domestic Razorpay payment is available for India only. Please select India.');
-            }
+            '</strong><br>' +
 
-            if(typeof Razorpay === 'undefined'){
-                throw new Error('Razorpay Checkout could not be loaded. Please refresh the page.');
-            }
+            'Payment method: ' +
 
-            const createResponse = await fetch('/api/payment/create-order',{
-                method:'POST',
-                headers:{'Content-Type':'application/json'},
-                body:JSON.stringify({
-                    amount:orderData.total,
-                    currency:'INR',
-                    receipt:'GLOBIRA-' + Date.now(),
-                    notes:{paymentMethod:selectedPayment}
-                })
-            });
+            selectedPayment;
 
-            const createResult = await createResponse.json();
 
-            if(!createResponse.ok || !createResult.success){
-                throw new Error(createResult.error || createResult.message || 'Could not create Razorpay order.');
-            }
+        showStep(4);
 
-            const razorpayKey = createResult.key || createResult.keyId || '';
-            const razorpayOrder = createResult.order || {};
-
-            if(!razorpayKey || !razorpayOrder.id || !razorpayOrder.amount){
-                throw new Error('Razorpay order response is incomplete. Please try again.');
-            }
-
-            const razorpayOptions = {
-                key:razorpayKey,
-                amount:razorpayOrder.amount,
-                currency:'INR',
-                name:'GLOBIRA',
-                description:'GLOBIRA Order Payment',
-                order_id:razorpayOrder.id,
-                prefill:{name:name,email:email,contact:mobile},
-                notes:{globira_payment_method:selectedPayment},
-                theme:{color:'#7a5c3a'},
-
-                handler:async function(paymentResponse){
-
-                    try{
-
-                        const verifyResponse = await fetch('/api/payment/verify',{
-                            method:'POST',
-                            headers:{'Content-Type':'application/json'},
-                            body:JSON.stringify({
-                                razorpay_order_id:paymentResponse.razorpay_order_id,
-                                razorpay_payment_id:paymentResponse.razorpay_payment_id,
-                                razorpay_signature:paymentResponse.razorpay_signature,
-                                order:orderData
-                            })
-                        });
-
-                        const verifyResult = await verifyResponse.json();
-
-                        if(!verifyResponse.ok || !verifyResult.success){
-                            throw new Error(verifyResult.error || verifyResult.message || 'Payment verification failed.');
-                        }
-
-                        const orderID = verifyResult.order?.orderNumber || ('GLB-' + Date.now());
-
-                        localStorage.setItem('globiraLastOrder',JSON.stringify({
-                            ...orderData,
-                            orderID:orderID,
-                            date:orderDate.toISOString(),
-                            paymentStatus:'CONFIRMED',
-                            paymentGateway:'Razorpay',
-                            razorpayOrderId:paymentResponse.razorpay_order_id,
-                            razorpayPaymentId:paymentResponse.razorpay_payment_id
-                        }));
-
-                        document.getElementById('orderNumber').textContent = 'ORDER ID: ' + orderID;
-                        document.getElementById('deliveryEstimate').innerHTML =
-                            'Estimated delivery: <strong>' + formatDate(deliveryStart) + ' – ' +
-                            formatDate(deliveryEnd) + '</strong><br>Payment method: ' +
-                            selectedPayment + '<br>Payment status: PAID';
-
-                        showStep(4);
-
-                    }catch(error){
-
-                        console.error('Razorpay verification error:',error);
-                        alert(error.message || 'Payment verification failed.');
-
-                    }finally{
-
-                        if(button){
-                            button.disabled = false;
-                            button.textContent = 'CONTINUE & PLACE ORDER';
-                        }
-
-                    }
-                },
-
-                modal:{
-                    ondismiss:function(){
-                        if(button){
-                            button.disabled = false;
-                            button.textContent = 'CONTINUE & PLACE ORDER';
-                        }
-                    }
-                }
-            };
-
-            const razorpay = new Razorpay(razorpayOptions);
-
-            razorpay.on('payment.failed',function(response){
-                console.error('Razorpay payment failed:',response?.error);
-                alert(response?.error?.description || 'Payment failed. Please try again.');
-                if(button){
-                    button.disabled = false;
-                    button.textContent = 'CONTINUE & PLACE ORDER';
-                }
-            });
-
-            razorpay.open();
-
-        }catch(error){
-
-            console.error('GLOBIRA PAYMENT ERROR:',error);
-            alert(error.message || 'Unable to start payment.');
-
-            if(button){
-                button.disabled = false;
-                button.textContent = selectedPayment === 'COD' ? 'PLACE ORDER' : 'CONTINUE & PLACE ORDER';
-            }
-        }
     }
 
 
@@ -6622,84 +6565,88 @@
     }
 
     async function loadCJFeaturedProduct(){
+
         if(catalogLoading) return;
         catalogLoading = true;
 
-        const status = document.getElementById('homeCatalogStatus');
-        const targetProducts = 6000;
-        const pageSize = 100;
-        const maxPages = Math.ceil(targetProducts / pageSize);
-        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
-
-        function updateProgress(count, page){
-            const text = `Loading GLOBIRA catalog · ${Math.min(count,targetProducts).toLocaleString()} / ${targetProducts.toLocaleString()}`;
-            if(status) status.textContent = text;
-            updateGWLiveStatus();
-        }
-
-        async function loadPage(page){
-            const response = await fetch(`/api/products?page=${page}&size=${pageSize}`,{
-                method:'GET', cache:'no-store', headers:{'Accept':'application/json'}
-            });
-            if(!response.ok) throw new Error(`GLOBIRA catalog returned ${response.status}`);
-            const payload = await response.json();
-            if(!payload || !payload.success) throw new Error(payload?.message || payload?.error || 'Catalog request failed.');
-            return Array.isArray(payload.products) ? payload.products.map(classifyCJProduct) : [];
-        }
-
         try{
             cjProducts = [];
-            updateProgress(0,1);
 
-            /* First page gives the visitor a usable homepage quickly. */
-            const firstPage = await loadPage(1);
-            const unique = new Map();
-            firstPage.forEach(p=>{ if(p?.id) unique.set(String(p.id),p); });
-            cjProducts = Array.from(unique.values());
-            renderFeatured();
-            renderHomepageLiveSections();
-            refreshCurrentCategoryInPlace();
-            updateProgress(cjProducts.length,1);
+            /*
+            * Load more than 1,000 live CJ products while keeping the existing
+            * GLOBIRA design unchanged. CJ allows up to 100 products per request.
+            * The first page is rendered immediately; later pages are added in
+            * the background to keep the homepage usable.
+            */
+            const targetProducts = 6000;
+            const pageSize = 100;
+            const maxPages = Math.ceil(targetProducts / pageSize);
 
-            /* Continue through every CJ page. The catalog becomes searchable across all loaded products. */
-            for(let page=2; page<=maxPages && cjProducts.length<targetProducts; page++){
+            const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+            async function loadCatalogPage(page){
                 try{
-                    const products = await loadPage(page);
-                    products.forEach(p=>{ if(p?.id) unique.set(String(p.id),p); });
-                    cjProducts = Array.from(unique.values()).slice(0,targetProducts);
-                    updateProgress(cjProducts.length,page);
+                    console.log(`GLOBIRA: Loading live CJ catalog page ${page}/${maxPages}...`);
 
-                    /* Keep the homepage feed synchronized without jumping the user. */
-                    const y = window.scrollY || document.documentElement.scrollTop || 0;
-                    renderFeatured();
-                    renderHomepageLiveSections();
+                    const response = await fetch(
+                        `/api/cj-products?page=${page}&size=${pageSize}`
+                    );
+
+                    if(!response.ok){
+                        throw new Error(`CJ API returned ${response.status}`);
+                    }
+
+                    const payload = await response.json();
+
+                    if(!payload.success){
+                        throw new Error(payload.error || 'CJ catalog request failed.');
+                    }
+
+                    return Array.isArray(payload.products)
+                        ? payload.products.map(classifyCJProduct)
+                        : [];
+                }catch(error){
+                    console.error(`GLOBIRA CJ CATALOG PAGE ERROR (${page}):`, error);
+                    return [];
+                }
+            }
+
+            function addUniqueCJProducts(products){
+                const unique = new Map(cjProducts.map(product => [product.id, product]));
+                products.forEach(product => {
+                    if(product && product.id) unique.set(product.id, product);
+                });
+                cjProducts = Array.from(unique.values());
+            }
+
+            for(let page = 1; page <= maxPages && cjProducts.length < targetProducts; page++){
+                const products = await loadCatalogPage(page);
+                addUniqueCJProducts(products);
+
+                console.log(`GLOBIRA: ${cjProducts.length} unique live CJ products loaded.`);
+
+                /* Refresh visible content after every successful page. */
+                renderFeatured();
+                renderCart();
+                updateGWLiveStatus();
+                renderHomepageLiveSections();
+                /* Never call showCategory() during background loading.
+                Re-rendering the category page used to jump the user to the top. */
+                if(currentCategory){
                     refreshCurrentCategoryInPlace();
-                    requestAnimationFrame(()=>window.scrollTo(0,y));
+                }
 
-                    if(page<maxPages && cjProducts.length<targetProducts) await wait(1100);
-                }catch(pageError){
-                    console.error(`GLOBIRA CJ catalog page ${page} failed:`,pageError);
-                    /* Do not discard products already loaded. */
+                if(page < maxPages && cjProducts.length < targetProducts){
                     await wait(1200);
                 }
             }
 
-            console.log(`GLOBIRA STOREFRONT: loaded ${cjProducts.length} live CJ products.`);
-            if(status) status.textContent = `${cjProducts.length.toLocaleString()} GLOBIRA products available`;
-            renderFeatured();
-            renderHomepageLiveSections();
-            updateGWLiveStatus();
+            console.log(`GLOBIRA: Live CJ catalog ready with ${cjProducts.length} unique products.`);
+
         }catch(error){
-            console.error('GLOBIRA STOREFRONT CATALOG ERROR:',error);
-            if(status) status.textContent = 'GLOBIRA catalog is temporarily loading…';
-            renderFeatured();
-            renderHomepageLiveSections();
-            updateGWLiveStatus();
+            console.error('GLOBIRA CJ CATALOG LOAD:', error);
         }finally{
-            catalogLoading=false;
-            renderFeatured();
-            renderHomepageLiveSections();
-            updateGWLiveStatus();
+            catalogLoading = false;
         }
     }
 
@@ -7647,17 +7594,6 @@
         return 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=300&q=80';
     }
 
-    function formatStoredOrderMoney(amount, currency){
-        const value=Number(amount||0);
-        const stored=String(currency||'USD').toUpperCase();
-        if(!Number.isFinite(value)) return '';
-        if(stored==='USD') return formatPrice(value);
-        const storedInr=Number(GLOBIRA_CURRENCIES[stored]?.inr || 0);
-        const usdInr=Number(GLOBIRA_CURRENCIES.USD?.inr || 0);
-        if(storedInr>0 && usdInr>0) return formatPrice(value * (storedInr/usdInr));
-        return formatPrice(value);
-    }
-
     function globiraRenderOrderCard(order){
         if(!order) return '';
         const number=order.orderNumber||order.orderID||'GLOBIRA ORDER';
@@ -7678,16 +7614,16 @@
                         <img src="${escapeHtml(image)}" alt="${escapeHtml(item.name||'Product')}" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=300&q=80';">
                         <div class="globira-order-item-name"><span>${escapeHtml(item.name||'Product')} × ${qty}${size}</span></div>
                     </div>
-                    <strong>${formatStoredOrderMoney(Number(item.price||0)*qty, order.currency || 'INR')}</strong>
+                    <strong>${formatPrice(Number(item.price||0)*qty)}</strong>
                 </div>`;
             }).join('')
-            : `<div class="globira-order-item"><span>Order details saved</span><strong>${formatStoredOrderMoney(order.total||0, order.currency || 'INR')}</strong></div>`;
+            : `<div class="globira-order-item"><span>Order details saved</span><strong>${formatPrice(order.total||0)}</strong></div>`;
 
         return `<article class="globira-order-card">
         <div class="globira-order-top"><div><div class="globira-order-number">${escapeHtml(String(number))}</div><div class="globira-order-date">${date?new Date(date).toLocaleString():''}</div></div><span class="globira-order-status">${escapeHtml(globiraOrderStatus(order))}</span></div>
         <div class="globira-order-items">${itemHtml}</div>
         <div class="globira-order-meta">
-            <div><small>Total</small><strong>${formatStoredOrderMoney(order.total||0, order.currency || 'INR')}</strong></div>
+            <div><small>Total</small><strong>${formatPrice(order.total||0)}</strong></div>
             <div><small>Payment</small><strong>${escapeHtml(String(payment).replace(/_/g,' '))}</strong></div>
             <div><small>Tracking</small><strong>${escapeHtml(String(tracking))}</strong></div>
             <div><small>GLOBIRA status</small><strong>${escapeHtml(globiraOrderStatus(order))}</strong></div>
@@ -10397,395 +10333,6 @@ body{font-size:14px!important}
 }
 </style>
 
-
-<!-- GLOBIRA FINAL CART REMOVE + PRODUCT PHOTO GALLERY FIX -->
-<style id="globira-final-cart-gallery-fix">
-    /* Make the cart remove action clearly visible without changing the existing layout. */
-    #cartItems .cart-item .remove,
-    #cartItems .cart-item .globira-remove-item{
-        display:inline-flex !important;
-        align-items:center !important;
-        justify-content:center !important;
-        margin-top:12px !important;
-        padding:7px 0 !important;
-        min-height:28px !important;
-        border:0 !important;
-        background:transparent !important;
-        color:#666 !important;
-        font-size:11px !important;
-        font-weight:600 !important;
-        letter-spacing:1.2px !important;
-        text-decoration:underline !important;
-        cursor:pointer !important;
-        opacity:1 !important;
-        visibility:visible !important;
-    }
-
-    #cartItems .cart-item .remove:hover,
-    #cartItems .cart-item .globira-remove-item:hover{
-        color:#111 !important;
-    }
-
-    /* Product popup gallery: show a clean row of 3–4 product-angle thumbnails. */
-    #productModal .thumbnails{
-        display:flex !important;
-        flex-wrap:nowrap !important;
-        gap:9px !important;
-        width:100% !important;
-        overflow-x:auto !important;
-        overflow-y:hidden !important;
-        padding:10px !important;
-        background:#fff !important;
-        box-sizing:border-box !important;
-        scrollbar-width:thin !important;
-    }
-
-    #productModal .thumbnails img{
-        width:78px !important;
-        height:92px !important;
-        min-width:78px !important;
-        object-fit:cover !important;
-        display:block !important;
-        cursor:pointer !important;
-        border:1px solid #ddd !important;
-        opacity:.72 !important;
-        background:#f3f1ed !important;
-    }
-
-    #productModal .thumbnails img:hover,
-    #productModal .thumbnails img.active{
-        opacity:1 !important;
-        border-color:#111 !important;
-    }
-</style>
-
-<script id="globira-final-cart-gallery-fix-script">
-(function(){
-    'use strict';
-
-    /* =========================================================
-       1. GUARANTEE A WORKING REMOVE BUTTON IN EVERY CART ROW
-       ========================================================= */
-
-    function globiraRemoveCartIndex(index){
-        if(!Array.isArray(window.cart) || !window.cart[index]) return;
-
-        window.cart.splice(index,1);
-
-        if(typeof window.saveCart === 'function'){
-            window.saveCart();
-        }
-
-        if(typeof window.renderCart === 'function'){
-            window.renderCart();
-        }
-
-        if(typeof window.showToast === 'function'){
-            window.showToast('Product removed from your cart');
-        }
-    }
-
-    function ensureCartRemoveButtons(){
-        const rows=[...document.querySelectorAll('#cartItems .cart-item')];
-
-        rows.forEach((row,index)=>{
-            if(row.querySelector('.globira-remove-item, .remove')) return;
-
-            const info=row.querySelector('.cart-item-info') || row;
-
-            const button=document.createElement('button');
-            button.type='button';
-            button.className='globira-remove-item';
-            button.textContent='REMOVE';
-            button.setAttribute('aria-label','Remove product from cart');
-
-            button.addEventListener('click',function(e){
-                e.preventDefault();
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                globiraRemoveCartIndex(index);
-            },true);
-
-            info.appendChild(button);
-        });
-    }
-
-    function patchCartRemoveButtons(){
-        ensureCartRemoveButtons();
-
-        const cartItems=document.getElementById('cartItems');
-        if(!cartItems || cartItems.__globiraRemoveObserver) return;
-
-        const observer=new MutationObserver(function(){
-            ensureCartRemoveButtons();
-        });
-
-        observer.observe(cartItems,{childList:true,subtree:true});
-        cartItems.__globiraRemoveObserver=true;
-    }
-
-    document.addEventListener('DOMContentLoaded',patchCartRemoveButtons);
-    setTimeout(patchCartRemoveButtons,100);
-    setTimeout(patchCartRemoveButtons,600);
-    setTimeout(patchCartRemoveButtons,1500);
-
-    /* =========================================================
-       2. PRODUCT POPUP — RESTORE 3–4 REAL PRODUCT PHOTOS
-       ========================================================= */
-
-    function globiraGalleryImages(product){
-        if(!product) return [];
-
-        const out=[];
-
-        function add(value){
-            if(!value) return;
-
-            if(Array.isArray(value)){
-                value.forEach(add);
-                return;
-            }
-
-            if(typeof value === 'object'){
-                add(
-                    value.url ||
-                    value.imageUrl ||
-                    value.image ||
-                    value.picUrl ||
-                    value.imgUrl ||
-                    value.productImage ||
-                    value.productImg ||
-                    value.fileUrl ||
-                    value.thumbnail ||
-                    value.src
-                );
-                return;
-            }
-
-            if(typeof value === 'string'){
-                const str=value.trim();
-                if(!str) return;
-
-                if(
-                    (str[0]==='[' && str[str.length-1]===']') ||
-                    (str[0]==='{' && str[str.length-1]==='}')
-                ){
-                    try{
-                        add(JSON.parse(str));
-                        return;
-                    }catch(e){}
-                }
-
-                str.split(/\s*[|,]\s*/).forEach(x=>{
-                    x=x.trim();
-                    if(/^https?:\/\//i.test(x)) out.push(x);
-                });
-            }
-        }
-
-        [
-            'images','imageUrls','imageList','productImages','pictures','pics',
-            'productImageList','productImgList','productImagesList',
-            'detailImages','detailImageList','imageArr','imgs','imgList',
-            'skuImages','variantImages','galleryImages'
-        ].forEach(key=>add(product[key]));
-
-        [
-            'image','imageUrl','productImage','mainImage','picUrl','imgUrl',
-            'coverImage','productImg','productImageUrl'
-        ].forEach(key=>add(product[key]));
-
-        [
-            'variants','variantList','variantOptions','skus','skuList',
-            'productVariants','productSkuList','skuInfoList'
-        ].forEach(key=>{
-            const list=product[key];
-            if(!Array.isArray(list)) return;
-
-            list.forEach(v=>{
-                if(!v || typeof v!=='object') return;
-
-                [
-                    'images','imageUrls','imageList','productImages','pictures','pics',
-                    'image','imageUrl','productImage','picUrl','imgUrl',
-                    'skuImage','skuImageUrl','variantImage','variantImages'
-                ].forEach(k=>add(v[k]));
-            });
-        });
-
-        return [...new Set(out)].filter(x=>/^https?:\/\//i.test(x));
-    }
-
-    function renderGlobiraProductGallery(product){
-        const main=document.getElementById('mainProductImage');
-        const thumbs=document.getElementById('productThumbnails');
-
-        if(!main || !thumbs || !product) return;
-
-        let images=globiraGalleryImages(product);
-
-        /* Keep the existing image first if the API gave it in another field. */
-        const current=String(main.src||'').trim();
-        if(/^https?:\/\//i.test(current) && !images.includes(current)){
-            images.unshift(current);
-        }
-
-        images=[...new Set(images)].slice(0,4);
-
-        if(!images.length) return;
-
-        main.src=images[0];
-
-        thumbs.innerHTML=images.map((image,index)=>`
-            <img
-                src="${String(image).replace(/"/g,'&quot;')}"
-                class="${index===0?'active':''}"
-                alt="${String(product.name||'Product').replace(/"/g,'&quot;')} photo ${index+1}"
-                loading="${index===0?'eager':'lazy'}"
-                decoding="async"
-                onclick="globiraFinalChangeProductImage(this)"
-            >
-        `).join('');
-    }
-
-    window.globiraFinalChangeProductImage=function(thumb){
-        if(!thumb) return;
-
-        const main=document.getElementById('mainProductImage');
-        if(main) main.src=thumb.src;
-
-        document.querySelectorAll('#productModal .thumbnails img').forEach(img=>{
-            img.classList.remove('active');
-        });
-
-        thumb.classList.add('active');
-    };
-
-    async function loadExtraProductPhotos(product){
-        if(!product) return;
-
-        /* First render whatever images are already available. */
-        renderGlobiraProductGallery(product);
-
-        const source=String(product.source||'').toLowerCase();
-        if(source!=='cjdropshipping') return;
-
-        let cjId=
-            product.cjProductId ||
-            product.pid ||
-            product.productId ||
-            product.id;
-
-        cjId=String(cjId||'').replace(/^cj-/i,'');
-
-        /* Only call the detail endpoint for a numeric CJ product id. */
-        if(!/^\d+$/.test(cjId)) return;
-
-        const urls=[
-            '/api/cj-product/'+encodeURIComponent(cjId),
-            '/api/cj-product?id='+encodeURIComponent(cjId),
-            '/api/cj-product?pid='+encodeURIComponent(cjId),
-            '/api/cj-product?productId='+encodeURIComponent(cjId)
-        ];
-
-        for(const url of urls){
-            try{
-                const response=await fetch(url,{cache:'no-store'});
-                if(!response.ok) continue;
-
-                const payload=await response.json();
-
-                const detail=
-                    payload?.product ||
-                    payload?.data?.product ||
-                    (payload?.data && typeof payload.data==='object' ? payload.data : null) ||
-                    payload;
-
-                if(detail && typeof detail==='object'){
-                    const merged=Object.assign({},product,detail);
-
-                    /* Make sure the currently opened product still matches. */
-                    if(
-                        window.currentProduct &&
-                        String(window.currentProduct.id)!==String(product.id)
-                    ){
-                        return;
-                    }
-
-                    renderGlobiraProductGallery(merged);
-                    return;
-                }
-            }catch(e){}
-        }
-    }
-
-    function hookProductOpen(){
-        if(typeof window.openProduct!=='function'){
-            setTimeout(hookProductOpen,300);
-            return;
-        }
-
-        if(window.openProduct.__globiraGalleryPatched) return;
-
-        const originalOpenProduct=window.openProduct;
-
-        function patchedOpenProduct(id,preselectedSize){
-            const result=originalOpenProduct.apply(this,arguments);
-
-            setTimeout(()=>{
-                let product=null;
-
-                try{
-                    if(typeof window.findProduct==='function'){
-                        product=window.findProduct(id);
-                    }
-                }catch(e){}
-
-                if(!product && Array.isArray(window.cjProducts)){
-                    product=window.cjProducts.find(x=>String(x.id)===String(id));
-                }
-
-                if(product){
-                    loadExtraProductPhotos(product);
-                }
-            },80);
-
-            return result;
-        }
-
-        patchedOpenProduct.__globiraGalleryPatched=true;
-        window.openProduct=patchedOpenProduct;
-    }
-
-    hookProductOpen();
-
-    /* Also refresh the gallery whenever the popup becomes visible. */
-    const modal=document.getElementById('productModal');
-
-    if(modal){
-        const observer=new MutationObserver(()=>{
-            if(!modal.classList.contains('active')) return;
-
-            const id=window.currentProduct?.id;
-            if(!id) return;
-
-            let product=null;
-            try{
-                if(typeof window.findProduct==='function'){
-                    product=window.findProduct(id);
-                }
-            }catch(e){}
-
-            if(product) loadExtraProductPhotos(product);
-        });
-
-        observer.observe(modal,{attributes:true,attributeFilter:['class']});
-    }
-
-})();
-</script>
-<!-- END GLOBIRA FINAL CART REMOVE + PRODUCT PHOTO GALLERY FIX -->
-
 </body>
     
 
@@ -11849,13 +11396,9 @@ body{font-size:14px!important}
         updateCurrencyUI();
     }
 
-    /* Product prices are stored in USD (supplier cost + 60% markup). */
-    function formatCurrencyValue(usdValue){
-        const usd=Number(usdValue||0);
+    function formatCurrencyValue(inrValue){
         const meta=GLOBIRA_CURRENCIES[globiraCurrency] || GLOBIRA_CURRENCIES.INR;
-        const usdInr=Number(GLOBIRA_CURRENCIES.USD?.inr || 0);
-        const targetInr=Number(meta.inr || 0);
-        const value=(usdInr>0 && targetInr>0) ? usd*(usdInr/targetInr) : usd;
+        const value=Number(inrValue||0) / Number(meta.inr||1);
         try{
             return new Intl.NumberFormat(undefined,{
                 style:'currency',currency:globiraCurrency,
@@ -11867,6 +11410,7 @@ body{font-size:14px!important}
         }
     }
 
+    /* Replace the original INR-only formatter without changing product prices. */
     window.formatPrice = formatCurrencyValue;
 
     function updateCurrencyUI(){
