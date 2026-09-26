@@ -622,7 +622,7 @@ function normalizeCJProduct(product) {
                 : 0,
 
         currency:
-            DEFAULT_CURRENCY,
+            "USD",
 
         markupPercent:
             GLOBIRA_MARKUP_PERCENT,
@@ -1017,7 +1017,7 @@ async function syncCJProducts() {
                     60,
                     Number(
                         process.env.CJ_SYNC_PAGES ||
-                        20
+                        60
                     )
                 )
             );
@@ -1510,7 +1510,7 @@ app.get(
                         1,
                         Number(
                             req.query.size ||
-                            24
+                            100
                         )
                     )
                 );
@@ -1624,7 +1624,7 @@ app.get(
                         1,
                         Number(
                             req.query.size ||
-                            24
+                            100
                         )
                     )
                 );
