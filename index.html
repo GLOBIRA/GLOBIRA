@@ -12727,3 +12727,495 @@ body{font-size:15px!important}
   }
 })();
 </script>
+
+
+<script id="globira-final-product-pagination-v6">
+(function(){
+  'use strict';
+
+  /*
+   * GLOBIRA FINAL PRODUCT PAGINATION
+   * Home: 300 products initially, next 300 per Load More.
+   * Collections/Search: 100 matching products initially, next 100 per Load More.
+   * Uses the live CJ API and keeps existing product cards/design.
+   */
+
+  const HOME_BATCH = 300;
+  const FEED_BATCH = 100;
+  const API_PAGE_SIZE = 100;
+  const API_BATCH_PAGES = 3;
+
+  const feedState = {
+    home: { products: [], nextPage: 1, totalPages: Infinity, loading: false, ready: false },
+    category: { key:'', title:'', products:[], nextPage:1, totalPages:Infinity, loading:false, ready:false },
+    search: { key:'', query:'', products:[], nextPage:1, totalPages:Infinity, loading:false, ready:false }
+  };
+
+  function uniqueProducts(list){
+    const map = new Map();
+    (Array.isArray(list) ? list : []).forEach(p=>{
+      if(!p || !p.id) return;
+      const normalized = typeof classifyCJProduct === 'function'
+        ? classifyCJProduct(p)
+        : p;
+      map.set(String(normalized.id), normalized);
+    });
+    return Array.from(map.values());
+  }
+
+  async function fetchCJPage(page, keyword){
+    const url = `/api/cj-products?page=${page}&size=${API_PAGE_SIZE}` +
+      (keyword ? `&keyword=${encodeURIComponent(keyword)}` : '');
+    try{
+      const r = await fetch(url,{cache:'no-store',headers:{Accept:'application/json'}});
+      if(!r.ok) return null;
+      const payload = await r.json();
+      if(!payload || !payload.success || !Array.isArray(payload.products)) return null;
+      return payload;
+    }catch(e){
+      console.warn('GLOBIRA pagination request failed:',page,keyword,e);
+      return null;
+    }
+  }
+
+  async function collectMatches(state, keyword, matcher, targetCount){
+    if(state.loading) return state.products;
+    state.loading = true;
+
+    try{
+      while(state.products.length < targetCount && state.nextPage <= state.totalPages){
+        const pages = [];
+        const first = state.nextPage;
+
+        for(let i=0;i<API_BATCH_PAGES;i++){
+          const pageNo = first+i;
+          if(pageNo > state.totalPages) break;
+          pages.push(pageNo);
+        }
+        if(!pages.length) break;
+
+        const responses = await Promise.all(
+          pages.map(pageNo=>fetchCJPage(pageNo,keyword))
+        );
+
+        let discovered = [];
+        let maxTotalPages = state.totalPages;
+
+        responses.forEach(payload=>{
+          if(!payload) return;
+          if(Number.isFinite(Number(payload.totalPages))){
+            maxTotalPages = Math.max(1,Number(payload.totalPages));
+          }
+          if(Array.isArray(payload.products)){
+            payload.products.map(p=>{
+              try{
+                return typeof classifyCJProduct === 'function'
+                  ? classifyCJProduct(p)
+                  : p;
+              }catch(e){ return p; }
+            }).forEach(p=>{
+              if(p && (!matcher || matcher(p))) discovered.push(p);
+            });
+          }
+        });
+
+        state.totalPages = maxTotalPages;
+        state.nextPage = Math.max(state.nextPage, Math.max.apply(null,pages)+1);
+
+        const merged = uniqueProducts(state.products.concat(discovered));
+        state.products = merged;
+
+        if(responses.every(x=>!x)) break;
+        if(responses.some(x=>Array.isArray(x?.products) && x.products.length===0)) break;
+      }
+    }finally{
+      state.loading = false;
+      state.ready = true;
+    }
+
+    return state.products;
+  }
+
+  function setStatus(text){
+    const s=document.getElementById('homeCatalogStatus');
+    if(s) s.textContent=text;
+  }
+
+  function renderHomeFeed(){
+    const container=document.getElementById('featuredProducts');
+    if(!container) return;
+
+    const products=feedState.home.products;
+    container.innerHTML=products.map(productCard).join('');
+
+    const button=document.getElementById('homeLoadMoreBtn');
+    if(button){
+      const hasMore=feedState.home.nextPage<=feedState.home.totalPages;
+      button.style.display=hasMore ? 'block' : 'none';
+      button.disabled=feedState.home.loading;
+      button.textContent=feedState.home.loading
+        ? 'Loading more products…'
+        : (hasMore ? 'Load more products · 300 more →' : '');
+    }
+
+    if(products.length){
+      setStatus(`Showing ${products.length.toLocaleString()} GLOBIRA products`);
+    }else{
+      setStatus('Loading the GLOBIRA catalog…');
+    }
+
+    if(typeof renderHomepageLiveSections==='function'){
+      try{ renderHomepageLiveSections(); }catch(e){}
+    }
+  }
+
+  async function loadHomeBatch(){
+    if(feedState.home.loading) return;
+
+    feedState.home.loading=true;
+    renderHomeFeed();
+
+    const start=feedState.home.nextPage;
+    const pages=[];
+    for(let i=0;i<3;i++){
+      const n=start+i;
+      if(n>feedState.home.totalPages) break;
+      pages.push(n);
+    }
+
+    const responses=await Promise.all(pages.map(n=>fetchCJPage(n,'')));
+
+    let maxTotal=feedState.home.totalPages;
+    let incoming=[];
+    responses.forEach(payload=>{
+      if(!payload) return;
+      if(Number.isFinite(Number(payload.totalPages))){
+        maxTotal=Math.max(1,Number(payload.totalPages));
+      }
+      if(Array.isArray(payload.products)) incoming.push(...payload.products);
+      if(payload.currency && typeof globiraCatalogCurrency!=='undefined'){
+        globiraCatalogCurrency=String(payload.currency).toUpperCase();
+      }
+    });
+
+    feedState.home.totalPages=maxTotal;
+    if(pages.length) feedState.home.nextPage=Math.max.apply(null,pages)+1;
+    feedState.home.products=uniqueProducts(feedState.home.products.concat(incoming));
+
+    /* Keep the live catalog available to product popup/cart/search. */
+    cjProducts=uniqueProducts(feedState.home.products);
+
+    feedState.home.loading=false;
+    feedState.home.ready=true;
+    renderHomeFeed();
+    if(typeof updateGWLiveStatus==='function'){
+      try{updateGWLiveStatus();}catch(e){}
+    }
+  }
+
+  window.loadMoreHomeProducts=async function(){
+    if(feedState.home.loading) return;
+    const y=window.scrollY || document.documentElement.scrollTop || 0;
+    await loadHomeBatch();
+    requestAnimationFrame(()=>window.scrollTo(0,y));
+  };
+
+  async function openCategoryFeed(category){
+    const d=(typeof GLOBIRA_MENU_DATA!=='undefined') ? GLOBIRA_MENU_DATA[category] : null;
+    const title=d?.title || ({
+      women:'Women',men:'Men',bags:'Bags',shoes:'Shoes',accessories:'Accessories',
+      electronics:'Electronics',home:'Home & Living',beauty:'Beauty & Personal Care',
+      tools:'Tools & DIY',sports:'Sports & Fitness',automotive:'Automotive',
+      pets:'Pet Supplies',office:'Office & School',baby:'Baby & Kids',
+      health:'Health & Wellness',more:'All Products'
+    }[category] || 'Collection');
+
+    const home=document.getElementById('homePage');
+    const page=document.getElementById('categoryPage');
+    const titleEl=document.getElementById('categoryTitle');
+    const eyebrow=document.getElementById('categoryEyebrow');
+    const container=document.getElementById('categoryProducts');
+
+    if(home) home.style.display='none';
+    if(page) page.classList.add('active');
+    if(titleEl) titleEl.textContent=title;
+    if(eyebrow) eyebrow.textContent='GLOBIRA / '+title.toUpperCase();
+    if(!container) return;
+
+    document.body.classList.remove('no-scroll');
+
+    const state=feedState.category;
+    state.key=String(category||'');
+    state.title=title;
+    state.products=[];
+    state.nextPage=1;
+    state.totalPages=Infinity;
+    state.ready=false;
+
+    container.innerHTML=`
+      <div class="gw-category-toolbar">
+        <div><b>Loading products…</b><span>Live CJ marketplace</span></div>
+      </div>
+      <div class="products category-result-grid"></div>
+    `;
+
+    page.scrollTop=0;
+    window.scrollTo(0,0);
+
+    const keyword=category==='more' ? '' : String(category||'');
+    const matcher=(p)=>{
+      if(category==='more') return true;
+      if(typeof getCategoryProducts==='function'){
+        /* Exact gender/category matching. */
+        const wanted=String(category).toLowerCase();
+        const gender=String(p.gender||'').toLowerCase();
+        const cat=String(p.category||'').toLowerCase();
+        if(wanted==='women'||wanted==='men'){
+          return gender===wanted || cat===wanted ||
+            (typeof globiraGender==='function' && globiraGender(p)===wanted);
+        }
+        return cat===wanted;
+      }
+      return true;
+    };
+
+    await collectMatches(state,keyword,matcher,FEED_BATCH);
+
+    if(currentCategory!==category) return;
+
+    renderCategoryFeed();
+  }
+
+  function renderCategoryFeed(){
+    const container=document.getElementById('categoryProducts');
+    if(!container) return;
+    const state=feedState.category;
+    const products=state.products;
+
+    container.innerHTML=`
+      <div class="gw-category-toolbar">
+        <div><b>${products.length.toLocaleString()} products</b><span>Live marketplace</span></div>
+        <select onchange="sortCategoryProducts(this.value)">
+          <option value="featured">Featured</option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="price-high">Price: High to Low</option>
+          <option value="name">Name</option>
+        </select>
+      </div>
+      <div class="products category-result-grid">
+        ${products.length
+          ? products.map(productCard).join('')
+          : '<div class="empty-category"><h3>No matching products yet</h3><p>Live matching products will appear automatically.</p></div>'}
+      </div>
+      ${state.nextPage<=state.totalPages
+        ? '<button class="gw-load-more" id="globiraCategoryLoadMore">Load more products · 100 more →</button>'
+        : ''}
+    `;
+
+    const btn=document.getElementById('globiraCategoryLoadMore');
+    if(btn){
+      btn.onclick=async()=>{
+        if(state.loading) return;
+        btn.disabled=true;
+        btn.textContent='Loading more products…';
+        const y=document.getElementById('categoryPage')?.scrollTop || 0;
+        const category=state.key;
+        const matcher=(p)=>{
+          const wanted=String(category).toLowerCase();
+          if(category==='more') return true;
+          const gender=String(p.gender||'').toLowerCase();
+          const cat=String(p.category||'').toLowerCase();
+          return wanted==='women'||wanted==='men'
+            ? (gender===wanted || cat===wanted || (typeof globiraGender==='function' && globiraGender(p)===wanted))
+            : cat===wanted;
+        };
+        await collectMatches(state,category==='more'?'':category,matcher,state.products.length+FEED_BATCH);
+        renderCategoryFeed();
+        requestAnimationFrame(()=>{
+          const p=document.getElementById('categoryPage');
+          if(p) p.scrollTop=y;
+        });
+      };
+    }
+  }
+
+  window.showCategory=function(category){
+    currentCategory=category;
+    openCategoryFeed(category);
+  };
+
+  async function runSearch(rawQuery){
+    const raw=String(rawQuery||'').trim();
+    if(!raw){
+      if(typeof showHome==='function') showHome();
+      return;
+    }
+
+    const query=typeof normalizeGlobiraSearch==='function'
+      ? normalizeGlobiraSearch(raw)
+      : raw.toLowerCase().trim();
+
+    currentCategory=null;
+    const home=document.getElementById('homePage');
+    const page=document.getElementById('categoryPage');
+    const title=document.getElementById('categoryTitle');
+    const eyebrow=document.getElementById('categoryEyebrow');
+    const container=document.getElementById('categoryProducts');
+
+    if(home) home.style.display='none';
+    if(page) page.classList.add('active');
+    if(title) title.textContent='Search: '+raw;
+    if(eyebrow) eyebrow.textContent='GLOBIRA / SEARCH RESULTS';
+    if(!container) return;
+
+    document.body.classList.remove('no-scroll');
+    page.scrollTop=0;
+    window.scrollTo(0,0);
+
+    const state=feedState.search;
+    state.key=query;
+    state.query=raw;
+    state.products=[];
+    state.nextPage=1;
+    state.totalPages=Infinity;
+    state.ready=false;
+
+    container.innerHTML=`
+      <div class="gw-category-toolbar">
+        <div><b>Searching…</b><span>Exact matching products only</span></div>
+      </div>
+      <div class="products category-result-grid"></div>
+    `;
+
+    const matcher=(p)=>{
+      return typeof globiraStrictSearchMatch==='function'
+        ? globiraStrictSearchMatch(p,query)
+        : String(p.name||'').toLowerCase().includes(query.toLowerCase());
+    };
+
+    await collectMatches(state,raw,matcher,FEED_BATCH);
+
+    if(feedState.search.key!==query) return;
+    renderSearchFeed();
+  }
+
+  function renderSearchFeed(){
+    const container=document.getElementById('categoryProducts');
+    if(!container) return;
+    const state=feedState.search;
+    const products=state.products;
+
+    container.innerHTML=`
+      <div class="gw-category-toolbar">
+        <div><b>${products.length.toLocaleString()} ${products.length===1?'product':'products'}</b><span>Matching products only</span></div>
+      </div>
+      <div class="products category-result-grid">
+        ${products.length
+          ? products.map(productCard).join('')
+          : '<div class="empty-category"><h3>No products found</h3><p>Try another product name.</p></div>'}
+      </div>
+      ${state.nextPage<=state.totalPages
+        ? '<button class="gw-load-more" id="globiraSearchLoadMore">Load more products · 100 more →</button>'
+        : ''}
+    `;
+
+    const btn=document.getElementById('globiraSearchLoadMore');
+    if(btn){
+      btn.onclick=async()=>{
+        if(state.loading) return;
+        btn.disabled=true;
+        btn.textContent='Loading more products…';
+        const p=document.getElementById('categoryPage');
+        const y=p?.scrollTop || 0;
+        const matcher=(product)=>{
+          return typeof globiraStrictSearchMatch==='function'
+            ? globiraStrictSearchMatch(product,state.key)
+            : String(product.name||'').toLowerCase().includes(state.key.toLowerCase());
+        };
+        await collectMatches(state,state.query,matcher,state.products.length+FEED_BATCH);
+        renderSearchFeed();
+        requestAnimationFrame(()=>{
+          const pp=document.getElementById('categoryPage');
+          if(pp) pp.scrollTop=y;
+        });
+      };
+    }
+  }
+
+  window.searchProducts=function(){
+    const heroInput=document.getElementById('globiraHeroSearchInput');
+    const topInput=document.getElementById('globiraSearchInput');
+    const input=heroInput || topInput;
+    const raw=input ? input.value.trim() : '';
+    if(heroInput && topInput) topInput.value=raw;
+    runSearch(raw);
+  };
+
+  /* Override subcategory pagination so it also uses 100-product pages. */
+  window.showSubcategory=function(category,sub){
+    currentCategory=category;
+    const d=(typeof GLOBIRA_MENU_DATA!=='undefined') ? GLOBIRA_MENU_DATA[category] : null;
+    const found=(d?.groups||[]).find(([t])=>typeof slugify==='function' && slugify(t)===sub);
+    const name=found?found[0]:String(sub||'').replace(/-/g,' ');
+    const query=String(name).replace(/&/g,' ').trim();
+
+    if(sub==='all'){
+      openCategoryFeed(category);
+      return;
+    }
+
+    /* Use the search term but keep it inside the selected category. */
+    const home=document.getElementById('homePage');
+    const page=document.getElementById('categoryPage');
+    const title=document.getElementById('categoryTitle');
+    const eyebrow=document.getElementById('categoryEyebrow');
+    const container=document.getElementById('categoryProducts');
+
+    if(home) home.style.display='none';
+    if(page) page.classList.add('active');
+    if(title) title.textContent=name.replace(/\b\w/g,c=>c.toUpperCase());
+    if(eyebrow) eyebrow.textContent='GLOBIRA / '+String(d?.title||category).toUpperCase()+' / '+name.toUpperCase();
+
+    const state=feedState.search;
+    state.key=query.toLowerCase();
+    state.query=query;
+    state.products=[];
+    state.nextPage=1;
+    state.totalPages=Infinity;
+    state.ready=false;
+
+    const wanted=String(category).toLowerCase();
+    const matcher=(p)=>{
+      const gender=String(p.gender||'').toLowerCase();
+      const cat=String(p.category||'').toLowerCase();
+      const categoryOk=(wanted==='women'||wanted==='men')
+        ? (gender===wanted || cat===wanted || (typeof globiraGender==='function' && globiraGender(p)===wanted))
+        : cat===wanted;
+      if(!categoryOk) return false;
+      return typeof globiraCriterionMatch==='function'
+        ? globiraCriterionMatch(p,name)
+        : String([p.name,p.subcategory,p.description,p.category].join(' ')).toLowerCase().includes(query.toLowerCase());
+    };
+
+    if(container) container.innerHTML='<div class="gw-category-toolbar"><div><b>Loading products…</b><span>Matching products only</span></div></div><div class="products category-result-grid"></div>';
+    if(page) page.scrollTop=0;
+
+    (async()=>{
+      await collectMatches(state,query,matcher,FEED_BATCH);
+      renderSearchFeed();
+    })();
+  };
+
+  /* Initial home load: exactly 300 live CJ products. */
+  (async function init(){
+    try{
+      await loadHomeBatch();
+    }catch(e){
+      console.error('GLOBIRA 300-product home loader:',e);
+      feedState.home.loading=false;
+      renderHomeFeed();
+    }
+  })();
+
+})();
+</script>
