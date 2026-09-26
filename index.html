@@ -13504,3 +13504,391 @@ document.addEventListener('click',function(e){
 
 })();
 </script>
+
+<style id="globira-final-feed-fix-v8">
+/* FINAL CATEGORY / HOME FEED FIX */
+#categoryProducts .globira-collection-toolbar{display:flex!important;flex-wrap:wrap!important;gap:10px!important;align-items:center!important;justify-content:space-between!important;margin:0 0 22px!important;padding:14px!important;background:#fff!important;border:1px solid #ded8ce!important;box-sizing:border-box!important}
+#categoryProducts .globira-collection-search{flex:1 1 320px!important;min-width:260px!important;height:46px!important;border:1px solid #bfb8ad!important;background:#fff!important;padding:0 15px!important;font:500 15px/1.2 'DM Sans',sans-serif!important;outline:none!important;box-sizing:border-box!important}
+#categoryProducts .globira-collection-filter{height:46px!important;min-width:130px!important;border:1px solid #bfb8ad!important;background:#fff!important;padding:0 12px!important;font:500 14px 'DM Sans',sans-serif!important;box-sizing:border-box!important}
+#categoryProducts .globira-collection-clear{height:46px!important;padding:0 16px!important;border:1px solid #111!important;background:#111!important;color:#fff!important;font:600 13px 'DM Sans',sans-serif!important;cursor:pointer!important}
+#categoryProducts .globira-collection-count{font-size:15px!important;white-space:nowrap!important}
+#categoryProducts .globira-collection-count b{font-size:16px!important}
+#categoryProducts .globira-collection-count span{display:block!important;color:#777!important;font-size:13px!important;margin-top:3px!important}
+.globira-feed-loading{text-align:center!important;padding:35px!important;background:#fff!important;border:1px solid #e2ddd5!important;font-size:15px!important}
+.globira-feed-loadmore{display:block!important;margin:30px auto!important;padding:15px 28px!important;background:#111!important;color:#fff!important;border:0!important;font:600 14px 'DM Sans',sans-serif!important;cursor:pointer!important;letter-spacing:.5px!important}
+@media(max-width:700px){#categoryProducts .globira-collection-toolbar{align-items:stretch!important}.globira-collection-search{min-width:100%!important;flex-basis:100%!important}.globira-collection-filter{flex:1!important;min-width:0!important}.globira-collection-clear{flex:1!important}}
+</style>
+<script id="globira-final-feed-fix-v8">
+(function(){
+'use strict';
+const PAGE=100, HOME_BATCH=300, CATEGORY_BATCH=100;
+const state={home:{items:[],next:1,total:Infinity,busy:false},category:{name:'',items:[],next:1,total:Infinity,busy:false,filters:{q:'',min:'',max:'',size:'',color:''}}};
+function normalizePayload(x){return x?.products||x?.data?.products||x?.data?.list||x?.data?.content||[]}
+function payloadPages(x){return Number(x?.totalPages??x?.data?.totalPages??x?.pagination?.totalPages??Infinity)}
+function productId(p){return String(p?.id||p?.cjProductId||p?.pid||p?.productId||'')}
+function uniq(a){const m=new Map();for(const p of a||[]){const id=productId(p);if(id)m.set(id,p)}return [...m.values()]}
+function classify(p){try{return typeof classifyCJProduct==='function'?classifyCJProduct(p):p}catch(e){return p}}
+async function getPage(page,keyword=''){
+  const url='/api/cj-products?page='+page+'&size='+PAGE+(keyword?'&keyword='+encodeURIComponent(keyword):'');
+  try{const r=await fetch(url,{cache:'no-store',headers:{Accept:'application/json'}});if(!r.ok)return null;const j=await r.json();if(j?.success===false)return null;return j}catch(e){console.warn('GLOBIRA feed page',page,e);return null}
+}
+async function getPages(start,count,keyword=''){
+  const nums=[];for(let i=0;i<count;i++)nums.push(start+i);
+  const rs=await Promise.all(nums.map(n=>getPage(n,keyword)));return rs;
+}
+function categoryOf(p){
+  const c=String(p?.category||'').toLowerCase();
+  const g=String(p?.gender||'').toLowerCase();
+  if(c)return c;
+  if(g)return g;
+  return typeof globiraGender==='function'?String(globiraGender(p)||'').toLowerCase():'';
+}
+function matchesCategory(p,cat){
+  p=classify(p); const c=String(cat||'').toLowerCase();
+  const pc=categoryOf(p), g=String(p?.gender||'').toLowerCase();
+  if(c==='men'||c==='women') return pc===c||g===c;
+  return pc===c;
+}
+function variantValues(p,key){
+  const out=[];const arr=Array.isArray(p?.variants)?p.variants:[];
+  for(const v of arr){const s=String(v?.variantNameEn||v?.variantName||v?.variantKey||v?.name||v?.properties||'');if(key==='size'&&/size\s*[:\-]?\s*([^|,/]+)/i.test(s))out.push(RegExp.$1.trim());if(key==='color'&&/(?:color|colour)\s*[:\-]?\s*([^|,/]+)/i.test(s))out.push(RegExp.$1.trim())}
+  return out;
+}
+function passesFilters(p){
+  const f=state.category.filters, q=f.q.toLowerCase();
+  if(q){const hay=[p?.name,p?.subcategory,p?.description,p?.category,p?.gender].join(' ').toLowerCase();if(!hay.includes(q))return false}
+  const price=Number(p?.price||0);if(f.min!==''&&price<Number(f.min))return false;if(f.max!==''&&price>Number(f.max))return false;
+  if(f.size&&!variantValues(p,'size').some(x=>x.toLowerCase()===f.size.toLowerCase())&&!String(p?.size||'').toLowerCase().includes(f.size.toLowerCase()))return false;
+  if(f.color&&!variantValues(p,'color').some(x=>x.toLowerCase()===f.color.toLowerCase())&&!String(p?.color||'').toLowerCase().includes(f.color.toLowerCase()))return false;
+  return true;
+}
+function renderHome(){
+ const c=document.getElementById('featuredProducts');if(!c)return;
+ c.innerHTML=state.home.items.map(productCard).join('');
+ const status=document.getElementById('homeCatalogStatus');if(status)status.textContent=state.home.items.length+' live products loaded';
+ const b=document.getElementById('homeLoadMoreBtn');if(b){b.style.display=state.home.next<=state.home.total?'inline-block':'none';b.disabled=state.home.busy;b.textContent=state.home.busy?'Loading products…':'Load 300 more products →'}
+}
+async function loadHome(force=false){
+ if(state.home.busy)return;state.home.busy=true;renderHome();
+ const first=state.home.next,rs=await getPages(first,3,'');let got=0;
+ for(const r of rs){const arr=normalizePayload(r);got+=arr.length;state.home.items=uniq(state.home.items.concat(arr.map(classify)));const tp=payloadPages(r);if(Number.isFinite(tp))state.home.total=Math.max(1,tp)}
+ state.home.next=first+3;state.home.busy=false;renderHome();
+ console.log('GLOBIRA HOME:',state.home.items.length,'products loaded from pages',first,'-',first+2,'raw',got);
+}
+window.loadMoreHomeProducts=function(){loadHome()};
+async function openCategory(cat){
+ const home=document.getElementById('homePage'),page=document.getElementById('categoryPage'),title=document.getElementById('categoryTitle'),ey=document.getElementById('categoryEyebrow'),c=document.getElementById('categoryProducts');
+ if(home)home.style.display='none';if(page)page.classList.add('active');
+ const d=typeof GLOBIRA_MENU_DATA!=='undefined'?GLOBIRA_MENU_DATA[cat]:null;const nice=d?.title||String(cat).replace(/[-_]/g,' ').replace(/\b\w/g,x=>x.toUpperCase());
+ if(title)title.textContent=nice;if(ey)ey.textContent='GLOBIRA / '+nice.toUpperCase();
+ state.category={name:String(cat).toLowerCase(),items:[],next:1,total:Infinity,busy:false,filters:{q:'',min:'',max:'',size:'',color:''}};
+ if(c)c.innerHTML='<div class="globira-feed-loading">Loading products for '+escapeHtml(nice)+'…</div>';
+ await loadCategoryBatch();
+}
+async function loadCategoryBatch(){
+ const s=state.category;if(s.busy)return;s.busy=true;renderCategory();
+ let safety=0;
+ while(s.items.length<CATEGORY_BATCH&&s.next<=s.total&&safety<30){
+   const first=s.next,rs=await getPages(first,3,'');let valid=false;
+   for(const r of rs){const arr=normalizePayload(r);if(arr.length)valid=true;const tp=payloadPages(r);if(Number.isFinite(tp))s.total=Math.max(1,tp);for(const p0 of arr){const p=classify(p0);if(matchesCategory(p,s.name))s.items.push(p)}}
+   s.items=uniq(s.items);s.next=first+3;safety+=3;if(!valid)break;
+ }
+ s.busy=false;renderCategory();
+}
+function renderCategory(){
+ const c=document.getElementById('categoryProducts');if(!c)return;const s=state.category;const filtered=s.items.filter(passesFilters);
+ let sizes=[],colors=[];for(const p of s.items){sizes=sizes.concat(variantValues(p,'size'));colors=colors.concat(variantValues(p,'color'));}
+ sizes=[...new Set(sizes.filter(Boolean))].slice(0,80).sort();colors=[...new Set(colors.filter(Boolean))].slice(0,80).sort();
+ const d=typeof GLOBIRA_MENU_DATA!=='undefined'?GLOBIRA_MENU_DATA[s.name]:null;const nice=d?.title||s.name;
+ c.innerHTML='<div class="globira-collection-toolbar">'+
+ '<div class="globira-collection-count"><b>'+filtered.length.toLocaleString()+' products</b><span>'+s.items.length.toLocaleString()+' '+nice+' products loaded</span></div>'+
+ '<input class="globira-collection-search" id="globiraCollectionSearch" type="search" placeholder="Search in '+escapeHtml(nice)+'..." value="'+escapeHtml(s.filters.q)+'">'+
+ '<input class="globira-collection-filter" id="globiraMinPrice" type="number" min="0" placeholder="Min price" value="'+escapeHtml(s.filters.min)+'">'+
+ '<input class="globira-collection-filter" id="globiraMaxPrice" type="number" min="0" placeholder="Max price" value="'+escapeHtml(s.filters.max)+'">'+
+ '<select class="globira-collection-filter" id="globiraSize"><option value="">All sizes</option>'+sizes.map(x=>'<option '+(x===s.filters.size?'selected':'')+'>'+escapeHtml(x)+'</option>').join('')+'</select>'+
+ '<select class="globira-collection-filter" id="globiraColor"><option value="">All colours</option>'+colors.map(x=>'<option '+(x===s.filters.color?'selected':'')+'>'+escapeHtml(x)+'</option>').join('')+'</select>'+
+ '<button class="globira-collection-clear" id="globiraCollectionClear">Clear filters</button></div>'+
+ '<div class="products category-result-grid">'+(filtered.length?filtered.map(productCard).join(''):'<div class="empty-category"><h3>No matching products</h3><p>Change the search or filters.</p></div>')+'</div>'+((s.next<=s.total)?'<button class="globira-feed-loadmore" id="globiraCategoryMore">Load 100 more products →</button>':'');
+ const bind=(id,fn)=>{const e=document.getElementById(id);if(e)e.addEventListener('input',fn)};
+ bind('globiraCollectionSearch',e=>{s.filters.q=e.target.value;renderCategory()});bind('globiraMinPrice',e=>{s.filters.min=e.target.value;renderCategory()});bind('globiraMaxPrice',e=>{s.filters.max=e.target.value;renderCategory()});
+ const sz=document.getElementById('globiraSize');if(sz)sz.onchange=e=>{s.filters.size=e.target.value;renderCategory()};const co=document.getElementById('globiraColor');if(co)co.onchange=e=>{s.filters.color=e.target.value;renderCategory()};
+ const cl=document.getElementById('globiraCollectionClear');if(cl)cl.onclick=()=>{s.filters={q:'',min:'',max:'',size:'',color:''};renderCategory()};
+ const more=document.getElementById('globiraCategoryMore');if(more)more.onclick=async()=>{more.disabled=true;more.textContent='Loading more…';await loadCategoryBatch()};
+}
+window.showCategory=function(cat){openCategory(cat)};
+window.showSubcategory=function(cat,sub){
+ if(sub==='all'){openCategory(cat);return}
+ const name=String(sub||'').replace(/-/g,' ');openCategory(cat).then(()=>{state.category.filters.q=name;renderCategory()});
+};
+/* Start home only after DOM is ready and do not let the old 20-product loader overwrite it. */
+function start(){setTimeout(()=>{loadHome(true)},100)}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
+</script>
+
+
+<!-- GLOBIRA CATEGORY CLEAN SEARCH + FILTER DRAWER + LARGER TYPE -->
+<style id="globira-category-clean-filter-v1">
+  /* Larger, easier-to-read storefront typography */
+  body{font-size:13px !important;}
+  .nav a{font-size:14px !important;}
+  .header-search input{font-size:13px !important;}
+  .section-heading p,.product-info p{font-size:13px !important;}
+  .product-info h3{font-size:21px !important;}
+  .price{font-size:15px !important;}
+  .badge{font-size:12px !important;}
+
+  /* Category toolbar: only small search + filter button */
+  #categoryProducts > .globira-collection-toolbar{
+    grid-column:1 / -1 !important;
+    display:flex !important;
+    align-items:center !important;
+    gap:10px !important;
+    margin:0 0 24px !important;
+    padding:0 !important;
+    border:0 !important;
+    background:transparent !important;
+    width:100% !important;
+  }
+  .globira-collection-count{
+    display:none !important;
+  }
+  .globira-collection-search{
+    flex:0 1 360px !important;
+    width:360px !important;
+    max-width:65vw !important;
+    height:44px !important;
+    padding:0 16px 0 42px !important;
+    border:1px solid #cfc9bd !important;
+    border-radius:24px !important;
+    background:#fff !important;
+    color:#111 !important;
+    font-family:inherit !important;
+    font-size:14px !important;
+    outline:none !important;
+    box-shadow:none !important;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23555555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") !important;
+    background-repeat:no-repeat !important;
+    background-position:15px center !important;
+  }
+  .globira-collection-search:focus{border-color:#111 !important;}
+  .globira-collection-filter,
+  .globira-collection-clear{
+    display:none !important;
+  }
+  .globira-filter-open-btn{
+    height:44px !important;
+    border:1px solid #111 !important;
+    background:#111 !important;
+    color:#fff !important;
+    border-radius:23px !important;
+    padding:0 18px !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:8px !important;
+    font-family:inherit !important;
+    font-size:13px !important;
+    letter-spacing:.3px !important;
+    white-space:nowrap !important;
+  }
+  .globira-filter-open-btn:hover{background:#333 !important;}
+  .globira-filter-icon{font-size:17px;line-height:1;}
+
+  /* Drawer */
+  .globira-filter-backdrop{
+    position:fixed !important;
+    inset:0 !important;
+    background:rgba(0,0,0,.42) !important;
+    z-index:10090 !important;
+    display:none !important;
+    opacity:0 !important;
+    transition:opacity .22s ease !important;
+  }
+  .globira-filter-backdrop.active{display:block !important;opacity:1 !important;}
+  .globira-filter-drawer{
+    position:fixed !important;
+    top:0 !important;
+    right:0 !important;
+    width:min(410px,92vw) !important;
+    height:100vh !important;
+    background:#f7f4ee !important;
+    z-index:10100 !important;
+    transform:translateX(105%) !important;
+    transition:transform .28s ease !important;
+    box-shadow:-18px 0 50px rgba(0,0,0,.18) !important;
+    display:flex !important;
+    flex-direction:column !important;
+  }
+  .globira-filter-drawer.active{transform:translateX(0) !important;}
+  .globira-filter-head{
+    display:flex !important;
+    justify-content:space-between !important;
+    align-items:center !important;
+    padding:24px 24px 18px !important;
+    border-bottom:1px solid #ddd8ce !important;
+    background:#f7f4ee !important;
+  }
+  .globira-filter-head h3{
+    font-family:'Playfair Display',serif !important;
+    font-size:28px !important;
+    font-weight:500 !important;
+    margin:0 !important;
+  }
+  .globira-filter-close{
+    width:38px !important;height:38px !important;border:1px solid #ccc6bb !important;
+    background:transparent !important;border-radius:50% !important;font-size:22px !important;
+  }
+  .globira-filter-body{
+    padding:24px !important;
+    overflow:auto !important;
+    flex:1 !important;
+  }
+  .globira-filter-group{margin-bottom:25px !important;}
+  .globira-filter-group label.title{
+    display:block !important;
+    font-size:12px !important;
+    font-weight:700 !important;
+    letter-spacing:1.5px !important;
+    text-transform:uppercase !important;
+    margin-bottom:10px !important;
+  }
+  .globira-filter-price-row{display:grid !important;grid-template-columns:1fr 1fr !important;gap:10px !important;}
+  .globira-filter-body input[type="number"],
+  .globira-filter-body select{
+    width:100% !important;height:44px !important;padding:0 12px !important;
+    border:1px solid #cfc9bd !important;background:#fff !important;
+    border-radius:7px !important;font-family:inherit !important;font-size:14px !important;
+    outline:none !important;
+  }
+  .globira-filter-body select:focus,
+  .globira-filter-body input:focus{border-color:#111 !important;}
+  .globira-filter-footer{
+    padding:16px 24px 22px !important;border-top:1px solid #ddd8ce !important;
+    display:grid !important;grid-template-columns:1fr 1fr !important;gap:10px !important;
+    background:#f7f4ee !important;
+  }
+  .globira-filter-clear-btn,.globira-filter-done-btn{
+    height:46px !important;border-radius:5px !important;font-family:inherit !important;
+    font-size:13px !important;letter-spacing:.4px !important;cursor:pointer !important;
+  }
+  .globira-filter-clear-btn{background:#fff !important;color:#111 !important;border:1px solid #111 !important;}
+  .globira-filter-done-btn{background:#111 !important;color:#fff !important;border:1px solid #111 !important;}
+
+  @media(max-width:700px){
+    #categoryProducts > .globira-collection-toolbar{margin-bottom:18px !important;}
+    .globira-collection-search{flex:1 !important;width:auto !important;max-width:none !important;height:42px !important;font-size:13px !important;}
+    .globira-filter-open-btn{height:42px !important;width:46px !important;padding:0 !important;border-radius:50% !important;}
+    .globira-filter-open-btn .filter-text{display:none !important;}
+    .globira-filter-drawer{width:94vw !important;}
+  }
+</style>
+<script id="globira-category-clean-filter-v1-js">
+(function(){
+  'use strict';
+  const root=document.getElementById('categoryProducts');
+  if(!root)return;
+
+  function getDrawer(){
+    let d=document.getElementById('globiraFilterDrawer');
+    let b=document.getElementById('globiraFilterBackdrop');
+    if(d&&b)return {d,b};
+
+    b=document.createElement('div');
+    b.id='globiraFilterBackdrop';
+    b.className='globira-filter-backdrop';
+    document.body.appendChild(b);
+
+    d=document.createElement('aside');
+    d.id='globiraFilterDrawer';
+    d.className='globira-filter-drawer';
+    d.innerHTML=`
+      <div class="globira-filter-head">
+        <h3>Filter</h3>
+        <button type="button" class="globira-filter-close" aria-label="Close filter">×</button>
+      </div>
+      <div class="globira-filter-body">
+        <div class="globira-filter-group">
+          <label class="title">Price</label>
+          <div class="globira-filter-price-row">
+            <input id="globiraDrawerMin" type="number" min="0" placeholder="Min price">
+            <input id="globiraDrawerMax" type="number" min="0" placeholder="Max price">
+          </div>
+        </div>
+        <div class="globira-filter-group">
+          <label class="title">Size</label>
+          <select id="globiraDrawerSize"><option value="">All sizes</option></select>
+        </div>
+        <div class="globira-filter-group">
+          <label class="title">Colour</label>
+          <select id="globiraDrawerColor"><option value="">All colours</option></select>
+        </div>
+      </div>
+      <div class="globira-filter-footer">
+        <button type="button" class="globira-filter-clear-btn">Clear all</button>
+        <button type="button" class="globira-filter-done-btn">Done</button>
+      </div>`;
+    document.body.appendChild(d);
+
+    function close(){d.classList.remove('active');b.classList.remove('active');document.body.classList.remove('globira-filter-lock');}
+    function open(){d.classList.add('active');b.classList.add('active');}
+    d.querySelector('.globira-filter-close').onclick=close;
+    b.onclick=close;
+    d.querySelector('.globira-filter-done-btn').onclick=close;
+    d.querySelector('.globira-filter-clear-btn').onclick=function(){
+      const clear=document.getElementById('globiraCollectionClear');
+      if(clear)clear.click();
+      close();
+    };
+    d._open=open;d._close=close;
+    return {d,b};
+  }
+
+  function copySelectOptions(sourceId,targetId){
+    const src=document.getElementById(sourceId),dst=document.getElementById(targetId);
+    if(!dst)return;
+    const current=src?src.value:'';
+    dst.innerHTML=src?src.innerHTML:'<option value="">All</option>';
+    dst.value=current;
+  }
+
+  function syncDrawerFromToolbar(){
+    const pair=getDrawer(),d=pair.d;
+    const min=document.getElementById('globiraMinPrice'),max=document.getElementById('globiraMaxPrice');
+    const dm=d.querySelector('#globiraDrawerMin'),dx=d.querySelector('#globiraDrawerMax');
+    if(dm)dm.value=min?min.value:'';
+    if(dx)dx.value=max?max.value:'';
+    copySelectOptions('globiraSize','globiraDrawerSize');
+    copySelectOptions('globiraColor','globiraDrawerColor');
+    const ds=d.querySelector('#globiraDrawerSize'),dc=d.querySelector('#globiraDrawerColor');
+    if(ds)ds.onchange=function(){const s=document.getElementById('globiraSize');if(s){s.value=ds.value;s.dispatchEvent(new Event('change',{bubbles:true}));}};
+    if(dc)dc.onchange=function(){const c=document.getElementById('globiraColor');if(c){c.value=dc.value;c.dispatchEvent(new Event('change',{bubbles:true}));}};
+    if(dm)dm.oninput=function(){const x=document.getElementById('globiraMinPrice');if(x){x.value=dm.value;x.dispatchEvent(new Event('input',{bubbles:true}));}};
+    if(dx)dx.oninput=function(){const x=document.getElementById('globiraMaxPrice');if(x){x.value=dx.value;x.dispatchEvent(new Event('input',{bubbles:true}));}};
+  }
+
+  function enhance(){
+    const toolbar=root.querySelector('.globira-collection-toolbar');
+    if(!toolbar)return;
+
+    let btn=toolbar.querySelector('.globira-filter-open-btn');
+    if(!btn){
+      btn=document.createElement('button');
+      btn.type='button';
+      btn.className='globira-filter-open-btn';
+      btn.innerHTML='<span class="globira-filter-icon">☷</span><span class="filter-text">Filter</span>';
+      toolbar.appendChild(btn);
+    }
+    btn.onclick=function(){const x=getDrawer();syncDrawerFromToolbar();x.d._open();};
+
+    /* The category search stays visible; all other controls live only in the drawer. */
+    ['globiraMinPrice','globiraMaxPrice','globiraSize','globiraColor','globiraCollectionClear'].forEach(id=>{
+      const el=document.getElementById(id);if(el)el.style.display='none';
+    });
+  }
+
+  const observer=new MutationObserver(function(){enhance();});
+  observer.observe(root,{childList:true,subtree:true});
+  enhance();
+})();
+</script>
