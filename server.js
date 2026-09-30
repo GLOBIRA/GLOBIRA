@@ -87,28 +87,12 @@ const SESSION_TIME =
 const sessions = new Map();
 
 /* =========================================================
-   CJ SETTINGS
+   SUPPLIER SETTINGS
 ========================================================= */
-
-/*
- * CJ access token.
- *
- * IMPORTANT:
- * Keep this in Vercel Environment Variables.
- *
- * CJ_ACCESS_TOKEN=xxxxxxxx
- */
 
 const CJ_ACCESS_TOKEN = String(
     process.env.CJ_ACCESS_TOKEN || ""
 ).trim();
-
-/*
- * Optional fallback name.
- *
- * If you already have CJ_ACCESS_TOKEN,
- * that remains the preferred value.
- */
 
 const CJ_API_KEY = String(
     process.env.CJ_API_KEY || ""
@@ -120,20 +104,7 @@ const CJ_API_BASE =
 const CJ_PRODUCT_LIST_URL =
     `${CJ_API_BASE}/product/listV2`;
 
-/*
- * CJ allows up to 100 products per request.
- */
-
 const CJ_PAGE_SIZE = 100;
-
-/*
- * GLOBIRA markup.
- *
- * Example:
- *
- * CJ cost = $10
- * 60% markup = $16
- */
 
 const GLOBIRA_MARKUP_PERCENT = Math.max(
     0,
@@ -143,7 +114,7 @@ const GLOBIRA_MARKUP_PERCENT = Math.max(
 );
 
 const DEFAULT_CURRENCY =
-    process.env.DEFAULT_CURRENCY || "INR";
+    process.env.DEFAULT_CURRENCY || "USD";
 
 const MIN_PRODUCT_STOCK = Math.max(
     0,
@@ -176,6 +147,26 @@ function safeArray(value) {
     return Array.isArray(value)
         ? value
         : [];
+}
+
+function uniqueStrings(values) {
+    return [
+        ...new Set(
+            safeArray(values)
+                .map(value =>
+                    String(value || "").trim()
+                )
+                .filter(Boolean)
+        )
+    ];
+}
+
+function cleanProductText(value) {
+    return String(value || "")
+        .replace(/<[^>]*>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
 }
 
 /* =========================================================
@@ -251,8 +242,6 @@ function generateOrderNumber() {
 
 /* =========================================================
    LOCAL CATALOG
-   Used for local/manual sync and compatibility.
-   CUSTOMER API DOES NOT DEPEND ON THIS.
 ========================================================= */
 
 function emptyCatalog() {
@@ -260,7 +249,7 @@ function emptyCatalog() {
         version: 1,
         updatedAt: null,
         lastSync: null,
-        syncSource: "CJ Dropshipping",
+        syncSource: "GLOBIRA",
         products: []
     };
 }
@@ -324,6 +313,9 @@ function saveCatalog(catalog) {
     catalog.updatedAt =
         new Date().toISOString();
 
+    catalog.syncSource =
+        "GLOBIRA";
+
     fs.writeFileSync(
         CATALOG_FILE,
         JSON.stringify(
@@ -373,7 +365,795 @@ function calculateGlobiraPrice(
 }
 
 /* =========================================================
-   CJ PRODUCT NORMALIZATION
+   GLOBIRA PRODUCT TYPE DETECTION
+========================================================= */
+
+function detectGlobiraProductType(product) {
+    const text = cleanProductText(
+        [
+            product?.nameEn,
+            product?.productNameEn,
+            product?.name,
+            product?.productName,
+            product?.categoryName,
+            product?.oneCategoryName,
+            product?.twoCategoryName,
+            product?.threeCategoryName,
+            product?.category,
+            product?.description
+        ].join(" ")
+    );
+
+    /* SHOES */
+
+    if (
+        /\b(
+            shoe|shoes|sneaker|sneakers|trainer|trainers|
+            boots|boot|sandals|sandal|slipper|slippers|
+            loafer|loafers|heels|heel|footwear
+        )\b/x.test(text)
+    ) {
+        return "shoes";
+    }
+
+    /* BAGS */
+
+    if (
+        /\b(
+            handbag|hand bag|purse|bag|bags|backpack|
+            backpacks|rucksack|tote|shoulder bag|
+            crossbody|cross-body|clutch|pouch|
+            laptop bag|travel bag|duffel|duffle|
+            suitcase|briefcase|card holder|wallet
+        )\b/x.test(text)
+    ) {
+        if (
+            /\b(
+                wallet|purse|card holder|cardholder|money clip
+            )\b/x.test(text)
+        ) {
+            return "wallets";
+        }
+
+        return "bags";
+    }
+
+    /* JEWELRY */
+
+    if (
+        /\b(
+            ring|rings|bracelet|bracelets|necklace|
+            necklaces|chain|chains|earring|earrings|
+            pendant|pendants|jewelry|jewellery|
+            anklet|anklets
+        )\b/x.test(text)
+    ) {
+        if (
+            /\b(ring|rings)\b/.test(text)
+        ) {
+            return "rings";
+        }
+
+        if (
+            /\b(
+                bracelet|bracelets|anklet|anklets
+            )\b/x.test(text)
+        ) {
+            return "bracelets";
+        }
+
+        if (
+            /\b(
+                necklace|necklaces|chain|chains|
+                pendant|pendants
+            )\b/x.test(text)
+        ) {
+            return "necklaces";
+        }
+
+        return "jewelry";
+    }
+
+    /* ELECTRONICS */
+
+    if (
+        /\b(
+            phone|mobile|iphone|samsung|xiaomi|redmi|
+            oppo|vivo|realme|case|phone case|tablet|
+            ipad|laptop|computer|keyboard|mouse|
+            headphone|headphones|earphone|earphones|
+            earbud|earbuds|airpods|speaker|speakers|
+            charger|charging|cable|power bank|powerbank|
+            smart watch|smartwatch|watch|camera|
+            projector|monitor|usb|adapter|hub|
+            electronic|electronics|gamepad|controller|
+            console
+        )\b/x.test(text)
+    ) {
+        return "electronics";
+    }
+
+    /* KIDS */
+
+    if (
+        /\b(
+            baby|babies|infant|infants|kid|kids|child|
+            children|toddler|newborn|boy|girls|girl|boys
+        )\b/x.test(text)
+    ) {
+        return "kids";
+    }
+
+    /* CLOTHING */
+
+    if (
+        /\b(
+            t-shirt|tshirt|tee|shirt|shirts|polo|
+            hoodie|hoodies|sweatshirt|sweatshirts|
+            jacket|jackets|coat|coats|blazer|blazers|
+            dress|dresses|skirt|skirts|legging|leggings|
+            shorts|pants|trousers|jeans|joggers|
+            tracksuit|tracksuits|sweatpants|underwear|
+            briefs|boxers|bra|bras|lingerie|swimwear|
+            bikini|bikinis|bodysuit|jumpsuit|romper|
+            top|tops|cardigan|vest|waistcoat|
+            clothing|apparel
+        )\b/x.test(text)
+    ) {
+        if (
+            /\b(
+                jeans|pants|trousers|joggers|
+                sweatpants|shorts
+            )\b/x.test(text)
+        ) {
+            return "pants";
+        }
+
+        return "clothing";
+    }
+
+    /* HOME */
+
+    if (
+        /\b(
+            kitchen|cookware|tableware|home decor|
+            decoration|storage|organizer|organiser|
+            furniture|chair|table|shelf|shelves|
+            pillow|cushion|blanket|towel|bedding|
+            bathroom|home
+        )\b/x.test(text)
+    ) {
+        return "home";
+    }
+
+    /* BEAUTY */
+
+    if (
+        /\b(
+            makeup|cosmetic|cosmetics|lipstick|foundation|
+            mascara|eyeliner|beauty|skincare|cream|
+            serum|lotion|shampoo|conditioner|perfume|
+            fragrance|brush|beauty tool
+        )\b/x.test(text)
+    ) {
+        return "beauty";
+    }
+
+    /* SPORTS */
+
+    if (
+        /\b(
+            sports|sport|fitness|gym|yoga|football|
+            soccer|basketball|tennis|cycling|cycling gear|
+            gloves|sportswear
+        )\b/x.test(text)
+    ) {
+        return "sports";
+    }
+
+    return "other";
+}
+
+/* =========================================================
+   SIZE CONFIGURATION
+========================================================= */
+
+function getGlobiraSizeConfiguration(
+    productType
+) {
+    const config = {
+        enabled: false,
+        type: "none",
+        label: "",
+        system: "",
+        chartType: "none",
+        attributes: [],
+        note: ""
+    };
+
+    if (productType === "clothing") {
+        return {
+            enabled: true,
+            type: "clothing",
+            label: "Size",
+            system: "standard_clothing",
+            chartType: "clothing",
+            attributes: [
+                "chest",
+                "shoulder",
+                "length",
+                "sleeve"
+            ],
+            note:
+                "Only sizes actually available from the supplier are shown."
+        };
+    }
+
+    if (productType === "pants") {
+        return {
+            enabled: true,
+            type: "pants",
+            label: "Waist / Size",
+            system: "waist",
+            chartType: "pants",
+            attributes: [
+                "waist",
+                "hip",
+                "inseam",
+                "length",
+                "rise"
+            ],
+            note:
+                "Pants use the supplier's actual waist or size measurements."
+        };
+    }
+
+    if (productType === "shoes") {
+        return {
+            enabled: true,
+            type: "shoes",
+            label: "Shoe Size",
+            system: "shoe",
+            chartType: "shoes",
+            attributes: [
+                "EU",
+                "US",
+                "UK",
+                "footLengthCm"
+            ],
+            note:
+                "Only actual available shoe sizes are shown."
+        };
+    }
+
+    if (productType === "kids") {
+        return {
+            enabled: true,
+            type: "kids",
+            label: "Age / Size",
+            system: "kids",
+            chartType: "kids",
+            attributes: [
+                "age",
+                "height",
+                "chest",
+                "waist",
+                "hip"
+            ],
+            note:
+                "Kids sizes follow the available supplier variants."
+        };
+    }
+
+    if (productType === "rings") {
+        return {
+            enabled: true,
+            type: "ring",
+            label: "Ring Size",
+            system: "ring",
+            chartType: "ring",
+            attributes: [
+                "US",
+                "UK",
+                "EU",
+                "diameterMm",
+                "circumferenceMm"
+            ],
+            note:
+                "Ring sizing follows the supplier's available variants."
+        };
+    }
+
+    if (productType === "bracelets") {
+        return {
+            enabled: true,
+            type: "bracelet",
+            label: "Bracelet Size",
+            system: "length",
+            chartType: "bracelet",
+            attributes: [
+                "length",
+                "wristCircumference"
+            ],
+            note:
+                "Bracelet length is used instead of clothing sizing."
+        };
+    }
+
+    if (productType === "necklaces") {
+        return {
+            enabled: true,
+            type: "necklace",
+            label: "Length",
+            system: "length",
+            chartType: "necklace",
+            attributes: [
+                "length",
+                "extension"
+            ],
+            note:
+                "Necklace length is used instead of clothing sizing."
+        };
+    }
+
+    /* BAGS NEVER GET CLOTHING SIZE */
+
+    if (productType === "bags") {
+        return {
+            enabled: false,
+            type: "dimensions",
+            label: "",
+            system: "dimensions",
+            chartType: "bag_dimensions",
+            attributes: [
+                "width",
+                "height",
+                "depth",
+                "strapLength",
+                "handleDrop"
+            ],
+            note:
+                "This product uses dimensions instead of clothing size."
+        };
+    }
+
+    if (productType === "wallets") {
+        return {
+            enabled: false,
+            type: "dimensions",
+            label: "",
+            system: "dimensions",
+            chartType: "wallet_dimensions",
+            attributes: [
+                "width",
+                "height",
+                "thickness"
+            ],
+            note:
+                "This product uses dimensions instead of clothing size."
+        };
+    }
+
+    /* ELECTRONICS NEVER GET CLOTHING SIZE */
+
+    if (productType === "electronics") {
+        return {
+            enabled: false,
+            type: "variant",
+            label: "Variant",
+            system: "product_variant",
+            chartType: "none",
+            attributes: [
+                "model",
+                "compatibility",
+                "capacity",
+                "power",
+                "color"
+            ],
+            note:
+                "Electronics use model, compatibility, capacity or technical variants."
+        };
+    }
+
+    if (productType === "home") {
+        return {
+            enabled: false,
+            type: "dimensions",
+            label: "",
+            system: "dimensions",
+            chartType: "home_dimensions",
+            attributes: [
+                "length",
+                "width",
+                "height",
+                "capacity",
+                "weight"
+            ],
+            note:
+                "Home products use dimensions, capacity or weight."
+        };
+    }
+
+    if (productType === "beauty") {
+        return {
+            enabled: false,
+            type: "variant",
+            label: "Variant",
+            system: "beauty_variant",
+            chartType: "none",
+            attributes: [
+                "shade",
+                "volume",
+                "capacity",
+                "packQuantity"
+            ],
+            note:
+                "Beauty products use shade, volume or pack quantity."
+        };
+    }
+
+    if (productType === "sports") {
+        return {
+            enabled: false,
+            type: "sport_variant",
+            label: "Variant",
+            system: "sport",
+            chartType: "none",
+            attributes: [
+                "size",
+                "dimensions",
+                "weight",
+                "capacity"
+            ],
+            note:
+                "Sports products use product-specific measurements."
+        };
+    }
+
+    return config;
+}
+
+/* =========================================================
+   VARIANT NORMALIZATION
+========================================================= */
+
+function extractVariantText(variant) {
+    if (!variant) {
+        return "";
+    }
+
+    if (typeof variant === "string") {
+        return variant;
+    }
+
+    return [
+        variant.variantName,
+        variant.variantNameEn,
+        variant.name,
+        variant.nameEn,
+        variant.variant,
+        variant.size,
+        variant.sizeName,
+        variant.color,
+        variant.colorName,
+        variant.colorNameEn,
+        variant.sku,
+        variant.variantSku
+    ]
+        .filter(Boolean)
+        .join(" / ");
+}
+
+function normalizeCJVariants(product) {
+    const rawVariants = [
+        ...safeArray(product?.variants),
+        ...safeArray(product?.variantList),
+        ...safeArray(product?.productVariants)
+    ];
+
+    const unique = new Map();
+
+    for (const raw of rawVariants) {
+        if (!raw) {
+            continue;
+        }
+
+        const text =
+            extractVariantText(raw);
+
+        const sku =
+            String(
+                raw?.sku ||
+                raw?.variantSku ||
+                raw?.variantId ||
+                raw?.vid ||
+                ""
+            ).trim();
+
+        const id =
+            String(
+                raw?.variantId ||
+                raw?.vid ||
+                sku ||
+                text
+            ).trim();
+
+        if (!id && !text) {
+            continue;
+        }
+
+        const variant = {
+            id:
+                id ||
+                `variant_${unique.size + 1}`,
+
+            sku,
+
+            name:
+                text ||
+                sku,
+
+            available:
+                raw?.available !== false &&
+                raw?.stock !== 0 &&
+                raw?.inventory !== 0,
+
+            stock:
+                Math.max(
+                    0,
+                    Number(
+                        raw?.stock ??
+                        raw?.inventory ??
+                        raw?.inventoryNum ??
+                        0
+                    )
+                ),
+
+            color:
+                raw?.color ||
+                raw?.colorName ||
+                raw?.colorNameEn ||
+                "",
+
+            size:
+                raw?.size ||
+                raw?.sizeName ||
+                "",
+
+            price:
+                Number(
+                    raw?.price ??
+                    raw?.sellPrice ??
+                    raw?.discountPrice ??
+                    0
+                ),
+
+            raw
+        };
+
+        unique.set(
+            variant.id,
+            variant
+        );
+    }
+
+    return Array.from(
+        unique.values()
+    );
+}
+
+/* =========================================================
+   SIZE EXTRACTION
+========================================================= */
+
+function extractActualSizes(
+    productType,
+    variants
+) {
+    const values = [];
+
+    for (const variant of variants) {
+        const size =
+            String(
+                variant.size || ""
+            ).trim();
+
+        if (size) {
+            values.push(size);
+            continue;
+        }
+
+        const raw =
+            variant.raw || {};
+
+        const rawSize =
+            raw.size ||
+            raw.sizeName ||
+            raw.sizeNameEn ||
+            raw.optionSize ||
+            "";
+
+        if (rawSize) {
+            values.push(
+                String(rawSize).trim()
+            );
+        }
+    }
+
+    /*
+     * Fallback for variants such as:
+     *
+     * Black-M
+     * White-XL
+     * Blue-42
+     */
+
+    if (
+        !values.length &&
+        (
+            productType === "clothing" ||
+            productType === "pants" ||
+            productType === "shoes" ||
+            productType === "kids" ||
+            productType === "rings"
+        )
+    ) {
+        for (const variant of variants) {
+            const text =
+                String(
+                    variant.name || ""
+                ).trim();
+
+            if (!text) {
+                continue;
+            }
+
+            const parts =
+                text
+                    .split(
+                        /[-|,/]+/
+                    )
+                    .map(
+                        item =>
+                            item.trim()
+                    )
+                    .filter(Boolean);
+
+            for (const part of parts) {
+                if (
+                    /^(xxxs|xxs|xs|s|m|l|xl|xxl|2xl|3xl|4xl|5xl|\d{1,3}(?:\.\d+)?)$/i
+                        .test(part)
+                ) {
+                    values.push(part);
+                }
+            }
+        }
+    }
+
+    return uniqueStrings(values);
+}
+
+/* =========================================================
+   COLOR EXTRACTION
+========================================================= */
+
+function extractActualColors(
+    variants
+) {
+    const colors = [];
+
+    for (const variant of variants) {
+        if (variant.color) {
+            colors.push(
+                variant.color
+            );
+        }
+
+        const raw =
+            variant.raw || {};
+
+        colors.push(
+            raw.color,
+            raw.colorName,
+            raw.colorNameEn,
+            raw.colour,
+            raw.colourName
+        );
+    }
+
+    return uniqueStrings(
+        colors
+    );
+}
+
+/* =========================================================
+   DIMENSIONS
+========================================================= */
+
+function extractProductDimensions(
+    product
+) {
+    return {
+        length:
+            product?.length ||
+            product?.productLength ||
+            product?.lengthCm ||
+            null,
+
+        width:
+            product?.width ||
+            product?.productWidth ||
+            product?.widthCm ||
+            null,
+
+        height:
+            product?.height ||
+            product?.productHeight ||
+            product?.heightCm ||
+            null,
+
+        depth:
+            product?.depth ||
+            product?.depthCm ||
+            null,
+
+        weight:
+            product?.weight ||
+            product?.productWeight ||
+            product?.weightGram ||
+            null,
+
+        capacity:
+            product?.capacity ||
+            product?.volume ||
+            null
+    };
+}
+
+/* =========================================================
+   SIZE FILTER TYPE
+========================================================= */
+
+function getGlobiraFilterSizeType(
+    productType
+) {
+    switch (productType) {
+        case "clothing":
+            return "clothing";
+
+        case "pants":
+            return "waist";
+
+        case "shoes":
+            return "shoe";
+
+        case "kids":
+            return "kids";
+
+        case "rings":
+            return "ring";
+
+        case "bracelets":
+            return "bracelet";
+
+        case "necklaces":
+            return "necklace";
+
+        default:
+            return "none";
+    }
+}
+
+/* =========================================================
+   PUBLIC PRODUCT NORMALIZATION
+ *
+ * IMPORTANT:
+ *
+ * No supplier branding is returned here.
+ * Customer-facing data uses GLOBIRA.
+ *
+ * Internal supplier information remains available
+ * only where needed by backend order processing.
 ========================================================= */
 
 function normalizeCJProduct(product) {
@@ -391,7 +1171,7 @@ function normalizeCJProduct(product) {
         );
 
     const stock = Math.max(
-        0,
+        MIN_PRODUCT_STOCK,
         Number(
             product.warehouseInventoryNum ??
             product.totalVerifiedInventory ??
@@ -407,21 +1187,15 @@ function normalizeCJProduct(product) {
             "3"
         );
 
-    /*
-     * listV2 itself returns available CJ products.
-     *
-     * Do NOT require warehouseInventoryNum here,
-     * because that field is not guaranteed on every
-     * listV2 result.
-     */
-
     const available =
         supplierCost > 0 &&
         (
             stock > 0 ||
-            product.inventory === undefined &&
-            product.warehouseInventoryNum === undefined &&
-            product.totalVerifiedInventory === undefined
+            (
+                product.inventory === undefined &&
+                product.warehouseInventoryNum === undefined &&
+                product.totalVerifiedInventory === undefined
+            )
         );
 
     const name =
@@ -437,10 +1211,7 @@ function normalizeCJProduct(product) {
         product.image ||
         "";
 
-    /*
-     * CJ can return different image fields depending
-     * on endpoint/version.
-     */
+    /* IMAGES */
 
     let images = [];
 
@@ -475,7 +1246,9 @@ function normalizeCJProduct(product) {
     }
 
     if (mainImage) {
-        images.unshift(mainImage);
+        images.unshift(
+            mainImage
+        );
     }
 
     images = [
@@ -500,6 +1273,8 @@ function normalizeCJProduct(product) {
         )
     ];
 
+    /* CATEGORY */
+
     const category =
         product.threeCategoryName ||
         product.categoryName ||
@@ -516,10 +1291,57 @@ function normalizeCJProduct(product) {
         product.twoCategoryName ||
         "";
 
+    /* PRODUCT TYPE */
+
+    const productType =
+        detectGlobiraProductType(
+            product
+        );
+
+    /* VARIANTS */
+
+    const normalizedVariants =
+        normalizeCJVariants(
+            product
+        );
+
+    /* SIZE */
+
+    const sizeConfig =
+        getGlobiraSizeConfiguration(
+            productType
+        );
+
+    const actualSizes =
+        extractActualSizes(
+            productType,
+            normalizedVariants
+        );
+
+    const actualColors =
+        extractActualColors(
+            normalizedVariants
+        );
+
+    const dimensions =
+        extractProductDimensions(
+            product
+        );
+
+    /* PRICE */
+
     const globiraPrice =
         calculateGlobiraPrice(
             supplierCost
         );
+
+    /*
+     * INTERNAL SUPPLIER IDENTIFIERS
+     *
+     * These are required by the backend to know
+     * which product/variant must eventually be
+     * ordered from the supplier.
+     */
 
     const supplierProductId =
         String(
@@ -537,34 +1359,19 @@ function normalizeCJProduct(product) {
             ""
         );
 
+    /*
+     * PUBLIC PRODUCT OBJECT
+     *
+     * No supplier name.
+     * No supplier branding.
+     */
+
     return {
         id:
-            `cj_${supplierProductId || supplierSku}`,
+            `product_${supplierProductId || supplierSku}`,
 
-        cjProductId:
+        productId:
             supplierProductId,
-
-        pid:
-            supplierProductId,
-
-        supplier:
-            "cjdropshipping",
-
-        source:
-            "cjdropshipping",
-
-        sourceType:
-            "supplier",
-
-        supplierName:
-            "CJ Dropshipping",
-
-        supplierProductId,
-
-        supplierSku,
-
-        sku:
-            supplierSku,
 
         name,
 
@@ -595,6 +1402,40 @@ function normalizeCJProduct(product) {
         gender:
             product.gender ||
             "",
+
+        brand:
+            product.brand ||
+            "GLOBIRA",
+
+        storeName:
+            "GLOBIRA",
+
+        productType,
+
+        sizeType:
+            getGlobiraFilterSizeType(
+                productType
+            ),
+
+        sizeConfig,
+
+        sizeOptions:
+            actualSizes,
+
+        hasSizeSelector:
+            sizeConfig.enabled &&
+            actualSizes.length > 0,
+
+        colorOptions:
+            actualColors,
+
+        dimensions,
+
+        variants:
+            normalizedVariants,
+
+        variantCount:
+            normalizedVariants.length,
 
         supplierCost:
             roundMoney(
@@ -633,12 +1474,6 @@ function normalizeCJProduct(product) {
 
         saleStatus,
 
-        variants:
-            safeArray(
-                product.variants ||
-                product.variantList
-            ),
-
         deliveryCycle:
             product.deliveryCycle ||
             null,
@@ -661,7 +1496,19 @@ function normalizeCJProduct(product) {
             ) === 1,
 
         syncedAt:
-            new Date().toISOString()
+            new Date().toISOString(),
+
+        /*
+         * INTERNAL DATA
+         *
+         * Kept inside a clearly separated object.
+         * Frontend should not display this.
+         */
+        _internal: {
+            supplierProductId,
+            supplierSku,
+            supplier: "supplier"
+        }
     };
 }
 
@@ -669,28 +1516,14 @@ function normalizeCJProduct(product) {
    CJ TOKEN / REQUEST
 ========================================================= */
 
-/*
- * Existing CJ_ACCESS_TOKEN remains the primary method.
- *
- * CJ requires an access token for product API calls.
- */
-
 async function getCJAccessToken() {
     if (CJ_ACCESS_TOKEN) {
         return CJ_ACCESS_TOKEN;
     }
 
-    /*
-     * We intentionally do not expose CJ_API_KEY
-     * to the frontend.
-     *
-     * If only CJ_API_KEY is configured, try the
-     * CJ authentication endpoint.
-     */
-
     if (!CJ_API_KEY) {
         throw new Error(
-            "CJ_ACCESS_TOKEN is not configured."
+            "Supplier access credentials are not configured."
         );
     }
 
@@ -703,6 +1536,7 @@ async function getCJAccessToken() {
                 headers: {
                     "Content-Type":
                         "application/json",
+
                     "Accept":
                         "application/json"
                 },
@@ -725,7 +1559,7 @@ async function getCJAccessToken() {
             JSON.parse(text);
     } catch {
         throw new Error(
-            `CJ authentication returned invalid JSON. HTTP ${response.status}`
+            `Supplier authentication returned invalid JSON. HTTP ${response.status}`
         );
     }
 
@@ -735,7 +1569,7 @@ async function getCJAccessToken() {
         data.success === false
     ) {
         throw new Error(
-            `CJ authentication failed: ${
+            `Supplier authentication failed: ${
                 data.message ||
                 "Unknown authentication error"
             }`
@@ -749,16 +1583,14 @@ async function getCJAccessToken() {
 
     if (!token) {
         throw new Error(
-            "CJ authentication succeeded but no access token was returned."
+            "Supplier authentication succeeded but no access token was returned."
         );
     }
 
     return token;
 }
 
-async function cjGET(
-    url
-) {
+async function cjGET(url) {
     const token =
         await getCJAccessToken();
 
@@ -788,13 +1620,13 @@ async function cjGET(
             JSON.parse(text);
     } catch {
         throw new Error(
-            `CJ returned invalid JSON. HTTP ${response.status}`
+            `Supplier API returned invalid JSON. HTTP ${response.status}`
         );
     }
 
     if (!response.ok) {
         throw new Error(
-            `CJ API HTTP ${response.status}: ${
+            `Supplier API HTTP ${response.status}: ${
                 data.message ||
                 "Unknown error"
             }`
@@ -806,7 +1638,7 @@ async function cjGET(
         data.success === false
     ) {
         throw new Error(
-            `CJ API error: ${
+            `Supplier API error: ${
                 data.message ||
                 "Request failed"
             }`
@@ -817,18 +1649,8 @@ async function cjGET(
 }
 
 /* =========================================================
-   LIVE CJ PRODUCT REQUEST
+   LIVE PRODUCT REQUEST
 ========================================================= */
-
-/*
- * THIS IS THE IMPORTANT FIX.
- *
- * Vercel no longer depends on:
- *
- * .globira-catalog.json
- *
- * /api/products talks directly to CJ.
- */
 
 async function fetchCJProductPage({
     page = 1,
@@ -868,10 +1690,6 @@ async function fetchCJProductPage({
         )
     );
 
-    /*
-     * CJ uses keyWord with capital W.
-     */
-
     if (keyword) {
         url.searchParams.set(
             "keyWord",
@@ -910,11 +1728,6 @@ async function fetchCJProductPage({
 
     let rawProducts = [];
 
-    /*
-     * CJ wraps products inside
-     * content[].productList.
-     */
-
     for (
         const group of content
     ) {
@@ -936,10 +1749,6 @@ async function fetchCJProductPage({
             )
             .filter(Boolean);
 
-    /*
-     * Deduplicate.
-     */
-
     const unique =
         new Map();
 
@@ -947,8 +1756,7 @@ async function fetchCJProductPage({
         const product of products
     ) {
         const key =
-            product.cjProductId ||
-            product.sku ||
+            product.productId ||
             product.id;
 
         if (key) {
@@ -1042,7 +1850,7 @@ async function syncCJProducts() {
                 );
 
                 console.log(
-                    `CJ sync page ${page}: ${result.products.length} products`
+                    `Product sync page ${page}: ${result.products.length} products`
                 );
 
                 if (
@@ -1055,10 +1863,6 @@ async function syncCJProducts() {
                 ) {
                     break;
                 }
-
-                /*
-                 * Respect CJ request limits.
-                 */
 
                 if (
                     page < pages
@@ -1073,7 +1877,7 @@ async function syncCJProducts() {
                 }
             } catch (error) {
                 console.error(
-                    `CJ sync page ${page} failed:`,
+                    `Product sync page ${page} failed:`,
                     error.message
                 );
 
@@ -1096,8 +1900,7 @@ async function syncCJProducts() {
             const product of collected
         ) {
             const key =
-                product.cjProductId ||
-                product.sku ||
+                product.productId ||
                 product.id;
 
             if (key) {
@@ -1123,7 +1926,7 @@ async function syncCJProducts() {
                 new Date().toISOString(),
 
             syncSource:
-                "CJ Dropshipping",
+                "GLOBIRA",
 
             products
         };
@@ -1199,9 +2002,7 @@ function searchCatalog(
                             product.description,
                             product.category,
                             product.parentCategory,
-                            product.subCategory,
-                            product.sku,
-                            product.supplierSku
+                            product.subCategory
                         ]
                             .join(" ")
                             .toLowerCase();
@@ -1534,12 +2335,6 @@ app.get(
                     ""
                 ).trim();
 
-            /*
-             * LIVE CJ REQUEST.
-             *
-             * This is the Vercel fix.
-             */
-
             const result =
                 await fetchCJProductPage({
                     page,
@@ -1553,7 +2348,10 @@ app.get(
                 success: true,
 
                 source:
-                    "cjdropshipping-live",
+                    "globira-live",
+
+                brand:
+                    "GLOBIRA",
 
                 products:
                     result.products,
@@ -1588,7 +2386,7 @@ app.get(
                     success: false,
 
                     message:
-                        "Could not load CJ products",
+                        "Could not load products",
 
                     error:
                         process.env.NODE_ENV ===
@@ -1601,7 +2399,7 @@ app.get(
 );
 
 /* =========================================================
-   CJ PRODUCTS COMPATIBILITY API
+   COMPATIBILITY PRODUCT API
 ========================================================= */
 
 app.get(
@@ -1654,7 +2452,10 @@ app.get(
                 success: true,
 
                 source:
-                    "cjdropshipping-live",
+                    "globira-live",
+
+                brand:
+                    "GLOBIRA",
 
                 products:
                     result.products,
@@ -1673,7 +2474,7 @@ app.get(
             });
         } catch (error) {
             console.error(
-                "CJ PRODUCTS API ERROR:",
+                "PRODUCT API ERROR:",
                 error
             );
 
@@ -1682,7 +2483,7 @@ app.get(
                 .json({
                     success: false,
                     message:
-                        "Could not load CJ products"
+                        "Could not load products"
                 });
         }
     }
@@ -1691,10 +2492,6 @@ app.get(
 /* =========================================================
    CATALOG STATUS
 ========================================================= */
-
-/*
- * Keep the old endpoint.
- */
 
 app.get(
     "/api/products/status",
@@ -1710,7 +2507,7 @@ app.get(
                 success: true,
 
                 source:
-                    "cjdropshipping-live",
+                    "globira-live",
 
                 totalProducts:
                     result.total,
@@ -1740,20 +2537,11 @@ app.get(
                 success: false,
 
                 message:
-                    "Could not load catalog status",
-
-                error:
-                    error.message
+                    "Could not load catalog status"
             });
         }
     }
 );
-
-/*
- * ADD THIS ENDPOINT TOO.
- *
- * This fixes the 404 you were seeing.
- */
 
 app.get(
     "/api/catalog-status",
@@ -1769,7 +2557,7 @@ app.get(
                 success: true,
 
                 source:
-                    "cjdropshipping-live",
+                    "globira-live",
 
                 totalProducts:
                     result.total,
@@ -1799,10 +2587,7 @@ app.get(
                 success: false,
 
                 message:
-                    "Could not load catalog status",
-
-                error:
-                    error.message
+                    "Could not load catalog status"
             });
         }
     }
@@ -2255,8 +3040,8 @@ app.post(
 );
 
 /* =========================================================
-   SEND ORDER TO CJ
-   NO CJ PAYMENT
+   SEND ORDER TO SUPPLIER
+   NO SUPPLIER PAYMENT
 ========================================================= */
 
 app.post(
@@ -2297,12 +3082,12 @@ app.post(
                         success: false,
 
                         message:
-                            "Customer payment must be confirmed before sending to CJ."
+                            "Customer payment must be confirmed before processing the order."
                     });
             }
 
             order.status =
-                "CJ_PENDING";
+                "SUPPLIER_PENDING";
 
             order.cjPaymentStatus =
                 "UNPAID";
@@ -2319,7 +3104,7 @@ app.post(
                     new Date().toISOString(),
 
                 message:
-                    "Order prepared for CJ. CJ payment remains unpaid and must be handled manually."
+                    "Order prepared for supplier processing. Supplier payment remains manual."
             });
 
             saveOrders(
@@ -2330,13 +3115,13 @@ app.post(
                 success: true,
 
                 message:
-                    "Order prepared for CJ. No CJ payment was made.",
+                    "Order prepared for processing.",
 
                 order
             });
         } catch (error) {
             console.error(
-                "SEND TO CJ ERROR:",
+                "SEND TO SUPPLIER ERROR:",
                 error
             );
 
@@ -2346,14 +3131,14 @@ app.post(
                     success: false,
 
                     message:
-                        "Could not prepare order for CJ"
+                        "Could not prepare order"
                 });
         }
     }
 );
 
 /* =========================================================
-   CJ ORDER SYNC PLACEHOLDER
+   SUPPLIER ORDER SYNC PLACEHOLDER
 ========================================================= */
 
 app.post(
@@ -2388,13 +3173,13 @@ app.post(
                 success: true,
 
                 message:
-                    "CJ sync endpoint is working.",
+                    "Order sync endpoint is working.",
 
                 order
             });
         } catch (error) {
             console.error(
-                "CJ SYNC ERROR:",
+                "ORDER SYNC ERROR:",
                 error
             );
 
@@ -2404,7 +3189,7 @@ app.post(
                     success: false,
 
                     message:
-                        "CJ sync failed"
+                        "Order sync failed"
                 });
         }
     }
@@ -2429,7 +3214,7 @@ app.get(
             time:
                 new Date().toISOString(),
 
-            cj:
+            supplierConnection:
                 CJ_ACCESS_TOKEN ||
                 CJ_API_KEY
                     ? "CONFIGURED"
@@ -2531,13 +3316,6 @@ app.use(
    LOCAL SERVER
 ========================================================= */
 
-/*
- * IMPORTANT:
- *
- * Vercel imports this file as a serverless function.
- * Therefore app.listen() is ONLY used locally.
- */
-
 if (
     require.main === module
 ) {
@@ -2571,7 +3349,7 @@ if (
             );
 
             console.log(
-                `CJ TOKEN: ${
+                `SUPPLIER CONNECTION: ${
                     CJ_ACCESS_TOKEN
                         ? "CONFIGURED"
                         : CJ_API_KEY
@@ -2585,7 +3363,19 @@ if (
             );
 
             console.log(
-                "LIVE CJ PRODUCTS: ENABLED"
+                "LIVE PRODUCTS: ENABLED"
+            );
+
+            console.log(
+                "DYNAMIC PRODUCT TYPES: ENABLED"
+            );
+
+            console.log(
+                "DYNAMIC SIZE SYSTEM: ENABLED"
+            );
+
+            console.log(
+                "CUSTOMER SUPPLIER BRANDING: HIDDEN"
             );
 
             console.log(
