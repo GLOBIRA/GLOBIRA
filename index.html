@@ -3336,18 +3336,115 @@
 
 
     <section id="categoryPage" class="category-page">
-        <button class="category-back" type="button" onclick="showHome()">← BACK TO GLOBIRA</button>
+
+        <!-- GLOBIRA CATEGORY HEADER
+             Same navigation + account/wishlist/cart controls as the homepage. -->
+        <div class="globira-category-header">
+
+            <div class="globira-category-header-top">
+
+                <button class="category-local-logo" type="button"
+                        onclick="showHome()"
+                        aria-label="Back to GLOBIRA home">
+                    GLOBIRA
+                </button>
+
+                <nav class="globira-category-nav" aria-label="GLOBIRA categories">
+                    <button type="button" data-cat="home" onclick="showHome()">Home</button>
+                    <button type="button" data-cat="women" onclick="showCategory('women')">Women</button>
+                    <button type="button" data-cat="men" onclick="showCategory('men')">Men</button>
+                    <button type="button" data-cat="bags" onclick="showCategory('bags')">Bags</button>
+                    <button type="button" data-cat="electronics" onclick="showCategory('electronics')">Electronics</button>
+                    <button type="button" data-cat="home" onclick="showCategory('home')">Home &amp; Living</button>
+                    <button type="button" data-cat="beauty" onclick="showCategory('beauty')">Beauty</button>
+                    <button type="button" data-cat="tools" onclick="showCategory('tools')">Tools &amp; DIY</button>
+                    <button type="button" data-cat="sports" onclick="showCategory('sports')">Sports</button>
+                    <button type="button" data-cat="more" onclick="showCategory('more')">More</button>
+                    <button type="button" data-cat="new" onclick="showNewArrivals()">New <span>NEW</span></button>
+                </nav>
+
+                <div class="globira-category-actions">
+
+                    <button class="category-icon-btn" type="button"
+                            onclick="handleGlobiraAccountClick()"
+                            aria-label="My Account"
+                            title="My Account">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <circle cx="12" cy="7" r="3.2"></circle>
+                            <path d="M5.5 20c.6-4 3-6 6.5-6s5.9 2 6.5 6"></path>
+                        </svg>
+                    </button>
+
+                    <button class="category-icon-btn" type="button"
+                            onclick="toggleWishlist?.()"
+                            aria-label="Wishlist"
+                            title="Wishlist">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M20.8 8.9c0 5-8.8 10-8.8 10S3.2 13.9 3.2 8.9A4.6 4.6 0 0 1 12 6.3a4.6 4.6 0 0 1 8.8 2.6Z"></path>
+                        </svg>
+                    </button>
+
+                    <button class="category-icon-btn category-cart-icon" type="button"
+                            onclick="openCart()"
+                            aria-label="Cart"
+                            title="Cart">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M5 8h14l-1 11H6L5 8Z"></path>
+                            <path d="M9 8V6a3 3 0 0 1 6 0v2"></path>
+                        </svg>
+                        <span id="categoryCartCount">0</span>
+                    </button>
+
+                </div>
+            </div>
+
+            <div class="globira-category-mobile-nav">
+                <button type="button" onclick="showHome()">Home</button>
+                <button type="button" onclick="showCategory('women')">Women</button>
+                <button type="button" onclick="showCategory('men')">Men</button>
+                <button type="button" onclick="showCategory('bags')">Bags</button>
+                <button type="button" onclick="showCategory('electronics')">Electronics</button>
+                <button type="button" onclick="showCategory('home')">Home &amp; Living</button>
+                <button type="button" onclick="showCategory('beauty')">Beauty</button>
+                <button type="button" onclick="showCategory('tools')">Tools &amp; DIY</button>
+                <button type="button" onclick="showCategory('sports')">Sports</button>
+                <button type="button" onclick="showCategory('more')">More</button>
+                <button type="button" onclick="showNewArrivals()">New</button>
+            </div>
+
+        </div>
+
+        <button class="category-back" type="button" onclick="showHome()">← BACK TO HOME</button>
 
         <div class="category-page-title">
 
-            <span id="categoryEyebrow">
-                GLOBIRA COLLECTION
-            </span>
+            <span id="categoryEyebrow">GLOBIRA / WOMEN</span>
 
             <h1 id="categoryTitle">Women</h1>
 
             <p id="categorySubtitle">Style for every moment</p>
 
+        </div>
+
+        <!-- Wide category search — the same clean format as the reference design. -->
+        <div class="globira-category-search-wrap">
+            <div class="globira-category-search">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="11" cy="11" r="6.5"></circle>
+                    <path d="m16 16 4.5 4.5"></path>
+                </svg>
+                <input id="globiraCategorySearchInput"
+                       type="search"
+                       autocomplete="off"
+                       placeholder="Search women's products, brands, styles..."
+                       oninput="categoryPageSearch(this.value)"
+                       onkeydown="if(event.key==='Enter') categoryPageSearch(this.value)">
+                <button type="button"
+                        onclick="categoryPageSearch(document.getElementById('globiraCategorySearchInput')?.value || '')"
+                        aria-label="Search">
+                    Search
+                </button>
+            </div>
         </div>
 
         <div class="products" id="categoryProducts"></div>
@@ -10781,6 +10878,57 @@ body{font-size:14px!important}
 </script>
 <!-- END GLOBIRA FINAL CART REMOVE + PRODUCT PHOTO GALLERY FIX -->
 
+
+<style id="globira-category-sticky-navigation-final">
+/* FINAL CATEGORY SCROLL BEHAVIOUR
+   Navigation stays at the top while products scroll underneath it. */
+#categoryPage .globira-category-header{
+    position:sticky !important;
+    top:0 !important;
+    z-index:9999 !important;
+    background:#fff !important;
+    opacity:1 !important;
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+    box-shadow:0 1px 0 rgba(17,24,32,.08) !important;
+}
+
+#categoryPage .globira-category-header-top,
+#categoryPage .globira-category-mobile-nav{
+    background:#fff !important;
+}
+
+/* Product cards always remain below the fixed/sticky category navigation. */
+#categoryPage #categoryProducts,
+#categoryPage #categoryProducts .category-result-grid,
+#categoryPage #categoryProducts .gw-product-card{
+    position:relative !important;
+    z-index:1 !important;
+}
+
+/* Keep the category title/search/product area in the normal scrolling layer. */
+#categoryPage .category-page-title,
+#categoryPage .globira-category-search-wrap{
+    position:relative !important;
+    z-index:1 !important;
+}
+
+/* Back button sits below the navigation instead of covering the category names. */
+#categoryPage .category-back{
+    position:relative !important;
+    top:auto !important;
+    left:auto !important;
+    z-index:2 !important;
+    display:block !important;
+    margin:22px 0 20px !important;
+}
+
+@media(max-width:650px){
+    #categoryPage .category-back{
+        margin:18px 0 16px !important;
+    }
+}
+</style>
 </body>
     
 
@@ -11133,6 +11281,552 @@ body{font-size:14px!important}
 
   /* Make the sort control remain available through the same category toolbar. */
   window.sortCategoryProducts=function(mode){categoryFilterState.sort=mode;applyCategoryFilters(true);};
+})();
+</script>
+
+
+<style id="globira-category-reference-final-v2">
+/* =========================================================
+   GLOBIRA CATEGORY PAGES — REFERENCE DESIGN
+   Header / navigation / icons / search are local to the
+   category view so the homepage remains untouched.
+   ========================================================= */
+
+.category-page{
+    background:#f8f7f3 !important;
+    color:#111820 !important;
+    padding:0 4.05% 80px !important;
+    overflow-x:hidden !important;
+}
+
+/* ---------- category header ---------- */
+.globira-category-header{
+    position:sticky !important;
+    top:0 !important;
+    z-index:2500 !important;
+    width:calc(100% + 8.1%) !important;
+    margin-left:-4.05% !important;
+    background:rgba(255,255,255,.97) !important;
+    border-bottom:1px solid #e6e2dc !important;
+    backdrop-filter:blur(12px) !important;
+    -webkit-backdrop-filter:blur(12px) !important;
+}
+
+.globira-category-header-top{
+    min-height:78px !important;
+    display:grid !important;
+    grid-template-columns:220px minmax(0,1fr) 150px !important;
+    align-items:center !important;
+    gap:20px !important;
+    padding:0 4.05% !important;
+}
+
+.category-local-logo{
+    border:0 !important;
+    background:transparent !important;
+    padding:0 !important;
+    justify-self:start !important;
+    color:#111820 !important;
+    font-family:'Playfair Display',serif !important;
+    font-size:29px !important;
+    line-height:1 !important;
+    font-weight:600 !important;
+    letter-spacing:5px !important;
+    cursor:pointer !important;
+}
+
+.globira-category-nav{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:clamp(12px,2vw,30px) !important;
+    min-width:0 !important;
+    height:78px !important;
+    overflow-x:auto !important;
+    scrollbar-width:none !important;
+}
+
+.globira-category-nav::-webkit-scrollbar{display:none !important}
+
+.globira-category-nav button{
+    position:relative !important;
+    flex:0 0 auto !important;
+    border:0 !important;
+    background:transparent !important;
+    color:#18222b !important;
+    padding:29px 0 26px !important;
+    font:500 12px/1 'DM Sans',sans-serif !important;
+    white-space:nowrap !important;
+    cursor:pointer !important;
+}
+
+.globira-category-nav button:hover{color:#68717a !important}
+
+.globira-category-nav button.active:after{
+    content:"" !important;
+    position:absolute !important;
+    left:0 !important;
+    right:0 !important;
+    bottom:17px !important;
+    height:1.5px !important;
+    background:#18222b !important;
+}
+
+.globira-category-nav button span{
+    display:inline-block !important;
+    margin-left:4px !important;
+    padding:3px 6px !important;
+    border-radius:10px !important;
+    background:#18222b !important;
+    color:#fff !important;
+    font:600 8px/1 'DM Sans',sans-serif !important;
+    vertical-align:2px !important;
+    letter-spacing:.5px !important;
+}
+
+.globira-category-actions{
+    display:flex !important;
+    justify-content:flex-end !important;
+    align-items:center !important;
+    gap:17px !important;
+}
+
+.category-icon-btn{
+    position:relative !important;
+    width:28px !important;
+    height:34px !important;
+    padding:0 !important;
+    border:0 !important;
+    background:transparent !important;
+    color:#17232e !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    cursor:pointer !important;
+}
+
+.category-icon-btn svg{
+    width:21px !important;
+    height:21px !important;
+    fill:none !important;
+    stroke:currentColor !important;
+    stroke-width:1.35 !important;
+    stroke-linecap:round !important;
+    stroke-linejoin:round !important;
+}
+
+.category-cart-icon span{
+    position:absolute !important;
+    top:-4px !important;
+    right:-7px !important;
+    min-width:15px !important;
+    height:15px !important;
+    padding:0 3px !important;
+    border-radius:50% !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    background:#18222b !important;
+    color:#fff !important;
+    font:600 8px/1 'DM Sans',sans-serif !important;
+}
+
+.globira-category-mobile-nav{display:none !important}
+
+/* ---------- back / title ---------- */
+.category-back{
+    margin:35px 0 28px !important;
+    height:50px !important;
+    padding:0 21px !important;
+    border:1px solid #71808b !important;
+    border-radius:11px !important;
+    background:transparent !important;
+    color:#172532 !important;
+    font:600 12px/1 'DM Sans',sans-serif !important;
+    letter-spacing:1px !important;
+}
+
+.category-back:hover{
+    background:#172532 !important;
+    color:#fff !important;
+}
+
+.category-page-title{
+    max-width:none !important;
+    margin:0 0 30px !important;
+    padding:0 !important;
+    border:0 !important;
+}
+
+.category-page-title span{
+    display:block !important;
+    margin:0 0 14px !important;
+    color:#7e878e !important;
+    font:500 11px/1.2 'DM Sans',sans-serif !important;
+    letter-spacing:4px !important;
+}
+
+.category-page-title h1{
+    margin:0 !important;
+    color:#101d28 !important;
+    font-family:'Playfair Display',serif !important;
+    font-size:64px !important;
+    line-height:.94 !important;
+    font-weight:500 !important;
+    letter-spacing:-1.5px !important;
+}
+
+.category-page-title #categorySubtitle{
+    display:block !important;
+    margin:12px 0 0 !important;
+    color:#8a9095 !important;
+    font:500 13px/1.4 'DM Sans',sans-serif !important;
+    letter-spacing:4px !important;
+}
+
+/* ---------- wide search ---------- */
+.globira-category-search-wrap{
+    width:100% !important;
+    margin:0 0 38px !important;
+}
+
+.globira-category-search{
+    width:min(1325px,100%) !important;
+    min-height:58px !important;
+    margin:0 auto !important;
+    display:flex !important;
+    align-items:center !important;
+    gap:0 !important;
+    border:1px solid #d8d1c8 !important;
+    border-radius:30px !important;
+    background:#fff !important;
+    box-shadow:0 2px 10px rgba(30,25,18,.025) !important;
+    overflow:hidden !important;
+}
+
+.globira-category-search svg{
+    flex:0 0 auto !important;
+    width:21px !important;
+    height:21px !important;
+    margin-left:24px !important;
+    margin-right:15px !important;
+    fill:none !important;
+    stroke:#172532 !important;
+    stroke-width:1.7 !important;
+    stroke-linecap:round !important;
+    stroke-linejoin:round !important;
+}
+
+.globira-category-search input{
+    flex:1 1 auto !important;
+    min-width:0 !important;
+    width:auto !important;
+    height:56px !important;
+    margin:0 !important;
+    padding:0 14px 0 0 !important;
+    border:0 !important;
+    outline:0 !important;
+    background:transparent !important;
+    color:#172532 !important;
+    font:400 15px/1 'DM Sans',sans-serif !important;
+}
+
+.globira-category-search input::placeholder{color:#969da2 !important;opacity:1 !important}
+
+.globira-category-search button{
+    flex:0 0 auto !important;
+    height:56px !important;
+    padding:0 24px !important;
+    border:0 !important;
+    border-left:1px solid #e4dfd8 !important;
+    background:transparent !important;
+    color:#172532 !important;
+    font:600 11px/1 'DM Sans',sans-serif !important;
+    letter-spacing:1px !important;
+    cursor:pointer !important;
+}
+
+.globira-category-search button:hover{background:#f8f6f2 !important}
+
+/* Existing generated toolbar is no longer needed visually.
+   Its input remains available to the existing category engine. */
+#categoryProducts .globira-collection-toolbar{
+    display:none !important;
+}
+
+/* Product grid starts cleanly below the search. */
+.category-page #categoryProducts .category-result-grid{
+    margin-top:0 !important;
+}
+
+/* ---------- responsive ---------- */
+@media(max-width:1200px){
+    .globira-category-header-top{
+        grid-template-columns:180px minmax(0,1fr) 115px !important;
+        gap:12px !important;
+    }
+    .globira-category-nav{gap:16px !important}
+    .globira-category-nav button{font-size:11px !important}
+    .globira-category-actions{gap:11px !important}
+}
+
+@media(max-width:850px){
+    .globira-category-header-top{
+        min-height:68px !important;
+        grid-template-columns:150px minmax(0,1fr) 95px !important;
+        padding:0 20px !important;
+    }
+    .category-local-logo{font-size:24px !important;letter-spacing:4px !important}
+    .globira-category-nav{
+        height:68px !important;
+        justify-content:flex-start !important;
+        gap:18px !important;
+    }
+    .globira-category-nav button{
+        padding:25px 0 22px !important;
+        font-size:10px !important;
+    }
+    .globira-category-actions{gap:8px !important}
+    .category-icon-btn{width:25px !important}
+    .category-icon-btn svg{width:19px !important;height:19px !important}
+    .category-back{margin-top:25px !important}
+    .category-page-title h1{font-size:56px !important}
+    .globira-category-search input{font-size:14px !important}
+}
+
+@media(max-width:650px){
+    .globira-category-header-top{
+        display:grid !important;
+        grid-template-columns:1fr auto !important;
+        min-height:65px !important;
+        padding:0 16px !important;
+    }
+    .category-local-logo{font-size:23px !important}
+    .globira-category-nav{display:none !important}
+    .globira-category-actions{gap:10px !important}
+    .globira-category-mobile-nav{
+        display:flex !important;
+        height:43px !important;
+        align-items:center !important;
+        gap:18px !important;
+        padding:0 16px !important;
+        overflow-x:auto !important;
+        white-space:nowrap !important;
+        border-top:1px solid #eeeae4 !important;
+    }
+    .globira-category-mobile-nav::-webkit-scrollbar{display:none !important}
+    .globira-category-mobile-nav button{
+        flex:0 0 auto !important;
+        border:0 !important;
+        background:transparent !important;
+        color:#202830 !important;
+        padding:0 !important;
+        font:500 10px/1 'DM Sans',sans-serif !important;
+    }
+    .category-page{
+        padding:0 20px 55px !important;
+    }
+    .category-back{
+        margin:22px 0 28px !important;
+        height:48px !important;
+        padding:0 17px !important;
+        font-size:11px !important;
+    }
+    .category-page-title{
+        margin-bottom:25px !important;
+    }
+    .category-page-title span{
+        font-size:10px !important;
+        letter-spacing:2.7px !important;
+        margin-bottom:11px !important;
+    }
+    .category-page-title h1{
+        font-size:45px !important;
+        letter-spacing:-1px !important;
+    }
+    .category-page-title #categorySubtitle{
+        font-size:11px !important;
+        letter-spacing:2px !important;
+        margin-top:9px !important;
+    }
+    .globira-category-search-wrap{
+        margin-bottom:25px !important;
+    }
+    .globira-category-search{
+        min-height:54px !important;
+        border-radius:27px !important;
+    }
+    .globira-category-search svg{
+        width:19px !important;
+        height:19px !important;
+        margin-left:18px !important;
+        margin-right:11px !important;
+    }
+    .globira-category-search input{
+        height:52px !important;
+        font-size:12px !important;
+    }
+    .globira-category-search button{
+        height:52px !important;
+        padding:0 14px !important;
+        font-size:9px !important;
+    }
+}
+</style>
+
+<script id="globira-category-reference-final-v2-js">
+(function(){
+    'use strict';
+
+    const CATEGORY_KEYS = [
+        'home','women','men','bags','electronics','home','beauty',
+        'tools','sports','more','new'
+    ];
+
+    const CATEGORY_TITLES = {
+        home:'Home',
+        women:'Women',
+        men:'Men',
+        bags:'Bags',
+        electronics:'Electronics',
+        home:'Home & Living',
+        beauty:'Beauty',
+        tools:'Tools & DIY',
+        sports:'Sports',
+        more:'More',
+        new:'New'
+    };
+
+    function syncCategoryCartCount(){
+        try{
+            const source=document.getElementById('cartCount');
+            const target=document.getElementById('categoryCartCount');
+            if(source && target) target.textContent=source.textContent || '0';
+        }catch(e){}
+    }
+
+    function updateCategoryActiveNav(category){
+        const key=String(category||'').toLowerCase();
+        document.querySelectorAll('.globira-category-nav button[data-cat]').forEach(btn=>{
+            btn.classList.toggle('active', String(btn.dataset.cat||'').toLowerCase()===key);
+        });
+    }
+
+    function updateCategorySearchPlaceholder(category){
+        const input=document.getElementById('globiraCategorySearchInput');
+        if(!input) return;
+        const title=CATEGORY_TITLES[String(category||'').toLowerCase()] || 'this collection';
+        const lower=title.toLowerCase();
+        input.placeholder='Search '+lower+' products, brands, styles...';
+    }
+
+    window.categoryPageSearch=function(value){
+        const raw=String(value||'').trim();
+        const input=document.getElementById('globiraCategorySearchInput');
+
+        /* Keep the existing live category engine as the single source of
+           truth, so category loading / CJ pagination is not replaced. */
+        try{
+            if(typeof S!=='undefined' && S.cat){
+                S.cat.filters.q=raw;
+                if(typeof renderCat==='function'){
+                    renderCat();
+                }
+                const hidden=document.getElementById('globiraCollectionSearch');
+                if(hidden && hidden.value!==raw) hidden.value=raw;
+            }
+        }catch(e){}
+
+        if(input && input.value!==raw) input.value=raw;
+    };
+
+    function bindCategorySearch(){
+        const input=document.getElementById('globiraCategorySearchInput');
+        if(!input || input.__globiraBound) return;
+        input.__globiraBound=true;
+
+        input.addEventListener('keydown',function(e){
+            if(e.key==='Enter'){
+                e.preventDefault();
+                window.categoryPageSearch(input.value);
+            }
+        });
+    }
+
+    function refreshCategoryChrome(){
+        const key=(typeof currentCategory!=='undefined' && currentCategory)
+            ? currentCategory
+            : (typeof S!=='undefined' && S.cat ? S.cat.name : 'women');
+
+        updateCategoryActiveNav(key);
+        updateCategorySearchPlaceholder(key);
+        bindCategorySearch();
+        syncCategoryCartCount();
+    }
+
+    const oldShowCategory=window.showCategory;
+    if(typeof oldShowCategory==='function' && !oldShowCategory.__globiraCategoryChrome){
+        const wrapped=function(category){
+            const result=oldShowCategory.apply(this,arguments);
+
+            /* The final live-category implementation is async. Wait for its
+               first render before syncing the local controls. */
+            setTimeout(function(){
+                refreshCategoryChrome();
+                const input=document.getElementById('globiraCategorySearchInput');
+                if(input && typeof S!=='undefined' && S.cat){
+                    input.value=S.cat.filters.q||'';
+                }
+            },20);
+
+            setTimeout(refreshCategoryChrome,250);
+            setTimeout(refreshCategoryChrome,700);
+            return result;
+        };
+        wrapped.__globiraCategoryChrome=true;
+        window.showCategory=wrapped;
+    }
+
+    const oldShowSubcategory=window.showSubcategory;
+    if(typeof oldShowSubcategory==='function' && !oldShowSubcategory.__globiraCategoryChrome){
+        const wrappedSub=function(category,sub){
+            const result=oldShowSubcategory.apply(this,arguments);
+            setTimeout(function(){
+                refreshCategoryChrome();
+                const input=document.getElementById('globiraCategorySearchInput');
+                if(input && typeof S!=='undefined' && S.cat){
+                    input.value=S.cat.filters.q||'';
+                }
+            },30);
+            return result;
+        };
+        wrappedSub.__globiraCategoryChrome=true;
+        window.showSubcategory=wrappedSub;
+    }
+
+    const oldShowHome=window.showHome;
+    if(typeof oldShowHome==='function' && !oldShowHome.__globiraCategoryChrome){
+        const wrappedHome=function(){
+            document.body.classList.remove('globira-category-active');
+            return oldShowHome.apply(this,arguments);
+        };
+        wrappedHome.__globiraCategoryChrome=true;
+        window.showHome=wrappedHome;
+    }
+
+    /* Keep the category cart badge synchronized with the real cart badge. */
+    const originalRenderCart=window.renderCart;
+    if(typeof originalRenderCart==='function' && !originalRenderCart.__globiraCategoryChrome){
+        window.renderCart=function(){
+            const result=originalRenderCart.apply(this,arguments);
+            setTimeout(syncCategoryCartCount,0);
+            return result;
+        };
+        window.renderCart.__globiraCategoryChrome=true;
+    }
+
+    bindCategorySearch();
+    syncCategoryCartCount();
 })();
 </script>
 
