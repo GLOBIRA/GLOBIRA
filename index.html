@@ -3150,6 +3150,12 @@
   .gw-category-count span{display:none !important}
 }
 </style>
+<link rel="preconnect" href="https://images.unsplash.com" crossorigin>
+<link rel="dns-prefetch" href="//images.unsplash.com">
+<style id="globira-fast-product-loading">
+#categoryProducts img{content-visibility:auto;}
+.gw-product-card img{background:#f3f1ed;}
+</style>
 </head>
 
     <body>
@@ -14367,7 +14373,82 @@ function drawer(){if(document.getElementById('globiraFilterOverlay'))return;docu
 function openDrawer(){drawer();const d=document.getElementById('globiraFilterDrawer'),o=document.getElementById('globiraFilterOverlay'),op=filterOptions();document.getElementById('globiraCategoryFilter').innerHTML='<option value="">All categories</option>'+op.cats.map(x=>'<option value="'+escapeHtml(x)+'">'+escapeHtml(x)+'</option>').join('');document.getElementById('globiraSize').innerHTML='<option value="">All sizes</option>'+op.sizes.map(x=>'<option value="'+escapeHtml(x)+'">'+escapeHtml(x)+'</option>').join('');document.getElementById('globiraColor').innerHTML='<option value="">All colours</option>'+op.colors.map(x=>'<option value="'+escapeHtml(x)+'">'+escapeHtml(x)+'</option>').join('');const f=S.cat.filters;document.getElementById('globiraCategoryFilter').value=f.category;document.getElementById('globiraMinPrice').value=f.min;document.getElementById('globiraMaxPrice').value=f.max;document.getElementById('globiraSize').value=f.size;document.getElementById('globiraColor').value=f.color;document.getElementById('globiraDelivery').value=f.delivery;document.getElementById('globiraRating').value=f.rating;document.getElementById('globiraAvailability').value=f.availability;document.getElementById('globiraCategoryFilter').onchange=e=>f.category=e.target.value;document.getElementById('globiraMinPrice').oninput=e=>f.min=e.target.value;document.getElementById('globiraMaxPrice').oninput=e=>f.max=e.target.value;document.getElementById('globiraSize').onchange=e=>f.size=e.target.value;document.getElementById('globiraColor').onchange=e=>f.color=e.target.value;document.getElementById('globiraDelivery').onchange=e=>f.delivery=e.target.value;document.getElementById('globiraRating').onchange=e=>f.rating=e.target.value;document.getElementById('globiraAvailability').onchange=e=>f.availability=e.target.value;d.classList.add('active');o.classList.add('active')}
 function renderHome(){const c=document.getElementById('featuredProducts');if(!c)return;c.innerHTML=S.home.items.slice(0,300).map(productCard).join('');const st=document.getElementById('homeCatalogStatus');if(st)st.textContent=S.home.items.length+' GLOBIRA products loaded';const b=document.getElementById('homeLoadMoreBtn');if(b){b.style.display=S.home.next<=S.home.total?'inline-block':'none';b.disabled=S.home.busy;b.textContent=S.home.busy?'Loading products…':'Load 300 more products →'}}
 async function loadHome(){if(S.home.busy)return;S.home.busy=true;renderHome();let target=S.home.items.length+300;while(S.home.items.length<target&&S.home.next<=S.home.total){const first=S.home.next,rs=await getBatch(first,Math.min(6,Math.max(1,S.home.total-first+1)));let got=false;for(const r of rs){if(!r)continue;const a=arr(r);if(a.length)got=true;S.home.total=Math.min(S.home.total,totalPages(r));S.home.items=unique(S.home.items.concat(a.map(classifyFinal)));}S.home.next=first+rs.length;if(!got)break}window.cjProducts=unique((window.cjProducts||[]).concat(S.home.items));S.home.busy=false;renderHome()}
-async function loadCat(){const s=S.cat;if(s.busy)return;s.busy=true;renderCat();const target=s.items.length+300;const keyword=(s.name==='women'||s.name==='men'||s.name==='more')?'':String(s.name||'');let empty=0;while(s.items.length<target&&s.next<=s.total&&empty<3){const first=s.next,count=Number.isFinite(s.total)?Math.min(6,Math.max(1,s.total-first+1)):6,rs=await getBatch(first,count,keyword);let got=0;for(const r of rs){if(!r)continue;const a=arr(r);got+=a.length;if(a.length){s.total=Math.min(s.total,totalPages(r));for(const p of a){if(matches(p,s.name))s.items.push(classifyFinal(p))}}}s.items=unique(s.items);s.next=first+rs.length;if(!got)empty++;else empty=0}s.busy=false;renderCat()}
+async function loadCat(){
+  const s=S.cat;
+  if(s.busy)return;
+  s.busy=true;
+  renderCat();
+
+  const keyword=(s.name==='women'||s.name==='men'||s.name==='more')?'':String(s.name||'');
+  let empty=0;
+  let firstPaint=true;
+  const target=s.items.length+300;
+
+  /* FAST FIRST PAINT: fetch 3 x 100-product pages together, then continue
+     loading the remaining catalog in the background. The user sees products
+     as soon as the first API responses arrive instead of waiting for 300. */
+  while(s.items.length<target && s.next<=s.total && empty<3){
+    const first=s.next;
+    const count=Number.isFinite(s.total)?Math.min(3,Math.max(1,s.total-first+1)):3;
+    const pages=Array.from({length:count},(_,i)=>first+i);
+
+    const results=await Promise.allSettled(
+      pages.map(pageNo=>getPage(pageNo,keyword))
+    );
+
+    let got=0;
+    for(const result of results){
+      const r=result.status==='fulfilled'?result.value:null;
+      if(!r)continue;
+      const a=arr(r);
+      got+=a.length;
+      if(Number.isFinite(totalPages(r))) s.total=Math.min(s.total,totalPages(r));
+      if(a.length){
+        for(const product of a){
+          if(matches(product,s.name)) s.items.push(classifyFinal(product));
+        }
+      }
+
+      /* Paint each successful response immediately. */
+      s.items=unique(s.items);
+      if(firstPaint && s.items.length){
+        firstPaint=false;
+        renderCat();
+        makeCategoryImagesFast();
+      }
+    }
+
+    s.items=unique(s.items);
+    s.next=first+pages.length;
+
+    if(!firstPaint){
+      renderCat();
+      makeCategoryImagesFast();
+    }
+
+    if(!got)empty++;else empty=0;
+    if(pages.length<1)break;
+  }
+
+  s.busy=false;
+  renderCat();
+  makeCategoryImagesFast();
+}
+
+/* Images below the fold are lazy; the first visible products load immediately. */
+function makeCategoryImagesFast(){
+  const images=document.querySelectorAll('#categoryProducts img');
+  images.forEach((img,i)=>{
+    if(i<12){
+      img.loading='eager';
+      img.fetchPriority='high';
+    }else{
+      img.loading='lazy';
+      img.fetchPriority='low';
+    }
+    img.decoding='async';
+  });
+}
 function renderCat(){const c=document.getElementById('categoryProducts');if(!c)return;const s=S.cat,n=nice(s.name),shown=s.items.filter(pass);const hasMore=s.next<=s.total;c.innerHTML='<div class="globira-collection-toolbar"><input id="globiraCollectionSearch" class="globira-collection-search" type="search" placeholder="Search in '+escapeHtml(n)+'..." value="'+escapeHtml(s.filters.q)+'"></div><div class="products category-result-grid">'+(shown.length?shown.map(productCard).join(''):'<div class="empty-category"><h3>No matching products</h3><p>Try another search.</p></div>')+'</div>'+(hasMore?'<button id="globiraCategoryMore" class="globira-feed-loadmore">Load 300 more products →</button>':'');const q=document.getElementById('globiraCollectionSearch');if(q){q.oninput=e=>{s.filters.q=e.target.value;renderCat();const x=document.getElementById('globiraCollectionSearch');if(x){x.focus();x.setSelectionRange(x.value.length,x.value.length)}}}document.getElementById('globiraCategoryMore')?.addEventListener('click',async()=>{const b=document.getElementById('globiraCategoryMore');if(b){b.disabled=true;b.textContent='Loading 300 more…'}await loadCat()})}
 async function openCat(cat){const home=document.getElementById('homePage'),page=document.getElementById('categoryPage'),title=document.getElementById('categoryTitle'),ey=document.getElementById('categoryEyebrow');if(home)home.style.display='none';if(page)page.classList.add('active');if(title)title.textContent=nice(cat);if(ey)ey.textContent='GLOBIRA / '+nice(cat).toUpperCase();S.cat={name:String(cat).toLowerCase(),items:[],next:1,total:Infinity,busy:false,filters:{q:'',category:'',min:'',max:'',color:'',size:'',delivery:'any',rating:'any',availability:'any'}};document.getElementById('categoryProducts').innerHTML='<div class="globira-feed-loading">Loading '+escapeHtml(nice(cat))+' products…</div>';await loadCat()}
 window.showCategory=openCat;window.showSubcategory=function(cat,sub){if(sub==='all'){openCat(cat);return}openCat(cat).then(()=>{S.cat.filters.q=String(sub||'').replace(/-/g,' ');renderCat()})};window.loadMoreHomeProducts=loadHome;
