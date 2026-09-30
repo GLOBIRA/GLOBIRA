@@ -14815,3 +14815,101 @@ if(typeof originalShowCategory==='function' && !originalShowCategory.__globiraIn
 }
 })();
 </script>
+
+
+<!-- GLOBIRA FINAL CHECKOUT OVERLAY FIX -->
+<style id="globira-checkout-overlay-fix-v2">
+/* Category pages sit above the home page, but checkout must always sit above
+   every category/product layer. */
+#checkoutModal,
+.checkout-modal{
+    position:fixed!important;
+    inset:0!important;
+    z-index:50000!important;
+}
+#checkoutModal.active,
+.checkout-modal.active{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    pointer-events:auto!important;
+}
+
+/* Product popup must also stay above the category layer while it is open. */
+#productModal,
+.product-modal{
+    z-index:49000!important;
+}
+</style>
+
+<script id="globira-checkout-overlay-fix-v2">
+(function(){
+    'use strict';
+
+    /*
+      The category page uses z-index 5000 while the original checkout used
+      z-index 600. That made checkout open successfully but remain visually
+      behind the category page. The checkout is now a true top-level overlay.
+    */
+
+    function forceReviewStep(){
+        const modal=document.getElementById('checkoutModal');
+        if(!modal) return;
+
+        modal.classList.add('active');
+        modal.style.display='block';
+        modal.style.visibility='visible';
+        modal.style.opacity='1';
+        modal.style.pointerEvents='auto';
+
+        /* Always start BUY NOW at "Review Your Order". */
+        if(typeof window.renderReview==='function') window.renderReview();
+        if(typeof window.renderCheckoutSummary==='function') window.renderCheckoutSummary();
+        if(typeof window.showStep==='function') window.showStep(1);
+
+        document.body.classList.add('no-scroll');
+    }
+
+    const install=function(){
+        const original=window.openCheckout;
+        if(typeof original!=='function' || original.__globiraCheckoutOverlayFix) return;
+
+        window.openCheckout=async function(){
+            const result=await original.apply(this,arguments);
+
+            /*
+              The original function can pause for login. If checkout actually
+              opened, force it to the top and make sure Step 1 is visible.
+            */
+            setTimeout(function(){
+                const modal=document.getElementById('checkoutModal');
+                if(modal && modal.classList.contains('active')){
+                    forceReviewStep();
+                }
+            },0);
+
+            return result;
+        };
+
+        window.openCheckout.__globiraCheckoutOverlayFix=true;
+    };
+
+    install();
+    setTimeout(install,50);
+    setTimeout(install,250);
+    setTimeout(install,700);
+
+    /* If another script activates checkout directly, still lift it above all UI. */
+    const observer=new MutationObserver(function(){
+        const modal=document.getElementById('checkoutModal');
+        if(modal && modal.classList.contains('active')){
+            modal.style.zIndex='50000';
+            modal.style.display='block';
+            modal.style.visibility='visible';
+            modal.style.pointerEvents='auto';
+        }
+    });
+
+    if(document.body) observer.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class','style']});
+})();
+</script>
