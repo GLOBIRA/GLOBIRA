@@ -387,11 +387,7 @@ function detectGlobiraProductType(product) {
     /* SHOES */
 
     if (
-        /\b(
-            shoe|shoes|sneaker|sneakers|trainer|trainers|
-            boots|boot|sandals|sandal|slipper|slippers|
-            loafer|loafers|heels|heel|footwear
-        )\b/x.test(text)
+        /\b(shoe|shoes|sneaker|sneakers|trainer|trainers|boots|boot|sandals|sandal|slipper|slippers|loafer|loafers|heels|heel|footwear)\b/i.test(text)
     ) {
         return "shoes";
     }
@@ -399,18 +395,10 @@ function detectGlobiraProductType(product) {
     /* BAGS */
 
     if (
-        /\b(
-            handbag|hand bag|purse|bag|bags|backpack|
-            backpacks|rucksack|tote|shoulder bag|
-            crossbody|cross-body|clutch|pouch|
-            laptop bag|travel bag|duffel|duffle|
-            suitcase|briefcase|card holder|wallet
-        )\b/x.test(text)
+        /\b(handbag|hand bag|purse|bag|bags|backpack|backpacks|rucksack|tote|shoulder bag|crossbody|cross-body|clutch|pouch|laptop bag|travel bag|duffel|duffle|suitcase|briefcase|card holder|wallet)\b/i.test(text)
     ) {
         if (
-            /\b(
-                wallet|purse|card holder|cardholder|money clip
-            )\b/x.test(text)
+            /\b(wallet|purse|card holder|cardholder|money clip)\b/i.test(text)
         ) {
             return "wallets";
         }
@@ -421,32 +409,22 @@ function detectGlobiraProductType(product) {
     /* JEWELRY */
 
     if (
-        /\b(
-            ring|rings|bracelet|bracelets|necklace|
-            necklaces|chain|chains|earring|earrings|
-            pendant|pendants|jewelry|jewellery|
-            anklet|anklets
-        )\b/x.test(text)
+        /\b(ring|rings|bracelet|bracelets|necklace|necklaces|chain|chains|earring|earrings|pendant|pendants|jewelry|jewellery|anklet|anklets)\b/i.test(text)
     ) {
         if (
-            /\b(ring|rings)\b/.test(text)
+            /\b(ring|rings)\b/i.test(text)
         ) {
             return "rings";
         }
 
         if (
-            /\b(
-                bracelet|bracelets|anklet|anklets
-            )\b/x.test(text)
+            /\b(bracelet|bracelets|anklet|anklets)\b/i.test(text)
         ) {
             return "bracelets";
         }
 
         if (
-            /\b(
-                necklace|necklaces|chain|chains|
-                pendant|pendants
-            )\b/x.test(text)
+            /\b(necklace|necklaces|chain|chains|pendant|pendants)\b/i.test(text)
         ) {
             return "necklaces";
         }
@@ -457,18 +435,7 @@ function detectGlobiraProductType(product) {
     /* ELECTRONICS */
 
     if (
-        /\b(
-            phone|mobile|iphone|samsung|xiaomi|redmi|
-            oppo|vivo|realme|case|phone case|tablet|
-            ipad|laptop|computer|keyboard|mouse|
-            headphone|headphones|earphone|earphones|
-            earbud|earbuds|airpods|speaker|speakers|
-            charger|charging|cable|power bank|powerbank|
-            smart watch|smartwatch|watch|camera|
-            projector|monitor|usb|adapter|hub|
-            electronic|electronics|gamepad|controller|
-            console
-        )\b/x.test(text)
+        /\b(phone|mobile|iphone|samsung|xiaomi|redmi|oppo|vivo|realme|case|phone case|tablet|ipad|laptop|computer|keyboard|mouse|headphone|headphones|earphone|earphones|earbud|earbuds|airpods|speaker|speakers|charger|charging|cable|power bank|powerbank|smart watch|smartwatch|watch|camera|projector|monitor|usb|adapter|hub|electronic|electronics|gamepad|controller|console)\b/i.test(text)
     ) {
         return "electronics";
     }
@@ -476,10 +443,7 @@ function detectGlobiraProductType(product) {
     /* KIDS */
 
     if (
-        /\b(
-            baby|babies|infant|infants|kid|kids|child|
-            children|toddler|newborn|boy|girls|girl|boys
-        )\b/x.test(text)
+        /\b(baby|babies|infant|infants|kid|kids|child|children|toddler|newborn|boy|girls|girl|boys)\b/i.test(text)
     ) {
         return "kids";
     }
@@ -487,24 +451,10 @@ function detectGlobiraProductType(product) {
     /* CLOTHING */
 
     if (
-        /\b(
-            t-shirt|tshirt|tee|shirt|shirts|polo|
-            hoodie|hoodies|sweatshirt|sweatshirts|
-            jacket|jackets|coat|coats|blazer|blazers|
-            dress|dresses|skirt|skirts|legging|leggings|
-            shorts|pants|trousers|jeans|joggers|
-            tracksuit|tracksuits|sweatpants|underwear|
-            briefs|boxers|bra|bras|lingerie|swimwear|
-            bikini|bikinis|bodysuit|jumpsuit|romper|
-            top|tops|cardigan|vest|waistcoat|
-            clothing|apparel
-        )\b/x.test(text)
+        /\b(t-shirt|tshirt|tee|shirt|shirts|polo|hoodie|hoodies|sweatshirt|sweatshirts|jacket|jackets|coat|coats|blazer|blazers|dress|dresses|skirt|skirts|legging|leggings|shorts|pants|trousers|jeans|joggers|tracksuit|tracksuits|sweatpants|underwear|briefs|boxers|bra|bras|lingerie|swimwear|bikini|bikinis|bodysuit|jumpsuit|romper|top|tops|cardigan|vest|waistcoat|clothing|apparel)\b/i.test(text)
     ) {
         if (
-            /\b(
-                jeans|pants|trousers|joggers|
-                sweatpants|shorts
-            )\b/x.test(text)
+            /\b(jeans|pants|trousers|joggers|sweatpants|shorts)\b/i.test(text)
         ) {
             return "pants";
         }
@@ -515,13 +465,7 @@ function detectGlobiraProductType(product) {
     /* HOME */
 
     if (
-        /\b(
-            kitchen|cookware|tableware|home decor|
-            decoration|storage|organizer|organiser|
-            furniture|chair|table|shelf|shelves|
-            pillow|cushion|blanket|towel|bedding|
-            bathroom|home
-        )\b/x.test(text)
+        /\b(kitchen|cookware|tableware|home decor|decoration|storage|organizer|organiser|furniture|chair|table|shelf|shelves|pillow|cushion|blanket|towel|bedding|bathroom|home)\b/i.test(text)
     ) {
         return "home";
     }
@@ -529,12 +473,7 @@ function detectGlobiraProductType(product) {
     /* BEAUTY */
 
     if (
-        /\b(
-            makeup|cosmetic|cosmetics|lipstick|foundation|
-            mascara|eyeliner|beauty|skincare|cream|
-            serum|lotion|shampoo|conditioner|perfume|
-            fragrance|brush|beauty tool
-        )\b/x.test(text)
+        /\b(makeup|cosmetic|cosmetics|lipstick|foundation|mascara|eyeliner|beauty|skincare|cream|serum|lotion|shampoo|conditioner|perfume|fragrance|brush|beauty tool)\b/i.test(text)
     ) {
         return "beauty";
     }
@@ -542,11 +481,7 @@ function detectGlobiraProductType(product) {
     /* SPORTS */
 
     if (
-        /\b(
-            sports|sport|fitness|gym|yoga|football|
-            soccer|basketball|tennis|cycling|cycling gear|
-            gloves|sportswear
-        )\b/x.test(text)
+        /\b(sports|sport|fitness|gym|yoga|football|soccer|basketball|tennis|cycling|cycling gear|gloves|sportswear)\b/i.test(text)
     ) {
         return "sports";
     }
@@ -1146,14 +1081,6 @@ function getGlobiraFilterSizeType(
 
 /* =========================================================
    PUBLIC PRODUCT NORMALIZATION
- *
- * IMPORTANT:
- *
- * No supplier branding is returned here.
- * Customer-facing data uses GLOBIRA.
- *
- * Internal supplier information remains available
- * only where needed by backend order processing.
 ========================================================= */
 
 function normalizeCJProduct(product) {
@@ -1337,10 +1264,6 @@ function normalizeCJProduct(product) {
 
     /*
      * INTERNAL SUPPLIER IDENTIFIERS
-     *
-     * These are required by the backend to know
-     * which product/variant must eventually be
-     * ordered from the supplier.
      */
 
     const supplierProductId =
@@ -1361,9 +1284,6 @@ function normalizeCJProduct(product) {
 
     /*
      * PUBLIC PRODUCT OBJECT
-     *
-     * No supplier name.
-     * No supplier branding.
      */
 
     return {
@@ -1498,12 +1418,6 @@ function normalizeCJProduct(product) {
         syncedAt:
             new Date().toISOString(),
 
-        /*
-         * INTERNAL DATA
-         *
-         * Kept inside a clearly separated object.
-         * Frontend should not display this.
-         */
         _internal: {
             supplierProductId,
             supplierSku,
