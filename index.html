@@ -14630,3 +14630,188 @@ function boot(){setTimeout(()=>loadHome(),150)}if(document.readyState==='loading
 #categoryProducts .globira-collection-search{flex:0 1 280px!important;width:280px!important;max-width:100%!important;height:40px!important}
 @media(max-width:700px){#categoryProducts .globira-collection-toolbar{justify-content:flex-start!important}#categoryProducts .globira-collection-search{width:230px!important;height:38px!important}}
 </style>
+
+<!-- GLOBIRA FINAL BUG FIX — HEADER / PRODUCT POPUP / FAST CATEGORY -->
+<style id="globira-final-bug-fix-2026-09-30">
+.globira-utility-bar{position:sticky!important;top:0!important;z-index:6002!important}
+.globira-main-header{position:sticky!important;top:38px!important;z-index:6001!important;background:#fff!important}
+.globira-reference-nav.globira-global-nav{position:sticky!important;top:124px!important;z-index:6000!important;background:#fff!important}
+.globira-mega-menus{z-index:5999!important}
+.category-page{z-index:5000!important;padding-top:190px!important}
+@media(max-width:850px){
+  .globira-main-header{top:38px!important}
+  .globira-reference-nav.globira-global-nav{top:124px!important}
+  .category-page{padding-top:180px!important}
+}
+@media(max-width:650px){
+  .globira-utility-bar{display:none!important}
+  .globira-main-header{top:0!important}
+  .globira-reference-nav.globira-global-nav{top:72px!important}
+  .category-page{padding-top:125px!important}
+}
+.gw-product-card{position:relative!important}
+</style>
+
+<script id="globira-final-bug-fix-2026-09-30">
+(function(){
+'use strict';
+
+/* BUY NOW: block checkout until every visible required variant is selected. */
+function colorOptions(){
+  return document.querySelectorAll('#productModal #globiraFinalColorOptions .color-option').length ||
+         document.querySelectorAll('#productModal #globiraColorOptions .color-option').length;
+}
+function selectedColor(){
+  const a=document.querySelector('#productModal #globiraFinalColorOptions .color-option.selected');
+  if(a) return String(a.dataset.color||'').trim();
+  const b=document.querySelector('#productModal #globiraColorOptions .color-option.selected');
+  if(b) return String(b.dataset.color||'').trim();
+  const note=document.getElementById('globiraFinalColorNote');
+  const m=note && String(note.textContent||'').match(/^Selected color:\s*(.+)$/i);
+  return m ? m[1].trim() : '';
+}
+function sizeOptions(){
+  return document.querySelectorAll('#productModal .size').length;
+}
+function selectedSize(){
+  const b=document.querySelector('#productModal .size.selected');
+  return b ? String(b.dataset.size||'').trim() : '';
+}
+
+document.addEventListener('click',function(event){
+  const buy=event.target.closest('#popupBuyButton');
+  if(!buy) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+
+  if(colorOptions() && !selectedColor()){
+    alert('Please select a color first.');
+    return;
+  }
+  if(sizeOptions() && !selectedSize()){
+    alert('Please select a size first.');
+    return;
+  }
+
+  /* Use the current exact BUY NOW handler after validation. */
+  if(typeof buy.onclick==='function') buy.onclick.call(buy,event);
+},true);
+
+/* Product-card safety: clicking a product always opens Quick View first. */
+document.addEventListener('click',function(event){
+  const card=event.target.closest('.gw-product-card');
+  if(!card || event.target.closest('.gw-card-heart')) return;
+  if(event.target.closest('button,a,input,select,textarea')) return;
+
+  const raw=card.getAttribute('onclick')||'';
+  const match=raw.match(/openProduct\(\s*['"]([^'"]+)['"]/);
+  if(!match || typeof window.openProduct!=='function') return;
+
+  setTimeout(function(){
+    const modal=document.getElementById('productModal');
+    if(modal && !modal.classList.contains('active')) window.openProduct(match[1]);
+  },0);
+},false);
+
+/* FAST CATEGORY SWITCH: use products already loaded on the homepage first. */
+function productText(p){
+  return [p&&p.name,p&&p.productName,p&&p.productNameEn,p&&p.category,
+    p&&p.categoryName,p&&p.subcategory,p&&p.subCategory,p&&p.productType,
+    p&&p.description,p&&p.gender,p&&p.sex,p&&p.targetGender]
+    .filter(Boolean).join(' ').toLowerCase();
+}
+function categoryMatch(p,category){
+  const c=String(category||'').toLowerCase();
+  if(c==='more') return true;
+  const t=productText(p);
+  const g=String(p&&(p.gender??p.sex??p.targetGender)||'').toLowerCase();
+
+  if(c==='men') return g.includes('men') || /\b(men|mens|male|man|gentlemen|menswear)\b/.test(t);
+  if(c==='women') return g.includes('women') ||
+    /\b(women|womens|female|woman|ladies|girls|womenswear|dress|dresses|skirt|blouse|lingerie|gown)\b/.test(t);
+
+  const families={
+    bags:['bag','bags','handbag','backpack','purse','tote','clutch','crossbody','wallet','luggage','suitcase'],
+    shoes:['shoe','shoes','sneaker','trainer','sandal','boot','heel','loafer','slipper','footwear'],
+    accessories:['watch','jewelry','jewellery','necklace','bracelet','ring','earring','belt','sunglasses','glasses','scarf','hat','cap','accessory','tie'],
+    electronics:['smartphone','mobile phone','phone','tablet','laptop','computer','monitor','keyboard','mouse','headphone','earphone','earbuds','speaker','camera','charger','usb','electronics','gaming'],
+    home:['home decor','home decoration','kitchen','cookware','bedding','bedsheet','pillow','blanket','curtain','storage','lamp','bathroom','garden','cleaning','household','furniture','decor'],
+    beauty:['makeup','cosmetic','cosmetics','skincare','skin care','serum','lipstick','foundation','mascara','perfume','fragrance','beauty'],
+    tools:['screwdriver','drill','wrench','plier','hammer','cutter','tool','tools','hardware','diy'],
+    sports:['fitness','gym','yoga','camping','hiking','cycling','running','jogging','workout','exercise','sportswear','athletic','football','soccer','basketball','tennis'],
+    automotive:['automotive','automobile','car accessory','car care','car interior','car exterior','motorcycle','motorbike','vehicle','auto parts'],
+    pets:['pet','dog','puppy','cat','kitten','aquarium','pet toy','pet bed','pet supplies'],
+    office:['office','stationery','notebook','pen','pencil','desk organizer','office supplies','school supplies'],
+    baby:['baby','infant','newborn','stroller','feeding bottle','diaper','nursery','baby clothing','baby toy'],
+    health:['health','medical','wellness','massage','therapy','first aid','recovery','rehabilitation','health care']
+  };
+  if(families[c] && families[c].some(w=>t.includes(w))) return true;
+  return String(p&&p.category||'').toLowerCase()===c ||
+         String(p&&p.subcategory||'').toLowerCase()===c;
+}
+function cachedProducts(category){
+  const out=[],seen=new Set();
+  const add=p=>{
+    if(!p||!p.id||seen.has(String(p.id))||!categoryMatch(p,category)) return;
+    seen.add(String(p.id)); out.push(p);
+  };
+  if(Array.isArray(window.cjProducts)) window.cjProducts.forEach(add);
+  document.querySelectorAll('#featuredProducts .gw-product-card').forEach(card=>{
+    const m=(card.getAttribute('onclick')||'').match(/openProduct\(\s*['"]([^'"]+)['"]/);
+    if(m && typeof window.findProduct==='function'){
+      try{add(window.findProduct(m[1]));}catch(e){}
+    }
+  });
+  return out;
+}
+function paintCachedCategory(category){
+  const container=document.getElementById('categoryProducts');
+  if(!container) return false;
+  const products=cachedProducts(category);
+  if(!products.length) return false;
+
+  const data=(typeof GLOBIRA_MENU_DATA!=='undefined') ? GLOBIRA_MENU_DATA[category] : null;
+  const name=data?.title || String(category).replace(/[-_]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  const title=document.getElementById('categoryTitle');
+  const eyebrow=document.getElementById('categoryEyebrow');
+  if(title) title.textContent=name;
+  if(eyebrow) eyebrow.textContent='GLOBIRA / '+name.toUpperCase();
+
+  container.innerHTML=
+    '<div class="gw-category-toolbar"><div><b>'+products.length.toLocaleString()+
+    ' products</b><span>Live marketplace</span></div></div>'+
+    '<div class="products category-result-grid">'+
+    products.slice(0,100).map(p=>typeof window.productCard==='function'?window.productCard(p):'').join('')+
+    '</div>';
+
+  document.querySelectorAll('#categoryProducts img').forEach((img,i)=>{
+    img.loading=i<12?'eager':'lazy';
+    img.decoding='async';
+    if(i<12) img.setAttribute('fetchpriority','high');
+  });
+  const page=document.getElementById('categoryPage');
+  if(page) page.scrollTop=0;
+  return true;
+}
+
+const originalShowCategory=window.showCategory;
+if(typeof originalShowCategory==='function' && !originalShowCategory.__globiraInstantCategoryFix){
+  window.showCategory=function(category){
+    const home=document.getElementById('homePage');
+    const page=document.getElementById('categoryPage');
+    if(home) home.style.display='none';
+    if(page) page.classList.add('active');
+
+    /* Start the existing live loader immediately. */
+    const result=originalShowCategory.apply(this,arguments);
+
+    /* Replace its temporary Loading state with cached products on the next frame. */
+    requestAnimationFrame(()=>paintCachedCategory(category));
+    return result;
+  };
+  window.showCategory.__globiraInstantCategoryFix=true;
+}
+})();
+</script>
