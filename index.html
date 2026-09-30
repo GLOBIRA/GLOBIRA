@@ -3078,6 +3078,78 @@
 </style>
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<style id="globira-category-page-clean-final">
+/* GLOBIRA CATEGORY PAGES — CLEAN, COMPACT, NO FILTER UI */
+.category-page{
+  padding:34px 5% 80px !important;
+}
+.category-page-title{
+  margin-bottom:28px !important;
+}
+.category-page-title span{
+  font-size:10px !important;
+  letter-spacing:2.5px !important;
+  color:#747b82 !important;
+}
+.category-page-title h1{
+  font-size:54px !important;
+  line-height:1.05 !important;
+  margin:7px 0 0 !important;
+}
+.gw-category-toolbar-clean{
+  min-height:42px !important;
+  padding:10px 0 !important;
+  margin-bottom:20px !important;
+  border-top:1px solid #e9e6df !important;
+  border-bottom:1px solid #e9e6df !important;
+}
+.gw-category-tools-clean{
+  display:flex !important;
+  align-items:center !important;
+}
+.gw-cat-search-always{
+  width:270px !important;
+  height:36px !important;
+  opacity:1 !important;
+  overflow:hidden !important;
+  display:flex !important;
+  align-items:center !important;
+  border:1px solid #d8d2c8 !important;
+  border-radius:2px !important;
+  background:#fff !important;
+  transition:none !important;
+}
+.gw-cat-search-always input{
+  width:100% !important;
+  height:34px !important;
+  padding:0 10px !important;
+  font-size:12px !important;
+  color:#111820 !important;
+}
+.gw-cat-search-always input::placeholder{color:#8a8f95 !important}
+.gw-cat-search-always button{
+  width:36px !important;
+  height:34px !important;
+  flex:0 0 36px !important;
+  font-size:17px !important;
+  background:#fff !important;
+}
+.gw-category-count{gap:9px !important}
+.gw-category-count b{font-size:11px !important}
+.gw-category-count span{font-size:10px !important}
+/* Filter controls are intentionally removed from the category toolbar. */
+.gw-category-toolbar .gw-cat-tool-btn,.gw-category-toolbar #gwCategoryFilterCount{display:none !important}
+
+@media(max-width:700px){
+  .category-page{padding:28px 4% 60px !important}
+  .category-page-title{margin-bottom:20px !important}
+  .category-page-title h1{font-size:42px !important}
+  .gw-category-toolbar-clean{align-items:center !important}
+  .gw-cat-search-always{width:220px !important;max-width:58vw !important}
+  .gw-category-count span{display:none !important}
+}
+</style>
 </head>
 
     <body>
@@ -10892,19 +10964,14 @@ body{font-size:14px!important}
   }
 
   function toolbarHTML(){
-    return `<div class="gw-category-toolbar">
+    const title=escapeHtml(document.getElementById('categoryTitle')?.textContent||'this collection');
+    return `<div class="gw-category-toolbar gw-category-toolbar-clean">
       <div class="gw-category-count" id="gwCategoryCount"><b>0 products</b><span>Live marketplace</span></div>
-      <div class="gw-category-tools">
-        <div class="gw-cat-search-shell" id="gwCatSearchShell">
-          <input id="gwCategorySearchInput" type="search" placeholder="Search in ${escapeHtml(document.getElementById('categoryTitle')?.textContent||'this collection')}..." autocomplete="off" onkeydown="if(event.key==='Enter')applyCategoryInlineSearch()">
+      <div class="gw-category-tools gw-category-tools-clean">
+        <div class="gw-cat-search-shell gw-cat-search-always" id="gwCatSearchShell">
+          <input id="gwCategorySearchInput" type="search" placeholder="Search ${title}..." autocomplete="off" onkeydown="if(event.key==='Enter')applyCategoryInlineSearch()">
           <button type="button" onclick="applyCategoryInlineSearch()" aria-label="Search">⌕</button>
         </div>
-        <button type="button" class="gw-cat-tool-btn" onclick="toggleCategorySearch()" aria-label="Search this collection">
-          <svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 5 5"></path></svg><span>Search</span>
-        </button>
-        <button type="button" class="gw-cat-tool-btn" onclick="openCategoryFilters()" aria-label="Filter products">
-          <svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"></path></svg><span>Filter</span><span id="gwCategoryFilterCount" class="gw-cat-filter-count">0</span>
-        </button>
       </div>
     </div>`;
   }
@@ -10923,10 +10990,8 @@ body{font-size:14px!important}
   }
 
   window.toggleCategorySearch=function(){
-    const shell=document.getElementById('gwCatSearchShell');
-    if(!shell)return;
-    shell.classList.toggle('open');
-    if(shell.classList.contains('open'))setTimeout(()=>document.getElementById('gwCategorySearchInput')?.focus(),80);
+    const input=document.getElementById('gwCategorySearchInput');
+    if(input) input.focus();
   };
   window.applyCategoryInlineSearch=function(){
     const input=document.getElementById('gwCategorySearchInput');
@@ -13522,8 +13587,8 @@ body{font-size:13px!important}
 .globira-collection-toolbar{display:flex!important;align-items:center!important;gap:12px!important;margin:0 0 26px!important;padding:0!important;background:transparent!important;border:0!important;box-sizing:border-box!important}
 .globira-collection-search{flex:1 1 auto!important;min-width:0!important;height:48px!important;border:1px solid #c9c2b7!important;border-radius:4px!important;background:#fff!important;padding:0 16px!important;font:500 14px/1.2 'DM Sans',sans-serif!important;outline:none!important;box-sizing:border-box!important}
 .globira-collection-search:focus{border-color:#111!important}
-.globira-filter-button{height:48px!important;min-width:118px!important;border:1px solid #111!important;border-radius:4px!important;background:#fff!important;color:#111!important;padding:0 18px!important;font:600 13px 'DM Sans',sans-serif!important;cursor:pointer!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:8px!important}
-.globira-filter-button:hover{background:#111!important;color:#fff!important}
+.globira-filter-button{display:none!important}
+.globira-filter-overlay,.globira-filter-drawer{display:none!important}
 .globira-collection-count{font-size:14px!important;white-space:nowrap!important;order:-1!important}
 .globira-collection-count b{font-size:15px!important}
 .globira-collection-count span{display:none!important}
@@ -13532,6 +13597,8 @@ body{font-size:13px!important}
 .globira-filter-overlay{position:fixed!important;inset:0!important;background:rgba(0,0,0,.42)!important;z-index:10000!important;display:none!important}
 .globira-filter-overlay.active{display:block!important}
 .globira-filter-drawer{position:fixed!important;top:0!important;right:-430px!important;width:min(410px,92vw)!important;height:100vh!important;background:#fff!important;z-index:10001!important;box-shadow:-18px 0 55px rgba(0,0,0,.18)!important;transition:right .28s ease!important;overflow:auto!important;padding:28px!important;box-sizing:border-box!important}
+.globira-filter-scroll{overflow:auto!important;flex:1 1 auto!important;min-height:0!important;padding-bottom:8px!important}
+.globira-filter-head small{display:block!important;font:600 10px/1 "DM Sans",sans-serif!important;letter-spacing:2px!important;color:#888!important;margin-bottom:5px!important}
 .globira-filter-drawer.active{right:0!important}
 .globira-filter-head{display:flex!important;align-items:center!important;justify-content:space-between!important;border-bottom:1px solid #ddd!important;padding-bottom:18px!important;margin-bottom:22px!important}
 .globira-filter-head h3{font-family:'Playfair Display',serif!important;font-size:30px!important;font-weight:500!important}
@@ -13549,19 +13616,23 @@ body{font-size:13px!important}
  .section-heading h2{font-size:42px!important}.category-overlay h3{font-size:40px!important}.category-page-title h1{font-size:36px!important}
 }
 </style>
-<script id="globira-final-feed-fix-v9">
+<script id="globira-final-feed-fix-v10">
 (function(){
 'use strict';
 window.__globiraFinalFeedActive=true;
-const PAGE=100, HOME_BATCH=300, CATEGORY_BATCH=300, MORE_BATCH=300;
-const S={home:{items:[],next:1,total:Infinity,busy:false},cat:{name:'',items:[],next:1,total:Infinity,busy:false,filters:{q:'',min:'',max:'',size:'',color:''}}};
+const PAGE=100, HOME_BATCH=300, CATEGORY_BATCH=300;
+const S={
+  home:{items:[],next:1,total:Infinity,busy:false},
+  cat:{name:'',items:[],next:1,total:Infinity,busy:false,
+       filters:{q:'',category:'',min:'',max:'',color:'',size:'',delivery:'any',rating:'any',availability:'any'}}
+};
 function arr(x){return x?.products||x?.data?.products||x?.data?.list||x?.data?.content||[]}
 function totalPages(x){const n=Number(x?.totalPages??x?.data?.totalPages??x?.pagination?.totalPages);return Number.isFinite(n)&&n>0?n:Infinity}
 function pid(p){return String(p?.id||p?.cjProductId||p?.pid||p?.productId||p?.sku||'')}
 function unique(a){const m=new Map();for(const p of a||[]){const id=pid(p);if(id)m.set(id,p)}return [...m.values()]}
 function txt(p){return [p?.name,p?.productName,p?.productNameEn,p?.category,p?.categoryName,p?.subcategory,p?.subCategory,p?.productType,p?.description].filter(Boolean).join(' ').toLowerCase()}
 function rawGender(p){return String(p?.gender||p?.sex||p?.targetGender||'').toLowerCase()}
-function family(p){const t=txt(p);const has=a=>a.some(x=>t.includes(x));
+function family(p){const t=txt(p),has=a=>a.some(x=>t.includes(x));
  if(has(['screwdriver','drill','wrench','plier','hammer','cutter','multimeter','tool set','tool kit','hand tool','power tool','hardware','workshop']))return'tools';
  if(has(['smartphone','mobile phone','phone','tablet','laptop','computer','monitor','keyboard','mouse','headphone','earphone','earbuds','speaker','camera','projector','charger','usb','power bank','electronics','electronic','drone','router','wifi','bluetooth','gaming']))return'electronics';
  if(has(['car accessory','automotive','automobile','car care','car interior','car exterior','dash cam','car charger','car holder','motorcycle','motorbike','vehicle','auto parts','car parts']))return'automotive';
@@ -13577,22 +13648,36 @@ function family(p){const t=txt(p);const has=a=>a.some(x=>t.includes(x));
  if(has(['watch','jewelry','jewellery','necklace','bracelet','ring','earring','belt','sunglasses','glasses','scarf','hat','cap','accessory','accessories','tie','hair clip']))return'accessories';
  return''}
 function genderFamily(p){const g=rawGender(p),t=txt(p);if(/\b(men|mens|male|man)\b/.test(g)||/\b(men|mens|male|man|menswear|men clothing)\b/.test(t))return'men';if(/\b(women|womens|female|woman)\b/.test(g)||/\b(women|womens|female|woman|womenswear|women clothing|dress|dresses|skirt|blouse|lingerie|bra|gown)\b/.test(t))return'women';return''}
-function classifyFinal(p){const x={...(p||{})};const f=family(x);const g=genderFamily(x);if(f)x.category=f;else if(g)x.category=g;else if(!x.category)x.category='other';if(g)x.gender=g;return x}
+function classifyFinal(p){const x={...(p||{})};const f=family(x),g=genderFamily(x);if(f)x.category=f;else if(g)x.category=g;else if(!x.category)x.category='other';if(g)x.gender=g;return x}
 function matches(p,cat){const x=classifyFinal(p),c=String(cat||'').toLowerCase();if(c==='men'||c==='women')return genderFamily(p)===c||String(p?.gender||'').toLowerCase()===c||String(p?.category||'').toLowerCase()===c;return family(p)===c||String(p?.category||'').toLowerCase()===c||String(p?.subcategory||'').toLowerCase()===c}
 async function getPage(n,keyword=''){try{const q=keyword?('&keyword='+encodeURIComponent(keyword)):'';const r=await fetch('/api/cj-products?page='+n+'&size='+PAGE+q,{cache:'no-store',headers:{Accept:'application/json'}});if(!r.ok)return null;return await r.json()}catch(e){console.warn('CJ page',n,e);return null}}
 async function getBatch(start,count,keyword=''){return Promise.all(Array.from({length:count},(_,i)=>getPage(start+i,keyword)))}
 function variants(p,key){const out=[];for(const v of Array.isArray(p?.variants)?p.variants:[]){const s=String(v?.variantNameEn||v?.variantName||v?.variantKey||v?.name||v?.properties||'');const m=s.match(key==='size'?/(?:size)\s*[:\-]?\s*([^|,/]+)/i:/(?:color|colour)\s*[:\-]?\s*([^|,/]+)/i);if(m)out.push(m[1].trim())}return [...new Set(out)]}
-function pass(p){const f=S.cat.filters,q=f.q.trim().toLowerCase();const h=[p?.name,p?.productName,p?.productNameEn,p?.subcategory,p?.description,p?.category,p?.gender].filter(Boolean).join(' ').toLowerCase();if(q&&!h.includes(q))return false;const price=Number(p?.price||0);if(f.min!==''&&price<Number(f.min))return false;if(f.max!==''&&price>Number(f.max))return false;if(f.size&&!variants(p,'size').some(x=>x.toLowerCase().includes(f.size.toLowerCase()))&&!String(p?.size||'').toLowerCase().includes(f.size.toLowerCase()))return false;if(f.color&&!variants(p,'color').some(x=>x.toLowerCase().includes(f.color.toLowerCase()))&&!String(p?.color||'').toLowerCase().includes(f.color.toLowerCase()))return false;return true}
+function productRating(p){const n=Number(p?.rating??p?.score??p?.reviewRating??p?.starRating??p?.averageRating);return Number.isFinite(n)?n:null}
+function availabilityValue(p){const raw=[p?.availability,p?.stockStatus,p?.inventoryStatus,p?.status].filter(Boolean).join(' ').toLowerCase();const stock=Number(p?.stock??p?.inventory??p?.stockQuantity??p?.availableStock);if(Number.isFinite(stock))return stock>0?'in':'out';if(/out.?of.?stock|sold.?out|unavailable|inactive/.test(raw))return'out';if(/in.?stock|available|active/.test(raw))return'in';return'any'}
+function deliveryDays(p){const direct=['deliveryDays','delivery_days','estimatedDeliveryDays','estimated_delivery_days','shippingDays','shipping_days','transitDays','transit_days','daysToDeliver'];for(const k of direct){const n=Number(p?.[k]);if(Number.isFinite(n)&&n>=0)return n}const raw=[p?.deliveryTime,p?.delivery,p?.shippingTime,p?.shippingEstimate,p?.estimatedDelivery,p?.deliveryEstimate,p?.shipping].filter(Boolean).join(' ');const r=raw.match(/(\d+)\s*(?:-|–|—|to)\s*(\d+)\s*(?:days?|working\s+days?)/i);if(r)return(Number(r[1])+Number(r[2]))/2;const s=raw.match(/(\d+)\s*(?:days?|working\s+days?)/i);if(s)return Number(s[1]);return 5.5}
+function deliveryMatch(p,v){const d=deliveryDays(p);if(v==='1-3')return d<=3;if(v==='4-7')return d>=4&&d<=7;if(v==='8-14')return d>=8&&d<=14;if(v==='15+')return d>=15;return true}
+function pass(p){const f=S.cat.filters,q=f.q.trim().toLowerCase();const h=[p?.name,p?.productName,p?.productNameEn,p?.subcategory,p?.description,p?.category,p?.gender].filter(Boolean).join(' ').toLowerCase();
+ if(q&&!h.includes(q))return false;
+ if(f.category){const wanted=f.category.toLowerCase();if(String(p?.category||'').toLowerCase()!==wanted&&String(p?.subcategory||'').toLowerCase()!==wanted&&family(p)!==wanted)return false}
+ const price=Number(p?.price??p?.salePrice??p?.sellingPrice??0);if(f.min!==''&&price<Number(f.min))return false;if(f.max!==''&&price>Number(f.max))return false;
+ if(f.size&&!variants(p,'size').some(x=>x.toLowerCase().includes(f.size.toLowerCase()))&&!String(p?.size||'').toLowerCase().includes(f.size.toLowerCase()))return false;
+ if(f.color&&!variants(p,'color').some(x=>x.toLowerCase().includes(f.color.toLowerCase()))&&!String(p?.color||'').toLowerCase().includes(f.color.toLowerCase()))return false;
+ if(!deliveryMatch(p,f.delivery))return false;
+ const rating=productRating(p);if(f.rating!=='any'&&(!Number.isFinite(rating)||rating<Number(f.rating)))return false;
+ if(f.availability!=='any'&&availabilityValue(p)!==f.availability)return false;
+ return true}
 function nice(cat){const d=typeof GLOBIRA_MENU_DATA!=='undefined'?GLOBIRA_MENU_DATA[cat]:null;return d?.title||String(cat).replace(/[-_]/g,' ').replace(/\b\w/g,x=>x.toUpperCase())}
-function drawer(){if(document.getElementById('globiraFilterOverlay'))return;document.body.insertAdjacentHTML('beforeend','<div id="globiraFilterOverlay" class="globira-filter-overlay"></div><aside id="globiraFilterDrawer" class="globira-filter-drawer"><div class="globira-filter-head"><h3>Filter</h3><button class="globira-filter-close" id="globiraFilterClose">×</button></div><div class="globira-filter-group"><label>Price</label><div class="globira-price-row"><input id="globiraMinPrice" class="globira-filter-input" type="number" min="0" placeholder="Min price"><input id="globiraMaxPrice" class="globira-filter-input" type="number" min="0" placeholder="Max price"></div></div><div class="globira-filter-group"><label>Size</label><select id="globiraSize" class="globira-filter-select"><option value="">All sizes</option></select></div><div class="globira-filter-group"><label>Colour</label><select id="globiraColor" class="globira-filter-select"><option value="">All colours</option></select></div><div class="globira-filter-actions"><button id="globiraFilterClear" class="globira-filter-clear">CLEAR ALL</button><button id="globiraFilterApply" class="globira-filter-apply">APPLY FILTER</button></div></aside>');const close=()=>{document.getElementById('globiraFilterOverlay')?.classList.remove('active');document.getElementById('globiraFilterDrawer')?.classList.remove('active')};document.getElementById('globiraFilterOverlay').onclick=close;document.getElementById('globiraFilterClose').onclick=close;document.getElementById('globiraFilterApply').onclick=()=>{close();renderCat()};document.getElementById('globiraFilterClear').onclick=()=>{S.cat.filters.min='';S.cat.filters.max='';S.cat.filters.size='';S.cat.filters.color='';renderCat()}}
-function openDrawer(){drawer();const d=document.getElementById('globiraFilterDrawer');const o=document.getElementById('globiraFilterOverlay');const sizes=[...new Set(S.cat.items.flatMap(p=>variants(p,'size')).filter(Boolean))].sort();const colors=[...new Set(S.cat.items.flatMap(p=>variants(p,'color')).filter(Boolean))].sort();document.getElementById('globiraMinPrice').value=S.cat.filters.min;document.getElementById('globiraMaxPrice').value=S.cat.filters.max;document.getElementById('globiraSize').innerHTML='<option value="">All sizes</option>'+sizes.map(x=>'<option>'+escapeHtml(x)+'</option>').join('');document.getElementById('globiraColor').innerHTML='<option value="">All colours</option>'+colors.map(x=>'<option>'+escapeHtml(x)+'</option>').join('');document.getElementById('globiraSize').value=S.cat.filters.size;document.getElementById('globiraColor').value=S.cat.filters.color;document.getElementById('globiraMinPrice').oninput=e=>S.cat.filters.min=e.target.value;document.getElementById('globiraMaxPrice').oninput=e=>S.cat.filters.max=e.target.value;document.getElementById('globiraSize').onchange=e=>S.cat.filters.size=e.target.value;document.getElementById('globiraColor').onchange=e=>S.cat.filters.color=e.target.value;d.classList.add('active');o.classList.add('active')}
-function renderHome(){const c=document.getElementById('featuredProducts');if(!c)return;c.innerHTML=S.home.items.map(productCard).join('');const st=document.getElementById('homeCatalogStatus');if(st)st.textContent=S.home.items.length+' GLOBIRA products loaded';const b=document.getElementById('homeLoadMoreBtn');if(b){b.style.display=S.home.next<=S.home.total?'inline-block':'none';b.disabled=S.home.busy;b.textContent=S.home.busy?'Loading products…':'Load 300 more products →'}}
-async function loadHome(){if(S.home.busy)return;S.home.busy=true;renderHome();let target=S.home.items.length+HOME_BATCH;while(S.home.items.length<target&&S.home.next<=S.home.total){const first=S.home.next;const rs=await getBatch(first,Math.min(6,Math.max(1,S.home.total-first+1)));let got=false;for(const r of rs){if(!r)continue;const a=arr(r);if(a.length)got=true;S.home.total=Math.min(S.home.total,totalPages(r));S.home.items=unique(S.home.items.concat(a.map(classifyFinal)));}S.home.next=first+rs.length;if(!got)break;}cjProducts=unique((window.cjProducts||[]).concat(S.home.items));S.home.busy=false;renderHome()}
-async function loadCat(){const s=S.cat;if(s.busy)return;s.busy=true;renderCat();const target=s.items.length+CATEGORY_BATCH;const keyword=(s.name==='women'||s.name==='men')?s.name:(s.name==='more'?'':s.name);let empty=0;while(s.items.length<target&&s.next<=s.total&&empty<2){const first=s.next;const count=Number.isFinite(s.total)?Math.min(6,Math.max(1,s.total-first+1)):6;const rs=await getBatch(first,count,keyword);let got=0;for(const r of rs){if(!r)continue;const a=arr(r);got+=a.length;if(a.length){s.total=Math.min(s.total,totalPages(r));for(const p of a){if(matches(p,s.name))s.items.push(classifyFinal(p))}}}s.items=unique(s.items);s.next=first+rs.length;if(!got)empty++;else empty=0;}s.busy=false;renderCat()}
-function renderCat(){const c=document.getElementById('categoryProducts');if(!c)return;const s=S.cat,n=nice(s.name),shown=s.items.filter(pass);const hasMore=s.next<=s.total;c.innerHTML='<div class="globira-collection-toolbar"><div class="globira-collection-count"><b>'+shown.length.toLocaleString()+'</b></div><input id="globiraCollectionSearch" class="globira-collection-search" type="search" placeholder="Search in '+escapeHtml(n)+'..." value="'+escapeHtml(s.filters.q)+'"><button id="globiraFilterButton" class="globira-filter-button">☷ FILTER</button></div><div class="products category-result-grid">'+(shown.length?shown.map(productCard).join(''):'<div class="empty-category"><h3>No matching products</h3><p>Try another search or filter.</p></div>')+'</div>'+(hasMore?'<button id="globiraCategoryMore" class="globira-feed-loadmore">Load 300 more products →</button>':'');const q=document.getElementById('globiraCollectionSearch');if(q){q.oninput=e=>{s.filters.q=e.target.value;renderCat();const x=document.getElementById('globiraCollectionSearch');if(x){x.focus();x.setSelectionRange(x.value.length,x.value.length)}}}document.getElementById('globiraFilterButton')?.addEventListener('click',openDrawer);document.getElementById('globiraCategoryMore')?.addEventListener('click',async()=>{const b=document.getElementById('globiraCategoryMore');if(b){b.disabled=true;b.textContent='Loading 300 more…'}await loadCat()})}
-async function openCat(cat){const home=document.getElementById('homePage'),page=document.getElementById('categoryPage'),title=document.getElementById('categoryTitle'),ey=document.getElementById('categoryEyebrow');if(home)home.style.display='none';if(page)page.classList.add('active');if(title)title.textContent=nice(cat);if(ey)ey.textContent='GLOBIRA / '+nice(cat).toUpperCase();S.cat={name:String(cat).toLowerCase(),items:[],next:1,total:Infinity,busy:false,filters:{q:'',min:'',max:'',size:'',color:''}};document.getElementById('categoryProducts').innerHTML='<div class="globira-feed-loading">Loading '+escapeHtml(nice(cat))+' products…</div>';await loadCat()}
+function filterOptions(){const items=S.cat.items;const cats=[...new Set(items.map(p=>String(p?.subcategory||p?.categoryName||p?.category||family(p)||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b)).slice(0,80);const sizes=[...new Set(items.flatMap(p=>variants(p,'size')).filter(Boolean))].sort();const colors=[...new Set(items.flatMap(p=>variants(p,'color')).filter(Boolean))].sort();return {cats,sizes,colors}}
+function drawer(){if(document.getElementById('globiraFilterOverlay'))return;document.body.insertAdjacentHTML('beforeend',`<div id="globiraFilterOverlay" class="globira-filter-overlay"></div><aside id="globiraFilterDrawer" class="globira-filter-drawer"><div class="globira-filter-head"><div><small>GLOBIRA</small><h3>Filter</h3></div><button class="globira-filter-close" id="globiraFilterClose">×</button></div><div class="globira-filter-scroll"><div class="globira-filter-group"><label>Category</label><select id="globiraCategoryFilter" class="globira-filter-select"><option value="">All categories</option></select></div><div class="globira-filter-group"><label>Price</label><div class="globira-price-row"><input id="globiraMinPrice" class="globira-filter-input" type="number" min="0" placeholder="Min price"><input id="globiraMaxPrice" class="globira-filter-input" type="number" min="0" placeholder="Max price"></div></div><div class="globira-filter-group"><label>Color</label><select id="globiraColor" class="globira-filter-select"><option value="">All colours</option></select></div><div class="globira-filter-group"><label>Size</label><select id="globiraSize" class="globira-filter-select"><option value="">All sizes</option></select></div><div class="globira-filter-group"><label>Delivery Time</label><select id="globiraDelivery" class="globira-filter-select"><option value="any">Any delivery time</option><option value="1-3">1–3 days</option><option value="4-7">4–7 days</option><option value="8-14">8–14 days</option><option value="15+">15+ days</option></select></div><div class="globira-filter-group"><label>Rating</label><select id="globiraRating" class="globira-filter-select"><option value="any">Any rating</option><option value="4">4★ & above</option><option value="3">3★ & above</option><option value="2">2★ & above</option></select></div><div class="globira-filter-group"><label>Availability</label><select id="globiraAvailability" class="globira-filter-select"><option value="any">All availability</option><option value="in">In stock</option><option value="out">Out of stock</option></select></div></div><div class="globira-filter-actions"><button id="globiraFilterClear" class="globira-filter-clear">Reset All</button><button id="globiraFilterApply" class="globira-filter-apply">Apply Filters</button></div></aside>`);const close=()=>{document.getElementById('globiraFilterOverlay')?.classList.remove('active');document.getElementById('globiraFilterDrawer')?.classList.remove('active')};document.getElementById('globiraFilterOverlay').onclick=close;document.getElementById('globiraFilterClose').onclick=close;document.getElementById('globiraFilterApply').onclick=()=>{close();renderCat()};document.getElementById('globiraFilterClear').onclick=()=>{S.cat.filters={q:S.cat.filters.q,category:'',min:'',max:'',color:'',size:'',delivery:'any',rating:'any',availability:'any'};close();renderCat()}}
+function openDrawer(){drawer();const d=document.getElementById('globiraFilterDrawer'),o=document.getElementById('globiraFilterOverlay'),op=filterOptions();document.getElementById('globiraCategoryFilter').innerHTML='<option value="">All categories</option>'+op.cats.map(x=>'<option value="'+escapeHtml(x)+'">'+escapeHtml(x)+'</option>').join('');document.getElementById('globiraSize').innerHTML='<option value="">All sizes</option>'+op.sizes.map(x=>'<option value="'+escapeHtml(x)+'">'+escapeHtml(x)+'</option>').join('');document.getElementById('globiraColor').innerHTML='<option value="">All colours</option>'+op.colors.map(x=>'<option value="'+escapeHtml(x)+'">'+escapeHtml(x)+'</option>').join('');const f=S.cat.filters;document.getElementById('globiraCategoryFilter').value=f.category;document.getElementById('globiraMinPrice').value=f.min;document.getElementById('globiraMaxPrice').value=f.max;document.getElementById('globiraSize').value=f.size;document.getElementById('globiraColor').value=f.color;document.getElementById('globiraDelivery').value=f.delivery;document.getElementById('globiraRating').value=f.rating;document.getElementById('globiraAvailability').value=f.availability;document.getElementById('globiraCategoryFilter').onchange=e=>f.category=e.target.value;document.getElementById('globiraMinPrice').oninput=e=>f.min=e.target.value;document.getElementById('globiraMaxPrice').oninput=e=>f.max=e.target.value;document.getElementById('globiraSize').onchange=e=>f.size=e.target.value;document.getElementById('globiraColor').onchange=e=>f.color=e.target.value;document.getElementById('globiraDelivery').onchange=e=>f.delivery=e.target.value;document.getElementById('globiraRating').onchange=e=>f.rating=e.target.value;document.getElementById('globiraAvailability').onchange=e=>f.availability=e.target.value;d.classList.add('active');o.classList.add('active')}
+function renderHome(){const c=document.getElementById('featuredProducts');if(!c)return;c.innerHTML=S.home.items.slice(0,300).map(productCard).join('');const st=document.getElementById('homeCatalogStatus');if(st)st.textContent=S.home.items.length+' GLOBIRA products loaded';const b=document.getElementById('homeLoadMoreBtn');if(b){b.style.display=S.home.next<=S.home.total?'inline-block':'none';b.disabled=S.home.busy;b.textContent=S.home.busy?'Loading products…':'Load 300 more products →'}}
+async function loadHome(){if(S.home.busy)return;S.home.busy=true;renderHome();let target=S.home.items.length+300;while(S.home.items.length<target&&S.home.next<=S.home.total){const first=S.home.next,rs=await getBatch(first,Math.min(6,Math.max(1,S.home.total-first+1)));let got=false;for(const r of rs){if(!r)continue;const a=arr(r);if(a.length)got=true;S.home.total=Math.min(S.home.total,totalPages(r));S.home.items=unique(S.home.items.concat(a.map(classifyFinal)));}S.home.next=first+rs.length;if(!got)break}window.cjProducts=unique((window.cjProducts||[]).concat(S.home.items));S.home.busy=false;renderHome()}
+async function loadCat(){const s=S.cat;if(s.busy)return;s.busy=true;renderCat();const target=s.items.length+300;const keyword=(s.name==='women'||s.name==='men'||s.name==='more')?'':String(s.name||'');let empty=0;while(s.items.length<target&&s.next<=s.total&&empty<3){const first=s.next,count=Number.isFinite(s.total)?Math.min(6,Math.max(1,s.total-first+1)):6,rs=await getBatch(first,count,keyword);let got=0;for(const r of rs){if(!r)continue;const a=arr(r);got+=a.length;if(a.length){s.total=Math.min(s.total,totalPages(r));for(const p of a){if(matches(p,s.name))s.items.push(classifyFinal(p))}}}s.items=unique(s.items);s.next=first+rs.length;if(!got)empty++;else empty=0}s.busy=false;renderCat()}
+function renderCat(){const c=document.getElementById('categoryProducts');if(!c)return;const s=S.cat,n=nice(s.name),shown=s.items.filter(pass);const hasMore=s.next<=s.total;c.innerHTML='<div class="globira-collection-toolbar"><input id="globiraCollectionSearch" class="globira-collection-search" type="search" placeholder="Search in '+escapeHtml(n)+'..." value="'+escapeHtml(s.filters.q)+'"></div><div class="products category-result-grid">'+(shown.length?shown.map(productCard).join(''):'<div class="empty-category"><h3>No matching products</h3><p>Try another search.</p></div>')+'</div>'+(hasMore?'<button id="globiraCategoryMore" class="globira-feed-loadmore">Load 300 more products →</button>':'');const q=document.getElementById('globiraCollectionSearch');if(q){q.oninput=e=>{s.filters.q=e.target.value;renderCat();const x=document.getElementById('globiraCollectionSearch');if(x){x.focus();x.setSelectionRange(x.value.length,x.value.length)}}}document.getElementById('globiraCategoryMore')?.addEventListener('click',async()=>{const b=document.getElementById('globiraCategoryMore');if(b){b.disabled=true;b.textContent='Loading 300 more…'}await loadCat()})}
+async function openCat(cat){const home=document.getElementById('homePage'),page=document.getElementById('categoryPage'),title=document.getElementById('categoryTitle'),ey=document.getElementById('categoryEyebrow');if(home)home.style.display='none';if(page)page.classList.add('active');if(title)title.textContent=nice(cat);if(ey)ey.textContent='GLOBIRA / '+nice(cat).toUpperCase();S.cat={name:String(cat).toLowerCase(),items:[],next:1,total:Infinity,busy:false,filters:{q:'',category:'',min:'',max:'',color:'',size:'',delivery:'any',rating:'any',availability:'any'}};document.getElementById('categoryProducts').innerHTML='<div class="globira-feed-loading">Loading '+escapeHtml(nice(cat))+' products…</div>';await loadCat()}
 window.showCategory=openCat;window.showSubcategory=function(cat,sub){if(sub==='all'){openCat(cat);return}openCat(cat).then(()=>{S.cat.filters.q=String(sub||'').replace(/-/g,' ');renderCat()})};window.loadMoreHomeProducts=loadHome;
-function boot(){drawer();setTimeout(()=>loadHome(),150)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+function boot(){setTimeout(()=>loadHome(),150)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
 </script>
 
@@ -13755,3 +13840,18 @@ function boot(){drawer();setTimeout(()=>loadHome(),150)}if(document.readyState==
     setCategorySubtitle('women');
 })();
 </script>
+<style id="globira-remove-category-filter-final">
+/* FINAL: category pages use search only — no filter button, badge, drawer or overlay */
+#categoryProducts .globira-filter-button,
+#categoryProducts #globiraFilterButton,
+#categoryProducts .gw-cat-tool-btn,
+#categoryProducts #gwCategoryFilterCount,
+#categoryProducts .gw-cat-filter-count,
+#categoryProducts .gw-category-filter-backdrop,
+#categoryProducts .gw-category-filter-panel,
+#globiraFilterOverlay,
+#globiraFilterDrawer{display:none!important;visibility:hidden!important;pointer-events:none!important}
+#categoryProducts .globira-collection-toolbar{justify-content:flex-end!important}
+#categoryProducts .globira-collection-search{flex:0 1 280px!important;width:280px!important;max-width:100%!important;height:40px!important}
+@media(max-width:700px){#categoryProducts .globira-collection-toolbar{justify-content:flex-start!important}#categoryProducts .globira-collection-search{width:230px!important;height:38px!important}}
+</style>
