@@ -15363,378 +15363,968 @@ document.addEventListener('click',function(e){
 .gw-fast-loading-note{font-size:12px;color:#777;margin:8px 0 14px;text-align:center}
 .gw-load-more:disabled{opacity:.65;cursor:wait}
 </style>
-<script id="globira-fast-feed-search-v11">
+<script id="globira-fast-feed-search-v12">
 (function(){
   'use strict';
 
-  const PAGE_SIZE=100;
-  const INITIAL_HOME=300;
-  const LOAD_MORE=300;
-  const INITIAL_CATEGORY=300;
-  const SEARCH_BATCH=100;
-  const CACHE_KEY='globiraCJPageCacheV11';
-  const pageCache=Object.create(null);
-  let cacheLoaded=false;
+  /* =========================================================
+     GLOBIRA V12 LIVE CJ SEARCH + STABLE LOAD MORE
+     - Search directly against the CJ backend keyword endpoint.
+     - "pants" means pants/trousers only; not jeans/shorts/tops.
+     - Every Load More click adds 100 additional matching products.
+     - No reload, no location change, no automatic repeated search.
+     - Keeps existing product cards/design.
+     ========================================================= */
 
-  function safeJSON(s){try{return JSON.parse(s)}catch(e){return null}}
-  function arr(x){return Array.isArray(x)?x:[]}
-  function productKey(p){return String(p?.id||p?.productId||p?.pid||'').trim()}
+  const PAGE_SIZE = 100;
+  const INITIAL_HOME = 300;
+  const HOME_MORE = 300;
+  const INITIAL_CATEGORY = 300;
+  const SEARCH_MORE = 100;
+  const CACHE_KEY = 'globiraCJPageCacheV12';
+
+  const pageCache = Object.create(null);
+  let cacheLoaded = false;
+  let searchRunId = 0;
+
+  const searchStates = Object.create(null);
+  const categoryStates = Object.create(null);
+
+  function safeJSON(s){ try{return JSON.parse(s)}catch(e){return null} }
+  function arr(x){ return Array.isArray(x) ? x : []; }
+
+  function productKey(p){
+    return String(p?.id || p?.productId || p?.pid || p?.cjProductId || p?.sku || '').trim();
+  }
+
   function unique(list){
-    const m=new Map();
+    const m = new Map();
     for(const p of arr(list)){
-      const id=productKey(p);
-      if(!id)continue;
-      m.set(id,p);
+      const id = productKey(p);
+      if(id) m.set(id,p);
     }
     return Array.from(m.values());
   }
-  function classify(p){
-    try{return typeof window.classifyCJProduct==='function'?window.classifyCJProduct(p):p}catch(e){return p}
-  }
-  function classifyAll(list){return unique(arr(list).map(classify))}
 
-  /* Keep a small session cache. This is what makes a second visit/open feel
-     immediate without changing the CJ source or the product data. */
+  function classify(p){
+    try{
+      return typeof window.classifyCJProduct === 'function'
+        ? window.classifyCJProduct(p)
+        : p;
+    }catch(e){ return p; }
+  }
+
+  function classifyAll(list){
+    return unique(arr(list).map(classify));
+  }
+
   function loadCache(){
-    if(cacheLoaded)return;
+    if(cacheLoaded) return;
     cacheLoaded=true;
     try{
-      const raw=sessionStorage.getItem(CACHE_KEY);
-      const data=safeJSON(raw);
-      if(data&&typeof data==='object')Object.assign(pageCache,data);
+      const data=safeJSON(sessionStorage.getItem(CACHE_KEY));
+      if(data && typeof data==='object') Object.assign(pageCache,data);
     }catch(e){}
   }
+
   function saveCache(){
     try{
-      const keys=Object.keys(pageCache).slice(-18);
-      const out={};keys.forEach(k=>out[k]=pageCache[k]);
+      const keys=Object.keys(pageCache)
+        .filter(k=>/^p\d+$/.test(k))
+        .slice(-30);
+      const out={};
+      keys.forEach(k=>out[k]=pageCache[k]);
       sessionStorage.setItem(CACHE_KEY,JSON.stringify(out));
     }catch(e){}
   }
+
   loadCache();
 
   async function fetchPage(page){
-    const k='p'+page;
-    if(pageCache[k]&&Array.isArray(pageCache[k].products))return pageCache[k];
+    const key='p'+page;
+    if(pageCache[key] && Array.isArray(pageCache[key].products)){
+      return pageCache[key];
+    }
+
     try{
-      const r=await fetch('/api/cj-products?page='+page+'&size='+PAGE_SIZE,{cache:'default',headers:{Accept:'application/json'}});
-      if(!r.ok)throw new Error('HTTP '+r.status);
+      const r=await fetch(
+        '/api/cj-products?page='+page+'&size='+PAGE_SIZE,
+        {cache:'default',headers:{Accept:'application/json'}}
+      );
+      if(!r.ok) throw new Error('HTTP '+r.status);
+
       const d=await r.json();
-      if(!d||!Array.isArray(d.products))throw new Error('Invalid CJ response');
-      pageCache[k]={
+      if(!d || !Array.isArray(d.products)){
+        throw new Error('Invalid CJ response');
+      }
+
+      pageCache[key]={
         products:classifyAll(d.products),
         totalPages:Number(d.totalPages)||300,
         totalRecords:Number(d.totalRecords)||0,
         savedAt:Date.now()
       };
       saveCache();
-      return pageCache[k];
+      return pageCache[key];
     }catch(e){
-      console.warn('GLOBIRA fast feed page failed',page,e);
+      console.warn('GLOBIRA CJ page failed:',page,e);
+      return null;
+    }
+  }
+
+  /*
+   * IMPORTANT:
+   * Search uses CJ's keyword parameter. This is what lets a search such as
+   * "bottles", "screwdriver", "cutter", etc. reach products that are not
+   * already visible in the homepage/category cache.
+   */
+  async function fetchSearchPage(query,page){
+    const key='s:'+normalizeQuery(query)+':'+page;
+
+    if(pageCache[key] && Array.isArray(pageCache[key].products)){
+      return pageCache[key];
+    }
+
+    try{
+      const url='/api/cj-products?page='+page+
+        '&size='+PAGE_SIZE+
+        '&keyword='+encodeURIComponent(query);
+
+      const r=await fetch(url,{
+        cache:'no-store',
+        headers:{Accept:'application/json'}
+      });
+
+      if(!r.ok) throw new Error('HTTP '+r.status);
+
+      const d=await r.json();
+      if(!d || !Array.isArray(d.products)){
+        throw new Error('Invalid CJ search response');
+      }
+
+      const result={
+        products:classifyAll(d.products),
+        totalPages:Number(d.totalPages)||1,
+        totalRecords:Number(d.totalRecords)||0,
+        savedAt:Date.now()
+      };
+
+      /* Search cache is memory/session useful, but never blocks fresh CJ data. */
+      pageCache[key]=result;
+      return result;
+    }catch(e){
+      console.warn('GLOBIRA CJ search failed:',query,page,e);
       return null;
     }
   }
 
   function allCached(){
+    loadCache();
     const out=[];
-    Object.keys(pageCache).forEach(k=>{if(/^p\d+$/.test(k))out.push(...arr(pageCache[k]?.products))});
+    Object.keys(pageCache).forEach(k=>{
+      if(/^p\d+$/.test(k)){
+        out.push(...arr(pageCache[k]?.products));
+      }
+    });
     return unique(out);
   }
 
+  function normalizeQuery(q){
+    let s=String(q||'')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g,' ')
+      .replace(/\s+/g,' ');
+
+    /*
+     * Small typo/plural normalization for normal customer searches.
+     * This is intentionally conservative; it does not turn one product
+     * family into another.
+     */
+    const aliases={
+      bottel:'bottle',
+      bottels:'bottles',
+      botle:'bottle',
+      botles:'bottles',
+      trouser:'trousers',
+      trouseres:'trousers',
+      pant:'pants',
+      tshirt:'tshirt',
+      tshort:'short'
+    };
+
+    return s.split(' ').map(w=>aliases[w]||w).join(' ');
+  }
+
   function textOf(p){
-    const parts=[p?.name,p?.category,p?.subcategory,p?.description,p?.productType,p?.productTypeName,p?.productName,p?.gender];
-    const variants=arr(p?.variants);
-    for(const v of variants)parts.push(v?.variantNameEn,v?.variantName,v?.name,v?.properties);
+    const parts=[
+      p?.name,
+      p?.productName,
+      p?.productNameEn,
+      p?.category,
+      p?.categoryName,
+      p?.subcategory,
+      p?.subCategory,
+      p?.productType,
+      p?.productTypeName,
+      p?.gender
+    ];
+
+    for(const v of arr(p?.variants)){
+      parts.push(
+        v?.variantNameEn,
+        v?.variantName,
+        v?.name,
+        v?.properties
+      );
+    }
+
     return parts.filter(Boolean).join(' ').toLowerCase();
   }
 
-  function normalizeQuery(q){
-    return String(q||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ');
-  }
-
+  /*
+   * Search-family definitions are deliberately separate.
+   * pants != jeans != shorts.
+   */
   const families={
-    pants:['pant','pants','trouser','trousers','jean','jeans','jogger','joggers','legging','leggings','short','shorts'],
-    shoes:['shoe','shoes','sneaker','sneakers','trainer','trainers','boot','boots','sandal','sandals','heel','heels','loafer','loafers','slipper','slippers'],
-    bags:['bag','bags','handbag','handbags','backpack','backpacks','purse','purses','tote','totes','clutch','clutches','crossbody','wallet','wallets'],
+    pants:['pant','pants','trouser','trousers'],
+    jeans:['jean','jeans'],
+    shorts:['short','shorts'],
+    skirts:['skirt','skirts'],
     dresses:['dress','dresses','gown','gowns'],
-    shirts:['shirt','shirts','tshirt','tshirts','t shirt','t shirts','blouse','blouses','top','tops'],
+    tops:['top','tops','blouse','blouses'],
+    shirts:['shirt','shirts','tshirt','tshirts','t shirt','t shirts'],
     jackets:['jacket','jackets','coat','coats','blazer','blazers'],
-    electronics:['electronic','electronics','phone','mobile','tablet','laptop','computer','charger','headphone','headphones','earbuds','camera','speaker'],
-    tools:['tool','tools','screwdriver','screwdrivers','cutter','cutters','drill','wrench','pliers','hardware'],
-    beauty:['beauty','cosmetic','cosmetics','makeup','skincare','skin care','hair'],
-    home:['home','furniture','kitchen','bedding','decor','decoration','household'],
-    accessories:['watch','watches','jewelry','jewellery','necklace','necklaces','bracelet','bracelets','ring','rings','earring','earrings','belt','belts','sunglasses']
+    hoodies:['hoodie','hoodies'],
+    sweaters:['sweater','sweaters','jumper','jumpers'],
+    shoes:['shoe','shoes','sneaker','sneakers','trainer','trainers','boot','boots','sandal','sandals','heel','heels','loafer','loafers','slipper','slippers','footwear'],
+    bags:['bag','bags','handbag','handbags','backpack','backpacks','purse','purses','tote','totes','clutch','clutches','crossbody','wallet','wallets'],
+    bottles:['bottle','bottles','water bottle','water bottles','flask','flasks','thermos','thermoses','drink bottle','drink bottles'],
+    electronics:['electronic','electronics','phone','phones','mobile','mobiles','smartphone','smartphones','tablet','tablets','laptop','laptops','computer','computers','charger','chargers','headphone','headphones','earbuds','earphone','earphones','camera','cameras','speaker','speakers','projector','projectors'],
+    tools:['tool','tools','screwdriver','screwdrivers','cutter','cutters','drill','drills','wrench','wrenches','pliers','hammer','hammers','hardware'],
+    beauty:['beauty','cosmetic','cosmetics','makeup','skincare','skin care','hair care','shampoo','conditioner','perfume','fragrance'],
+    home:['home','furniture','kitchen','bedding','decor','decoration','household','storage','organizer'],
+    accessories:['watch','watches','jewelry','jewellery','necklace','necklaces','bracelet','bracelets','ring','rings','earring','earrings','belt','belts','sunglasses','scarf','hat','cap']
   };
 
-  function strictSmartMatch(p,raw){
-    const q=normalizeQuery(raw);if(!q)return true;
-    const words=q.split(' ').filter(Boolean);
-    const hay=textOf(p);
-    const tokens=hay.split(/[^a-z0-9]+/).filter(Boolean);
-    return words.every(w=>{
-      const family=Object.keys(families).find(f=>families[f].includes(w));
-      if(family){
-        return families[family].some(term=>{
-          const t=normalizeQuery(term);
-          return hay.includes(t)||tokens.includes(t)||tokens.includes(t.replace(/s$/,''));
-        });
+  const genderAliases={
+    men:['men','mens','man','male','menswear'],
+    women:['women','womens','woman','female','womenswear'],
+    kids:['kid','kids','child','children','baby','babies','infant','infants','girls','girl','boys','boy']
+  };
+
+  function productGender(p){
+    const raw=String(p?.gender||p?.sex||p?.targetGender||'').toLowerCase().trim();
+    if(raw==='men'||raw==='women'||raw==='kids') return raw;
+
+    try{
+      if(typeof window.globiraGender==='function'){
+        const g=String(window.globiraGender(p)||'').toLowerCase().trim();
+        if(g) return g;
       }
-      return tokens.includes(w)||hay.includes(w);
-    });
+    }catch(e){}
+
+    const h=textOf(p);
+    if(/\b(men|mens|male|man|menswear)\b/.test(h)) return 'men';
+    if(/\b(women|womens|female|woman|womenswear)\b/.test(h)) return 'women';
+    if(/\b(kids|kid|children|child|baby|babies|infant|girls|girl|boys|boy)\b/.test(h)) return 'kids';
+    return '';
   }
 
-  function genderOf(p){
-    let g=String(p?.gender||'').toLowerCase();
-    if(g==='men'||g==='women'||g==='kids')return g;
-    try{if(typeof window.globiraGender==='function'){g=String(window.globiraGender(p)||'').toLowerCase();if(g)return g}}catch(e){}
+  function productFamily(p){
     const h=textOf(p);
-    if(/\b(men|mens|male|man|menswear)\b/.test(h))return 'men';
-    if(/\b(women|womens|female|woman|womenswear)\b/.test(h))return 'women';
-    if(/\b(kids|kid|children|child|baby|babies|infant)\b/.test(h))return 'kids';
+
+    /*
+     * Prefer the actual product/category fields. This prevents a women's
+     * "top" whose long description happens to mention pants from becoming
+     * a pants result.
+     */
+    const strong=[
+      p?.name,
+      p?.productName,
+      p?.productNameEn,
+      p?.category,
+      p?.categoryName,
+      p?.subcategory,
+      p?.subCategory,
+      p?.productType,
+      p?.productTypeName
+    ].filter(Boolean).join(' ').toLowerCase();
+
+    const tokenText=' '+strong.replace(/[^a-z0-9]+/g,' ')+' ';
+
+    for(const [family,terms] of Object.entries(families)){
+      for(const term of terms){
+        const n=normalizeQuery(term);
+        if(!n) continue;
+        if(tokenText.includes(' '+n+' ')) return family;
+      }
+    }
+
+    /*
+     * Fall back to the normalized category assigned by the existing GLOBIRA
+     * classifier, but never use a description-only match.
+     */
+    const c=String(p?.category||'').toLowerCase().trim();
+    if(c && c!=='other') return c;
+
     return '';
+  }
+
+  function strictSmartMatch(p,raw){
+    const q=normalizeQuery(raw);
+    if(!q) return false;
+
+    const words=q.split(' ').filter(Boolean);
+    const text=textOf(p);
+    const tokens=new Set(text.split(/[^a-z0-9]+/).filter(Boolean));
+
+    let requestedGender='';
+    for(const [g,aliases] of Object.entries(genderAliases)){
+      if(words.some(w=>aliases.includes(w))){
+        requestedGender=g;
+        break;
+      }
+    }
+
+    if(requestedGender){
+      if(productGender(p)!==requestedGender) return false;
+    }
+
+    const nonGender=words.filter(w=>{
+      return !Object.values(genderAliases).some(a=>a.includes(w));
+    });
+
+    if(!nonGender.length) return true;
+
+    const familyRequests=[];
+
+    for(const word of nonGender){
+      const family=Object.keys(families).find(f=>families[f].includes(word));
+      if(family) familyRequests.push(family);
+    }
+
+    /*
+     * If a family is requested, require the product itself to belong to that
+     * family. This is the key fix for "pants" returning tops/jeans/shorts.
+     */
+    if(familyRequests.length){
+      const requestedFamily=familyRequests[0];
+      if(productFamily(p)!==requestedFamily) return false;
+
+      /* Any additional non-family words must also occur in product metadata. */
+      for(const word of nonGender){
+        if(Object.keys(families).some(f=>families[f].includes(word))) continue;
+        if(!tokens.has(word) && !text.includes(word)) return false;
+      }
+
+      return true;
+    }
+
+    /* Normal product/brand/model search: every meaningful word must match. */
+    return nonGender.every(word=>{
+      if(tokens.has(word)) return true;
+      return text.includes(' '+word) || text.startsWith(word);
+    });
   }
 
   function categoryOf(p){
     const c=String(p?.category||'').toLowerCase().trim();
-    if(c&&c!=='other')return c;
-    try{if(typeof window.strictCategoryFromProduct==='function'){const x=String(window.strictCategoryFromProduct(p)||'').toLowerCase();if(x)return x}}catch(e){}
-    const h=textOf(p);
-    for(const [k,terms] of Object.entries(families))if(terms.some(t=>h.includes(normalizeQuery(t))))return k;
-    return c||'';
+    if(c && c!=='other') return c;
+
+    try{
+      if(typeof window.strictCategoryFromProduct==='function'){
+        const x=String(window.strictCategoryFromProduct(p)||'').toLowerCase();
+        if(x) return x;
+      }
+    }catch(e){}
+
+    const f=productFamily(p);
+    return f || c || '';
   }
 
-  function categoryMatch(p,cat){
-    const wanted=String(cat||'').toLowerCase();
-    if(wanted==='more'||wanted==='all')return true;
-    if(wanted==='women'||wanted==='men'||wanted==='kids')return genderOf(p)===wanted;
-    const c=categoryOf(p);
-    if(c===wanted)return true;
-    return textOf(p).split(/[^a-z0-9]+/).includes(wanted);
+  function categoryMatch(p,category){
+    const wanted=String(category||'more').toLowerCase();
+    if(wanted==='more'||wanted==='all') return true;
+
+    if(wanted==='women'||wanted==='men'||wanted==='kids'){
+      return productGender(p)===wanted;
+    }
+
+    return categoryOf(p)===wanted;
   }
 
   function setImagesFast(root){
-    if(!root)return;
+    if(!root) return;
     root.querySelectorAll('img').forEach((img,i)=>{
       img.decoding='async';
-      if(i<12){img.loading='eager';img.setAttribute('fetchpriority','high')}
-      else{img.loading='lazy';img.setAttribute('fetchpriority','low')}
+      if(i<12){
+        img.loading='eager';
+        img.setAttribute('fetchpriority','high');
+      }else{
+        img.loading='lazy';
+        img.setAttribute('fetchpriority','low');
+      }
     });
   }
 
-  function renderHomeFast(products,loadingMore){
-    const c=document.getElementById('featuredProducts');if(!c)return;
+  function renderHome(products,loading){
+    const c=document.getElementById('featuredProducts');
+    if(!c) return;
+
     const list=unique(products);
-    /* Never clear the existing grid while loading more. */
-    c.innerHTML=list.slice(0,homeVisible).map(window.productCard||(()=>'' )).join('');
+    c.innerHTML=list.slice(0,window.__globiraHomeVisible||INITIAL_HOME)
+      .map(window.productCard||(()=>'' )).join('');
+
     setImagesFast(c);
-    const st=document.getElementById('homeCatalogStatus');
-    if(st)st.textContent=list.length+' GLOBIRA products loaded';
-    let b=document.getElementById('homeLoadMoreBtn');
+
+    const status=document.getElementById('homeCatalogStatus');
+    if(status) status.textContent=list.length.toLocaleString()+' GLOBIRA products loaded';
+
+    const b=document.getElementById('homeLoadMoreBtn');
     if(b){
       b.style.display='inline-block';
-      b.disabled=!!loadingMore;
-      b.textContent=loadingMore?'Loading products…':'Load 300 more products →';
+      b.disabled=!!loading;
+      b.textContent=loading
+        ? 'Loading products…'
+        : 'Load 300 more products →';
     }
   }
 
-  function appendHome(products){
-    const c=document.getElementById('featuredProducts');if(!c)return;
-    const current=allCached();
-    const existing=Array.from(c.querySelectorAll('.gw-product-card,[data-product-id]'));
-    /* Render from cache in one stable order; the viewport itself is not reset. */
-    const combined=unique(current.concat(products));
-    renderHomeFast(combined,false);
-    return combined;
-  }
+  let homePage=1;
+  let homeTotal=300;
+  let homeBusy=false;
+  window.__globiraHomeVisible=INITIAL_HOME;
 
-  let homePage=1,homeBusy=false,homeTotal=300,homeVisible=300;
-  async function fastHomeLoad(initial){
-    if(homeBusy)return;
+  async function loadHome(initial){
+    if(homeBusy) return;
     homeBusy=true;
-    loadCache();
-    const cached=allCached();
-    if(cached.length){renderHomeFast(cached,false)}
 
-    if(!initial)homeVisible+=LOAD_MORE;
-    const target=initial?INITIAL_HOME:Math.max(INITIAL_HOME,homeVisible);
+    loadCache();
+
+    const cached=allCached();
+    if(cached.length){
+      renderHome(cached,false);
+    }
+
+    if(!initial){
+      window.__globiraHomeVisible+=HOME_MORE;
+    }
+
+    const target=initial
+      ? INITIAL_HOME
+      : window.__globiraHomeVisible;
+
     while(allCached().length<target && homePage<=homeTotal){
-      const pages=[homePage,homePage+1,homePage+2].filter(p=>p<=homeTotal);
+      const pages=[
+        homePage,
+        homePage+1,
+        homePage+2
+      ].filter(p=>p<=homeTotal);
+
+      if(!pages.length) break;
+
       const responses=await Promise.all(pages.map(fetchPage));
+
       let got=false;
       for(const r of responses){
-        if(r?.products?.length)got=true;
-        if(r?.totalPages)homeTotal=Math.max(homeTotal,r.totalPages);
+        if(r?.products?.length) got=true;
+        if(Number(r?.totalPages)>0) homeTotal=Math.max(homeTotal,Number(r.totalPages));
       }
+
       homePage+=pages.length;
+
       const products=allCached();
-      renderHomeFast(products,true);
-      if(!got)break;
-      if(initial && products.length>=INITIAL_HOME)break;
+      renderHome(products,true);
+
+      if(!got) break;
     }
-    const products=allCached();
-    renderHomeFast(products,false);
+
+    renderHome(allCached(),false);
     homeBusy=false;
   }
 
-  /* Replace only the load-more action; no automatic page refresh. */
-  window.loadMoreHomeProducts=function(){fastHomeLoad(false)};
-  window.__globiraFastHomeLoad=fastHomeLoad;
+  window.loadMoreHomeProducts=function(){
+    const y=window.scrollY||document.documentElement.scrollTop||0;
+    loadHome(false).then(()=>{
+      requestAnimationFrame(()=>window.scrollTo(0,y));
+    });
+  };
 
-  function renderFeed(container,products,state,type){
-    if(!container)return;
-    const list=unique(products);
-    const gridClass='products category-result-grid';
-    const buttonId=type==='search'?'globiraSearchLoadMore':'globiraCategoryLoadMore';
-    const label=type==='search'?'Load 100 more products →':'Load 100 more products →';
-    container.innerHTML='<div class="gw-category-toolbar"><div><b>'+list.length.toLocaleString()+' products</b><span>'+ (type==='search'?'Matching products only':'Live marketplace') +'</span></div></div>'+
-      '<div class="'+gridClass+'">'+(list.length?list.map(window.productCard||(()=>'' )).join(''):'<div class="empty-category"><h3>No products found</h3><p>Try another search.</p></div>')+'</div>'+
-      (state.hasMore?'<button class="gw-load-more" id="'+buttonId+'">'+label+'</button>':'');
-    setImagesFast(container);
-    updateWishlistHeartsSafe();
+  function preparePage(title,eyebrow){
+    const home=document.getElementById('homePage');
+    const page=document.getElementById('categoryPage');
+
+    if(home) home.style.display='none';
+    if(page) page.classList.add('active');
+
+    const t=document.getElementById('categoryTitle');
+    const e=document.getElementById('categoryEyebrow');
+
+    if(t) t.textContent=title;
+    if(e) e.textContent=eyebrow||('GLOBIRA / '+String(title).toUpperCase());
+
+    document.body.classList.remove('no-scroll');
   }
 
-  function updateWishlistHeartsSafe(){try{if(typeof window.updateWishlistHearts==='function')window.updateWishlistHearts()}catch(e){}}
+  function renderFeed(container,state,type){
+    if(!container||!state) return;
 
-  const categoryStates=Object.create(null);
-  const searchStates=Object.create(null);
+    const list=unique(state.products||[]);
+    const buttonId=type==='search'
+      ? 'globiraSearchLoadMore'
+      : 'globiraCategoryLoadMore';
+
+    const label=type==='search'
+      ? 'Load 100 more products →'
+      : 'Load 100 more products →';
+
+    container.innerHTML=
+      '<div class="gw-category-toolbar">'+
+        '<div><b>'+list.length.toLocaleString()+' products</b>'+
+        '<span>'+(type==='search'?'Matching products only':'Live marketplace')+'</span></div>'+
+      '</div>'+
+      '<div class="products category-result-grid">'+
+        (list.length
+          ? list.map(window.productCard||(()=>'' )).join('')
+          : '<div class="empty-category"><h3>No products found</h3><p>Try another search.</p></div>')+
+      '</div>'+
+      (state.hasMore
+        ? '<button type="button" class="gw-load-more" id="'+buttonId+'">'+label+'</button>'
+        : '');
+
+    setImagesFast(container);
+
+    const button=document.getElementById(buttonId);
+    if(button){
+      button.onclick=async function(event){
+        if(event){
+          event.preventDefault();
+          event.stopPropagation();
+        }
+
+        if(state.loading) return;
+
+        const y=window.scrollY||document.documentElement.scrollTop||0;
+
+        button.disabled=true;
+        button.textContent='Loading 100 more products…';
+
+        try{
+          if(type==='search'){
+            await loadSearchMore(state,container);
+          }else{
+            await loadCategoryMore(state,container);
+          }
+        }finally{
+          requestAnimationFrame(()=>window.scrollTo(0,y));
+        }
+      };
+    }
+
+    try{
+      if(typeof window.updateWishlistHearts==='function'){
+        window.updateWishlistHearts();
+      }
+    }catch(e){}
+  }
 
   async function loadCategory(category,loadMore){
     const key=String(category||'more').toLowerCase();
-    let st=categoryStates[key];
-    if(!st||!loadMore){st=categoryStates[key]={products:[],next:1,total:300,hasMore:true,loading:false};}
-    if(st.loading)return;
-    st.loading=true;
-    const container=document.getElementById('categoryProducts');if(!container){st.loading=false;return}
 
-    /* Cached products appear immediately, before any new network wait. */
+    let state=categoryStates[key];
+
+    if(!state || !loadMore){
+      state=categoryStates[key]={
+        products:[],
+        next:1,
+        total:300,
+        hasMore:true,
+        loading:false
+      };
+    }
+
+    if(state.loading) return;
+
+    state.loading=true;
+
+    const container=document.getElementById('categoryProducts');
+    if(!container){
+      state.loading=false;
+      return;
+    }
+
     if(!loadMore){
       const cached=allCached().filter(p=>categoryMatch(p,key));
-      if(cached.length){st.products=unique(cached);renderFeed(container,st.products,st,'category')}
+      if(cached.length){
+        state.products=unique(cached);
+        renderFeed(container,state,'category');
+      }else{
+        container.innerHTML=
+          '<div class="gw-category-toolbar"><div><b>Loading products…</b><span>Live CJ marketplace</span></div></div>'+
+          '<div class="products category-result-grid"></div>';
+      }
     }
 
-    const target=loadMore?st.products.length+100:INITIAL_CATEGORY;
-    while(st.products.length<target && st.next<=st.total){
-      const pages=[st.next,st.next+1,st.next+2].filter(p=>p<=st.total);
+    const target=loadMore
+      ? state.products.length+SEARCH_MORE
+      : INITIAL_CATEGORY;
+
+    while(state.products.length<target && state.next<=state.total){
+      const pages=[
+        state.next,
+        state.next+1,
+        state.next+2
+      ].filter(p=>p<=state.total);
+
+      if(!pages.length) break;
+
       const responses=await Promise.all(pages.map(fetchPage));
-      for(const r of responses){if(r?.totalPages)st.total=Math.max(st.total,r.totalPages);if(r?.products)st.products=unique(st.products.concat(r.products.filter(p=>categoryMatch(p,key))))}
-      st.next+=pages.length;
-      st.hasMore=st.next<=st.total;
-      /* Append/fill only; never trigger a page reload or scroll jump. */
-      renderFeed(container,st.products,st,'category');
-      if(!responses.some(r=>r?.products?.length))break;
+
+      let got=false;
+
+      for(const r of responses){
+        if(Number(r?.totalPages)>0){
+          state.total=Math.max(state.total,Number(r.totalPages));
+        }
+
+        if(r?.products?.length){
+          got=true;
+          const matches=r.products.filter(p=>categoryMatch(p,key));
+          state.products=unique(state.products.concat(matches));
+        }
+      }
+
+      state.next+=pages.length;
+      state.hasMore=state.next<=state.total;
+
+      renderFeed(container,state,'category');
+
+      if(!got) break;
     }
-    st.hasMore=st.next<=st.total;
-    renderFeed(container,st.products,st,'category');
-    st.loading=false;
+
+    state.hasMore=state.next<=state.total;
+    state.loading=false;
+    renderFeed(container,state,'category');
   }
 
-  function prepareCategoryPage(category){
-    const home=document.getElementById('homePage'),page=document.getElementById('categoryPage');
-    const title=document.getElementById('categoryTitle'),ey=document.getElementById('categoryEyebrow');
-    const d=(typeof window.GLOBIRA_MENU_DATA!=='undefined')?window.GLOBIRA_MENU_DATA?.[category]:null;
-    const names={women:'Women',men:'Men',bags:'Bags',shoes:'Shoes',accessories:'Accessories',electronics:'Electronics',home:'Home & Living',beauty:'Beauty & Personal Care',tools:'Tools & DIY',sports:'Sports & Fitness',automotive:'Automotive',pets:'Pet Supplies',office:'Office & School',baby:'Baby & Kids',health:'Health & Wellness',more:'All Products'};
-    const name=d?.title||names[category]||String(category||'Collection');
-    if(home)home.style.display='none';if(page)page.classList.add('active');
-    if(title)title.textContent=name;if(ey)ey.textContent='GLOBIRA / '+name.toUpperCase();
-    document.body.classList.remove('no-scroll');
-    return name;
+  async function loadCategoryMore(state,container){
+    await loadCategory(state.key,true);
   }
 
   window.showCategory=function(category){
     const key=String(category||'more').toLowerCase();
+
     window.currentCategory=key;
-    prepareCategoryPage(key);
+
+    const names={
+      women:'Women',
+      men:'Men',
+      bags:'Bags',
+      shoes:'Shoes',
+      accessories:'Accessories',
+      electronics:'Electronics',
+      home:'Home & Living',
+      beauty:'Beauty & Personal Care',
+      tools:'Tools & DIY',
+      sports:'Sports & Fitness',
+      automotive:'Automotive',
+      pets:'Pet Supplies',
+      office:'Office & School',
+      baby:'Baby & Kids',
+      health:'Health & Wellness',
+      more:'All Products'
+    };
+
+    const d=(typeof window.GLOBIRA_MENU_DATA!=='undefined')
+      ? window.GLOBIRA_MENU_DATA[key]
+      : null;
+
+    const title=d?.title||names[key]||'Collection';
+
+    preparePage(title,'GLOBIRA / '+String(title).toUpperCase());
+
     const c=document.getElementById('categoryProducts');
-    if(c)c.innerHTML='<div class="gw-category-toolbar"><div><b>Loading products…</b><span>Live CJ marketplace</span></div></div><div class="products category-result-grid"></div>';
+    if(c){
+      c.innerHTML=
+        '<div class="gw-category-toolbar"><div><b>Loading products…</b><span>Live CJ marketplace</span></div></div>'+
+        '<div class="products category-result-grid"></div>';
+    }
+
     loadCategory(key,false);
   };
 
   window.showSubcategory=function(category,sub){
-    if(sub==='all'||!sub){window.showCategory(category);return}
+    if(sub==='all'||!sub){
+      window.showCategory(category);
+      return;
+    }
+
     const key=String(category||'more').toLowerCase();
-    window.currentCategory=key;
     const name=String(sub||'').replace(/-/g,' ');
-    prepareCategoryPage(key);
+
+    window.currentCategory=key;
+    preparePage(
+      name.replace(/\b\w/g,c=>c.toUpperCase()),
+      'GLOBIRA / '+key.toUpperCase()+' / '+name.toUpperCase()
+    );
+
     const c=document.getElementById('categoryProducts');
-    const st=searchStates['sub:'+key+':'+normalizeQuery(name)]={products:[],next:1,total:300,hasMore:true,loading:false,query:name,category:key};
-    loadScopedSearch(st,c);
+    const id='sub:'+key+':'+normalizeQuery(name);
+
+    const state=searchStates[id]||{
+      products:[],
+      next:1,
+      total:300,
+      hasMore:true,
+      loading:false,
+      query:name,
+      category:key,
+      keyword:name
+    };
+
+    searchStates[id]=state;
+
+    if(c){
+      c.innerHTML=
+        '<div class="gw-category-toolbar"><div><b>Searching…</b><span>Matching products only</span></div></div>'+
+        '<div class="products category-result-grid"></div>';
+    }
+
+    loadSearch(state,c);
   };
 
-  async function loadScopedSearch(st,container){
-    if(st.loading)return;st.loading=true;
-    const target=st.products.length+SEARCH_BATCH;
-    while(st.products.length<target&&st.next<=st.total){
-      const pages=[st.next,st.next+1,st.next+2].filter(p=>p<=st.total);
-      const responses=await Promise.all(pages.map(fetchPage));
-      for(const r of responses){if(r?.totalPages)st.total=Math.max(st.total,r.totalPages);if(r?.products)st.products=unique(st.products.concat(r.products.filter(p=>categoryMatch(p,st.category)&&strictSmartMatch(p,st.query))))}
-      st.next+=pages.length;st.hasMore=st.next<=st.total;
-      renderFeed(container,st.products,st,'search');
-      if(st.products.length>=target)break;
-      if(!responses.some(r=>r?.products?.length))break;
+  async function loadSearch(state,container){
+    if(!state||state.loading||!container) return;
+
+    state.loading=true;
+
+    const target=INITIAL_CATEGORY;
+
+    while(state.products.length<target && state.next<=state.total){
+      const page=state.next;
+
+      const r=await fetchSearchPage(state.keyword,page);
+
+      if(!r){
+        state.next++;
+        if(state.next>state.total) state.hasMore=false;
+        break;
+      }
+
+      if(Number(r.totalPages)>0) state.total=Math.max(1,Number(r.totalPages));
+
+      const matches=arr(r.products)
+        .filter(p=>strictSmartMatch(p,state.query))
+        .filter(p=>!state.category || categoryMatch(p,state.category));
+
+      state.products=unique(state.products.concat(matches));
+      state.next++;
+
+      state.hasMore=state.next<=state.total;
+
+      renderFeed(container,state,'search');
+
+      if(!r.products.length) break;
     }
-    st.hasMore=st.next<=st.total;renderFeed(container,st.products,st,'search');st.loading=false;
+
+    state.hasMore=state.next<=state.total;
+    state.loading=false;
+    renderFeed(container,state,'search');
   }
 
+  async function loadSearchMore(state,container){
+    if(!state||state.loading||!container) return;
+
+    state.loading=true;
+
+    const target=state.products.length+SEARCH_MORE;
+
+    while(state.products.length<target && state.next<=state.total){
+      const r=await fetchSearchPage(state.keyword,state.next);
+
+      if(!r){
+        state.next++;
+        continue;
+      }
+
+      if(Number(r.totalPages)>0) state.total=Math.max(1,Number(r.totalPages));
+
+      const matches=arr(r.products)
+        .filter(p=>strictSmartMatch(p,state.query))
+        .filter(p=>!state.category || categoryMatch(p,state.category));
+
+      state.products=unique(state.products.concat(matches));
+      state.next++;
+      state.hasMore=state.next<=state.total;
+
+      renderFeed(container,state,'search');
+
+      if(!r.products.length) break;
+    }
+
+    state.hasMore=state.next<=state.total;
+    state.loading=false;
+    renderFeed(container,state,'search');
+  }
+
+  /*
+   * Global search:
+   * ALWAYS searches the CJ supplier using keyword=.
+   * It no longer depends on which 300 products happened to be cached.
+   */
   async function smartSearch(raw,scope){
     const q=String(raw||'').trim();
-    if(!q){if(typeof window.showHome==='function')window.showHome();return}
+
+    if(!q){
+      if(typeof window.showHome==='function'){
+        window.showHome();
+      }
+      return;
+    }
+
     const query=normalizeQuery(q);
-    const category=scope&&scope!=='home'?String(scope).toLowerCase():'';
-    const page=document.getElementById('categoryPage'),home=document.getElementById('homePage'),title=document.getElementById('categoryTitle'),ey=document.getElementById('categoryEyebrow'),c=document.getElementById('categoryProducts');
-    if(home)home.style.display='none';if(page)page.classList.add('active');
-    if(title)title.textContent='Search: '+q;if(ey)ey.textContent=category?'GLOBIRA / '+category.toUpperCase()+' / SEARCH':'GLOBIRA / SEARCH RESULTS';
-    if(!c)return;
-    document.body.classList.remove('no-scroll');
+    const category=(scope&&scope!=='home')
+      ? String(scope).toLowerCase()
+      : '';
+
+    const page=document.getElementById('categoryPage');
+    const c=document.getElementById('categoryProducts');
+
+    preparePage(
+      'Search: '+q,
+      category
+        ? 'GLOBIRA / '+category.toUpperCase()+' / SEARCH'
+        : 'GLOBIRA / SEARCH RESULTS'
+    );
+
+    if(!c) return;
+
+    const run=++searchRunId;
     const id=(category||'home')+'|'+query;
-    const st=searchStates[id]||{products:[],next:1,total:300,hasMore:true,loading:false,query:q,category:category};
-    searchStates[id]=st;
-    const cached=allCached().filter(p=>(!category||categoryMatch(p,category))&&strictSmartMatch(p,q));
-    if(cached.length){st.products=unique(cached);renderFeed(c,st.products,st,'search')}
-    else c.innerHTML='<div class="gw-category-toolbar"><div><b>Searching…</b><span>Matching products only</span></div></div><div class="products category-result-grid"></div>';
-    await loadScopedSearch(st,c);
+
+    /*
+     * New query gets a clean state. This prevents "pants" results from the
+     * previous query surviving when the customer immediately searches
+     * "bottles".
+     */
+    const state={
+      products:[],
+      next:1,
+      total:1,
+      hasMore:true,
+      loading:false,
+      query:q,
+      keyword:q,
+      category:category
+    };
+
+    searchStates[id]=state;
+
+    c.innerHTML=
+      '<div class="gw-category-toolbar"><div><b>Searching CJ marketplace…</b><span>Exact matching products only</span></div></div>'+
+      '<div class="products category-result-grid"></div>';
+
+    /*
+     * A cached exact match can paint instantly, but we still perform the live
+     * CJ search. Cached results are only a first paint and are replaced/merged
+     * with live results without reloading the page.
+     */
+    const cached=allCached()
+      .filter(p=>(!category||categoryMatch(p,category)))
+      .filter(p=>strictSmartMatch(p,q));
+
+    if(cached.length){
+      state.products=unique(cached.slice(0,INITIAL_CATEGORY));
+      renderFeed(c,state,'search');
+    }
+
+    await loadSearch(state,c);
+
+    if(run!==searchRunId) return;
   }
 
   window.searchProducts=function(){
-    const hero=document.getElementById('globiraHeroSearchInput'),top=document.getElementById('globiraSearchInput');
-    const input=hero||top;const raw=input?input.value.trim():'';if(hero&&top)top.value=raw;
-    /* Search the currently selected collection, but home searches the whole catalog. */
-    const scope=(window.currentCategory&&document.getElementById('categoryPage')?.classList.contains('active'))?String(window.currentCategory).toLowerCase():'home';
-    smartSearch(raw,scope);
+    const hero=document.getElementById('globiraHeroSearchInput');
+    const top=document.getElementById('globiraSearchInput');
+    const input=hero||top;
+
+    const raw=input ? input.value.trim() : '';
+
+    if(hero&&top) top.value=raw;
+
+    const activeCategory=
+      window.currentCategory &&
+      document.getElementById('categoryPage')?.classList.contains('active')
+        ? String(window.currentCategory).toLowerCase()
+        : 'home';
+
+    /*
+     * Do not allow a browser/form Enter action to navigate or refresh.
+     */
+    smartSearch(raw,activeCategory);
   };
 
-  /* Search icon / Enter should use the same smart search path. */
+  /*
+   * Search Enter: stop the browser's native action before it can navigate.
+   * This is capture-phase so it wins over older handlers already in the file.
+   */
   document.addEventListener('keydown',function(e){
-    if(e.key!=='Enter')return;
+    if(e.key!=='Enter') return;
+
     const t=e.target;
-    if(t&&((t.id==='globiraHeroSearchInput')||(t.id==='globiraSearchInput')||(t.classList&&t.classList.contains('globira-collection-search')))){
-      e.preventDefault();window.searchProducts();
+    const isSearch=
+      t &&
+      (
+        t.id==='globiraHeroSearchInput' ||
+        t.id==='globiraSearchInput' ||
+        (t.classList && t.classList.contains('globira-collection-search'))
+      );
+
+    if(!isSearch) return;
+
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    window.searchProducts();
+  },true);
+
+  /*
+   * Stop submit/navigation if an older wrapper/form exists around the search.
+   */
+  document.addEventListener('submit',function(e){
+    const form=e.target;
+    if(!form) return;
+
+    const searchInput=
+      form.querySelector &&
+      form.querySelector('#globiraHeroSearchInput,#globiraSearchInput');
+
+    if(searchInput){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      window.searchProducts();
     }
   },true);
 
-  /* Rebind category/search load-more buttons after each render without changing design. */
-  document.addEventListener('click',function(e){
-    const b=e.target.closest&&e.target.closest('#globiraCategoryLoadMore,#globiraSearchLoadMore');
-    if(!b)return;
-    e.preventDefault();e.stopPropagation();
-    if(b.id==='globiraCategoryLoadMore'){
-      const key=String(window.currentCategory||'more').toLowerCase();
-      loadCategory(key,true);
-    }else{
-      const active=Object.values(searchStates).find(s=>s&&document.getElementById('categoryProducts')&&s.products.some(p=>document.getElementById('categoryProducts').textContent.includes(String(p.name||'').slice(0,10))));
-      if(active)loadScopedSearch(active,document.getElementById('categoryProducts'));
-    }
-  },true);
-
-  /* Home: render cached products immediately. If there is no cache, fetch the
-     first 3 CJ pages in parallel. No page refresh and no automatic +300 after
-     the initial 300. */
   function bootFast(){
     const cached=allCached();
-    if(cached.length)renderHomeFast(cached,false);
-    fastHomeLoad(true);
+
+    if(cached.length){
+      renderHome(cached,false);
+    }
+
+    loadHome(true);
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(bootFast,0),{once:true});
-  else setTimeout(bootFast,0);
+
+  if(document.readyState==='loading'){
+    document.addEventListener(
+      'DOMContentLoaded',
+      ()=>setTimeout(bootFast,0),
+      {once:true}
+    );
+  }else{
+    setTimeout(bootFast,0);
+  }
 
 })();
 </script>
