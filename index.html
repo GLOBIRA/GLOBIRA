@@ -14913,3 +14913,442 @@ if(typeof originalShowCategory==='function' && !originalShowCategory.__globiraIn
     if(document.body) observer.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class','style']});
 })();
 </script>
+
+
+<!-- =========================================================
+     GLOBIRA FINAL STABILITY FIX — PRODUCT GALLERY / CHECKOUT /
+     WISHLIST / CART
+     Added as the final layer so older duplicate wrappers cannot
+     override the corrected behaviour.
+========================================================= -->
+<style id="globira-final-storefront-fix">
+#productModal .thumbnails{
+    display:flex!important;
+    flex-wrap:nowrap!important;
+    overflow-x:auto!important;
+    gap:9px!important;
+    padding:10px!important;
+}
+#productModal .thumbnails img{
+    flex:0 0 75px!important;
+    width:75px!important;
+    height:90px!important;
+    object-fit:cover!important;
+    cursor:pointer!important;
+    opacity:.62!important;
+    border:1px solid transparent!important;
+    transition:.15s!important;
+}
+#productModal .thumbnails img.active{
+    opacity:1!important;
+    border-color:#111!important;
+}
+#productModal .globira-gallery-count{
+    display:block!important;
+    padding:0 10px 8px!important;
+    font-size:11px!important;
+    color:#777!important;
+}
+#productModal .globira-gallery-error{
+    display:none;
+}
+</style>
+
+<script id="globira-final-storefront-fix">
+(function(){
+'use strict';
+
+function gClean(v){
+    return String(v==null?'':v).trim();
+}
+
+function gIsImage(v){
+    return /^https?:\/\/.+/i.test(gClean(v));
+}
+
+/* Collect image URLs from CJ responses even when the API nests them
+   inside data/result/product/variants/SKU objects. */
+function gCollectImages(value, out, seen, depth){
+    if(depth>7 || value==null) return;
+    if(typeof value==='string'){
+        const str=value.trim();
+        if(gIsImage(str)){
+            out.push(str);
+            return;
+        }
+
+        /* Some CJ fields are JSON strings containing image arrays. */
+        if((str[0]==='[' && str[str.length-1]===']') ||
+           (str[0]==='{' && str[str.length-1]==='}')){
+            try{
+                gCollectImages(JSON.parse(str),out,seen,depth+1);
+            }catch(e){}
+        }
+
+        /* Some APIs return multiple URLs separated by commas/newlines. */
+        str.split(/[\r\n,|]+/).forEach(part=>{
+            const u=part.trim();
+            if(gIsImage(u)) out.push(u);
+        });
+        return;
+    }
+
+    if(typeof value!=='object') return;
+    if(seen.has(value)) return;
+    seen.add(value);
+
+    if(Array.isArray(value)){
+        value.forEach(v=>gCollectImages(v,out,seen,depth+1));
+        return;
+    }
+
+    Object.keys(value).forEach(key=>{
+        const val=value[key];
+        const k=String(key).toLowerCase();
+
+        /* Image-related fields get priority, but recursive scanning below
+           also catches CJ fields with different names. */
+        if(/image|img|pic|photo|picture|gallery|thumbnail|skuimage|variantimage|url/.test(k)){
+            gCollectImages(val,out,seen,depth+1);
+        }else if(depth<5){
+            gCollectImages(val,out,seen,depth+1);
+        }
+    });
+}
+
+function gImagesFromProduct(product){
+    const out=[];
+    gCollectImages(product,out,new WeakSet(),0);
+
+    /* Preserve the normalizer already present in this HTML when available. */
+    try{
+        if(typeof normalizeProductImages==='function'){
+            gCollectImages(normalizeProductImages(product),out,new WeakSet(),0);
+        }
+    }catch(e){}
+
+    return [...new Set(out.filter(gIsImage))].slice(0,8);
+}
+
+function gCurrentProduct(id){
+    try{
+        if(typeof window.findProduct==='function'){
+            const p=window.findProduct(id);
+            if(p) return p;
+        }
+    }catch(e){}
+    try{
+        if(Array.isArray(window.cjProducts)){
+            return window.cjProducts.find(x=>String(x.id)===String(id))||null;
+        }
+    }catch(e){}
+    try{
+        if(Array.isArray(window.products)){
+            return window.products.find(x=>String(x.id)===String(id))||null;
+        }
+    }catch(e){}
+    return null;
+}
+
+function gDetailCandidates(product){
+    const vals=[
+        product && product.cjProductId,
+        product && product.pid,
+        product && product.productId,
+        product && product.product_id,
+        product && product.id
+    ].map(gClean).filter(Boolean);
+
+    return [...new Set(vals)].map(v=>v.replace(/^cj-/i,''));
+}
+
+async function gFetchCJDetail(product){
+    const ids=gDetailCandidates(product);
+    if(!ids.length) return null;
+
+    for(const id of ids){
+        const urls=[
+            '/api/cj-product/'+encodeURIComponent(id),
+            '/api/cj-product?id='+encodeURIComponent(id),
+            '/api/cj-product?pid='+encodeURIComponent(id),
+            '/api/cj-product?productId='+encodeURIComponent(id)
+        ];
+
+        for(const url of urls){
+            try{
+                const r=await fetch(url,{cache:'no-store'});
+                if(!r.ok) continue;
+                const payload=await r.json();
+
+                const detail=
+                    payload?.product ||
+                    payload?.data?.product ||
+                    payload?.data?.result ||
+                    payload?.data ||
+                    payload?.result ||
+                    payload;
+
+                if(detail && typeof detail==='object'){
+                    const imgs=gImagesFromProduct(detail);
+                    if(imgs.length){
+                        return {detail:detail,images:imgs};
+                    }
+                }
+            }catch(e){}
+        }
+    }
+    return null;
+}
+
+function gRenderGallery(product,images){
+    const main=document.getElementById('mainProductImage');
+    const thumbs=document.getElementById('productThumbnails');
+    if(!main || !thumbs || !product) return;
+
+    let list=[...new Set((images||[]).filter(gIsImage))];
+
+    /* First image remains the currently displayed/main product image if
+       the API did not return it in the same order. */
+    const current=gClean(main.currentSrc||main.src);
+    if(gIsImage(current) && !list.includes(current)) list.unshift(current);
+
+    if(!list.length) list=gImagesFromProduct(product);
+    if(!list.length && gIsImage(product.image)) list=[product.image];
+    if(!list.length) return;
+
+    list=list.slice(0,8);
+    main.src=list[0];
+    main.dataset.galleryImages=JSON.stringify(list);
+
+    thumbs.innerHTML=list.map((url,index)=>{
+        const safe=url.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+        const name=gClean(product.name||'Product').replace(/"/g,'&quot;');
+        return '<img src="'+safe+'" class="'+(index===0?'active':'')+
+               '" data-gallery-index="'+index+'" alt="'+name+' photo '+(index+1)+
+               '" loading="'+(index===0?'eager':'lazy')+
+               '" decoding="async">';
+    }).join('');
+
+    let count=document.getElementById('globiraGalleryCount');
+    if(!count){
+        count=document.createElement('div');
+        count.id='globiraGalleryCount';
+        count.className='globira-gallery-count';
+        thumbs.parentNode.insertBefore(count,thumbs.nextSibling);
+    }
+    count.textContent=list.length>1 ? list.length+' product photos' : '1 product photo';
+
+    thumbs.querySelectorAll('img').forEach(img=>{
+        img.addEventListener('click',function(e){
+            e.preventDefault();
+            e.stopPropagation();
+            const photo=this.currentSrc||this.src;
+            main.src=photo;
+            thumbs.querySelectorAll('img').forEach(x=>x.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+}
+
+let galleryRun=0;
+
+async function gLoadGallery(id){
+    const run=++galleryRun;
+    const product=gCurrentProduct(id);
+    if(!product) return;
+
+    /* Show all photos already supplied in the catalog immediately. */
+    let images=gImagesFromProduct(product);
+    gRenderGallery(product,images);
+
+    /* Then ask the server for the full CJ product detail. */
+    const detail=await gFetchCJDetail(product);
+    if(run!==galleryRun) return;
+
+    if(detail){
+        const merged=Object.assign({},product,detail.detail);
+        const full=[...new Set([
+            ...images,
+            ...detail.images,
+            ...gImagesFromProduct(merged)
+        ])];
+        gRenderGallery(merged,full);
+    }
+}
+
+/* One final openProduct hook. It does not replace the existing product
+   logic; it only loads the full gallery after the existing popup opens. */
+function gInstallProductHook(){
+    if(typeof window.openProduct!=='function'){
+        setTimeout(gInstallProductHook,150);
+        return;
+    }
+    if(window.openProduct.__globiraFinalGalleryHook) return;
+
+    const original=window.openProduct;
+
+    function wrappedOpenProduct(id,preselectedSize){
+        const result=original.apply(this,arguments);
+        setTimeout(()=>gLoadGallery(id),0);
+        setTimeout(()=>gLoadGallery(id),120);
+        return result;
+    }
+
+    wrappedOpenProduct.__globiraFinalGalleryHook=true;
+    window.openProduct=wrappedOpenProduct;
+}
+gInstallProductHook();
+setTimeout(gInstallProductHook,300);
+setTimeout(gInstallProductHook,1000);
+
+/* Also catch direct modal activation. */
+function gObserveProductModal(){
+    const modal=document.getElementById('productModal');
+    if(!modal){
+        setTimeout(gObserveProductModal,300);
+        return;
+    }
+    if(modal.__globiraFinalGalleryObserver) return;
+    modal.__globiraFinalGalleryObserver=true;
+
+    const observer=new MutationObserver(()=>{
+        if(!modal.classList.contains('active')) return;
+        const id=window.currentProduct?.id;
+        if(id!=null) setTimeout(()=>gLoadGallery(id),0);
+    });
+    observer.observe(modal,{attributes:true,attributeFilter:['class']});
+}
+gObserveProductModal();
+
+/* ---------------------------------------------------------
+   CHECKOUT: "BACK TO HOME" on Review Your Order must always
+   close checkout and return to the actual homepage.
+--------------------------------------------------------- */
+function gReturnHome(){
+    const checkout=document.getElementById('checkoutModal');
+    const product=document.getElementById('productModal');
+    const cartDrawer=document.getElementById('cartDrawer');
+    const overlay=document.querySelector('.overlay');
+
+    if(checkout){
+        checkout.classList.remove('active');
+        checkout.style.display='none';
+        checkout.style.visibility='hidden';
+        checkout.style.pointerEvents='none';
+    }
+    if(product){
+        product.classList.remove('active');
+        product.style.display='';
+    }
+    if(cartDrawer) cartDrawer.classList.remove('active');
+    if(overlay) overlay.classList.remove('active');
+
+    const category=document.getElementById('categoryPage');
+    const home=document.getElementById('homePage');
+    if(category) category.classList.remove('active');
+    if(home) home.style.display='block';
+
+    document.body.classList.remove('no-scroll');
+    document.documentElement.classList.remove('no-scroll');
+
+    window.scrollTo({top:0,left:0,behavior:'auto'});
+
+    /* Let the existing homepage state restore itself too. */
+    try{
+        if(typeof window.showHome==='function' &&
+           !window.showHome.__globiraFinalHomeGuard){
+            window.showHome();
+        }
+    }catch(e){}
+}
+
+/* Capture phase prevents older inline/card handlers from swallowing the
+   review-page Home button. */
+document.addEventListener('click',function(e){
+    const btn=e.target.closest(
+        '#checkoutModal .review-home-btn,'+
+        '#checkoutModal [data-action="home"],'+
+        '#checkoutModal .back-to-home,'+
+        '#checkoutModal .checkout-home'
+    );
+    if(!btn) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    gReturnHome();
+},true);
+
+/* ---------------------------------------------------------
+   WISHLIST: exactly one toggle per heart click.
+--------------------------------------------------------- */
+document.addEventListener('click',function(e){
+    const heart=e.target.closest('.gw-card-heart,[data-wishlist-product]');
+    if(!heart) return;
+
+    const id=heart.dataset.wishlistProduct || heart.dataset.productId;
+    if(!id || typeof window.toggleProductWishlist!=='function') return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+
+    try{
+        window.toggleProductWishlist(id);
+    }catch(err){}
+},true);
+
+/* ---------------------------------------------------------
+   CART: reliable Add To Cart + quantity + remove.
+   The existing addToCart remains the source of truth for variants.
+--------------------------------------------------------- */
+document.addEventListener('click',function(e){
+    const remove=e.target.closest('#cartItems .remove,#cartItems .globira-remove-item');
+    if(!remove) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+
+    if(!Array.isArray(window.cart)) return;
+
+    const row=remove.closest('.cart-item');
+    const rows=[...document.querySelectorAll('#cartItems .cart-item')];
+    const index=rows.indexOf(row);
+    const item=window.cart[index];
+
+    if(item && typeof window.removeItem==='function'){
+        try{
+            window.removeItem(item.id,item.size);
+        }catch(err){}
+    }
+},true);
+
+/* Make the header cart count update immediately after cart changes. */
+function gRefreshCart(){
+    try{
+        if(typeof window.renderCart==='function') window.renderCart();
+    }catch(e){}
+}
+window.addEventListener('storage',function(e){
+    if(e.key==='globiraCart') gRefreshCart();
+});
+
+/* Ensure body scroll is restored if checkout is programmatically closed. */
+document.addEventListener('click',function(e){
+    const close=e.target.closest('#checkoutModal .checkout-close');
+    if(!close) return;
+    setTimeout(()=>{
+        const modal=document.getElementById('checkoutModal');
+        if(!modal || !modal.classList.contains('active')){
+            document.body.classList.remove('no-scroll');
+        }
+    },20);
+},true);
+
+})();
+</script>
+<!-- END GLOBIRA FINAL STABILITY FIX -->
+
+</body>
+</html>
